@@ -1,0 +1,187 @@
+// src/components/app-content/MyListingsContent.jsx
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { myListings, deleteProduct } from '../../api/products';
+import { useAuth } from '../../context/AuthContext';
+import { useToast } from '../../components/Toast';
+
+const statusConfig = {
+  pending:     { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400' },
+  approved:    { label: 'Approved — Live', color: 'bg-green-100 text-green-700',  dot: 'bg-green-400'  },
+  rejected:    { label: 'Rejected',        color: 'bg-red-100 text-red-700',      dot: 'bg-red-400'    },
+  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-400'   },
+};
+
+export default function MyListingsContent() {
+  const [searchParams] = useSearchParams();
+  const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(searchParams.get('status') || 'all');
+  const [deleting, setDeleting] = useState(null);
+
+  const { permissions } = useAuth();
+  const { toast } = useToast();
+
+  const canEdit = permissions?.includes('product-edit') || false;
+  const canDelete = permissions?.includes('product-delete') || false;
+  const canResubmit = permissions?.includes('product-create') || false;
+  const canCreate = permissions?.includes('product-create') || false;
+
+  const fetchListings = () => {
+    setLoading(true);
+    myListings(status !== 'all' ? { status } : {})
+      .then(res => setListings(res.data.products || []))
+      .finally(() => setLoading(false));
+  };
+
+  useEffect(() => { fetchListings(); }, [status]);
+
+  const handleDelete = async (id, title) => {
+    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    setDeleting(id);
+    try {
+      await deleteProduct(id);
+      toast('Listing deleted successfully', 'success');
+      fetchListings();
+    } catch (err) {
+      const msg = err.response?.data?.message || 'Could not delete.';
+      toast(msg, 'error');
+    } finally {
+      setDeleting(null);
+    }
+  };
+
+  return (
+    <>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-gray-800">My Listings</h2>
+          <p className="text-gray-500 text-sm mt-1">{listings.length} listing{listings.length !== 1 ? 's' : ''}</p>
+        </div>
+        {canCreate && (
+          <Link
+            to="/dashboard/create"
+            className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition"
+          >
+            <span>+</span> Post New Listing
+          </Link>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-2 mb-6">
+        {['all', 'pending', 'approved', 'rejected'].map(s => (
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={`px-4 py-2 rounded-xl text-sm font-medium transition capitalize
+              ${status === s
+                ? 'bg-blue-600 text-white shadow-sm'
+                : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
+              }`}
+          >
+            {s === 'all' ? 'All' : s}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="space-y-3 animate-pulse">
+          {Array(4).fill(0).map((_, i) => (
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 items-center">
+              <div className="w-14 h-14 rounded-xl bg-gray-100 shrink-0" />
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-gray-100 rounded w-56" />
+                <div className="h-3 bg-gray-100 rounded w-32" />
+              </div>
+              <div className="h-6 w-20 bg-gray-100 rounded-full" />
+            </div>
+          ))}
+        </div>
+      ) : listings.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
+          <div className="text-5xl mb-4">📭</div>
+          <h3 className="font-bold text-gray-700 mb-2">No listings yet</h3>
+          <p className="text-gray-400 text-sm mb-6">Post your first e-waste component to start selling</p>
+          {canCreate && (
+            <Link
+              to="/dashboard/create"
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
+            >
+              + Post First Listing
+            </Link>
+          )}
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {listings.map(listing => {
+            const cfg = statusConfig[listing.status] || statusConfig.pending;
+            return (
+              <div key={listing.product_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex gap-4 items-start">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+                  {listing.images?.[0] ? (
+                    <img
+                      src={`http://localhost:8000/storage/${listing.images[0].image_path}`}
+                      alt=""
+                      className="w-full h-full object-cover"
+                    />
+                  ) : '📦'}
+                </div>
+                <div className="flex-1 overflow-hidden">
+                  <h3 className="font-bold text-gray-800 truncate">{listing.title}</h3>
+                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-400">
+                    <span>UGX {Number(listing.price).toLocaleString()}</span>
+                    <span>·</span>
+                    <span>{listing.condition}</span>
+                    <span>·</span>
+                    <span>{listing.category?.name}</span>
+                    <span>·</span>
+                    <span>{new Date(listing.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                  </div>
+                  {listing.status === 'rejected' && listing.rejection_reason && (
+                    <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
+                      <p className="text-xs text-red-600 font-medium">Rejection reason:</p>
+                      <p className="text-xs text-red-500 mt-0.5">{listing.rejection_reason}</p>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+                    {cfg.label}
+                  </span>
+                  <div className="flex gap-2">
+                    {canEdit && ['pending', 'rejected'].includes(listing.status) && (
+                      <Link
+                        to={`/dashboard/edit/${listing.product_id}`}
+                        className="text-xs text-blue-500 hover:underline"
+                      >
+                        Edit
+                      </Link>
+                    )}
+                    {canResubmit && listing.status === 'rejected' && (
+                      <Link
+                        to={`/dashboard/resubmit/${listing.product_id}`}
+                        className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded-lg font-medium transition"
+                      >
+                        Resubmit
+                      </Link>
+                    )}
+                    {canDelete && listing.status !== 'approved' && (
+                      <button
+                        onClick={() => handleDelete(listing.product_id, listing.title)}
+                        disabled={deleting === listing.product_id}
+                        className="text-xs text-red-400 hover:underline disabled:opacity-50"
+                      >
+                        {deleting === listing.product_id ? '...' : 'Delete'}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </>
+  );
+}

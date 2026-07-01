@@ -1,0 +1,40 @@
+import api from './axios';
+
+// Stats
+export const getManagerStats = () => api.get('/manager/stats');
+
+// Users
+export const getManagerUsers = () => api.get('/manager/users');
+export const listUsers = () => api.get('/manager/users');
+export const activateUser = (id) => api.patch(`/manager/users/${id}/activate`);
+export const deactivateUser = (id) => api.patch(`/manager/users/${id}/deactivate`);
+
+// Product Managers
+export const getProductManagers = () => api.get('/manager/product-managers');
+export const createProductManager = (data) => api.post('/manager/product-managers', data);
+
+// Assignments
+export const assignCategory = (data) => api.post('/manager/assignments', data);
+export const removeAssignment = (id) => api.delete(`/manager/assignments/${id}`);
+
+// Categories
+export const getManagerCategories = () => api.get('/manager/categories');
+export const createCategory = (data) => api.post('/manager/categories', data);
+export const updateCategory = (id, data) => api.put(`/manager/categories/${id}`, data);
+export const deleteCategory = (id) => api.delete(`/manager/categories/${id}`);
+
+// Subcategories
+export const addSubcategory = (catId, data) => api.post(`/manager/categories/${catId}/subcategories`, data);
+export const removeSubcategory = (id) => api.delete(`/manager/subcategories/${id}`);
+
+// Products
+export const getManagerProducts = (params) => api.get('/manager/products', { params });
+export const viewManagerProduct = (id) => api.get(`/manager/products/${id}`);
+export const approveProduct = (id) => api.patch(`/manager/products/${id}/approve`);
+export const rejectProduct = (id, data) => api.patch(`/manager/products/${id}/reject`, data);
+
+// Profile
+export const getManagerProfile = () => api.get('/manager/profile');
+export const updateManagerProfile = (data) => api.post('/manager/profile', data, {
+  headers: { 'Content-Type': 'multipart/form-data' }
+});

@@ -1,0 +1,173 @@
+<?php
+
+use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\AdminController;
+use App\Http\Controllers\ManagerController;
+use App\Http\Controllers\CategoryController;
+use App\Http\Controllers\ProductManagerController;
+use App\Http\Controllers\ProductController;
+use App\Http\Controllers\MessageController;
+use App\Http\Controllers\NotificationController;
+
+// ── Auth ──────────────────────────────────────────────────────
+Route::prefix('auth')->group(function () {
+    Route::post('/register', [AuthController::class, 'register']);
+    Route::post('/login',    [AuthController::class, 'login']);
+});
+
+Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::get('/me',      [AuthController::class, 'me']);
+});
+
+// ── Public Routes (No Auth Required) ─────────────────────────
+Route::get('/categories', [CategoryController::class, 'index']);
+Route::get('/categories/{categoryId}/subcategories', [CategoryController::class, 'subcategories']);
+Route::get('/products', [ProductController::class, 'browse']);
+Route::get('/products/{id}', [ProductController::class, 'show']);
+
+// ── SUPER ADMIN ROUTES ───────────────────────────────────────
+// These require permissions that only Super Admin has (or anyone with these specific permissions)
+Route::middleware(['auth:sanctum', 'check.permissions:user-list,role-list,permission-list,audit-list'])->prefix('admin')->group(function () {
+    // Dashboard
+    Route::get('/stats', [AdminController::class, 'stats']);
+
+    // ── Users ──────────────────────────────────────────────
+    Route::get('/users',               [AdminController::class, 'getUsers'])->middleware('can:user-list');
+    Route::post('/users',              [AdminController::class, 'createUser'])->middleware('can:user-create');
+    Route::put('/users/{id}',          [AdminController::class, 'updateUser'])->middleware('can:user-edit');
+    Route::delete('/users/{id}',       [AdminController::class, 'deleteUser'])->middleware('can:user-delete');
+
+    // ── Admins ─────────────────────────────────────────────
+    Route::get('/admins',              [AdminController::class, 'getAdmins'])->middleware('can:admin-list');
+    Route::post('/admins',             [AdminController::class, 'createAdmin'])->middleware('can:admin-create');
+    Route::delete('/admins/{id}',      [AdminController::class, 'deleteAdmin'])->middleware('can:admin-delete');
+    Route::get('/managers',            [AdminController::class, 'getAdmins'])->middleware('can:admin-list');
+    Route::post('/managers',           [AdminController::class, 'createAdmin'])->middleware('can:admin-create');
+    Route::delete('/managers/{id}',    [AdminController::class, 'deleteAdmin'])->middleware('can:admin-delete');
+
+    // ── Roles ──────────────────────────────────────────────
+    Route::get('/roles',               [AdminController::class, 'getRoles'])->middleware('can:role-list');
+    Route::post('/roles',              [AdminController::class, 'createRole'])->middleware('can:role-create');
+    Route::put('/roles/{id}',          [AdminController::class, 'updateRole'])->middleware('can:role-edit');
+    Route::delete('/roles/{id}',       [AdminController::class, 'deleteRole'])->middleware('can:role-delete');
+
+    // ── Permissions ────────────────────────────────────────
+    Route::get('/permissions',         [AdminController::class, 'getPermissions'])->middleware('can:permission-list');
+    Route::post('/permissions',        [AdminController::class, 'createPermission'])->middleware('can:permission-create');
+    Route::delete('/permissions/{id}', [AdminController::class, 'deletePermission'])->middleware('can:permission-delete');
+
+    // ── Audit ──────────────────────────────────────────────
+    Route::get('/audit',               [AdminController::class, 'getAuditTrail'])->middleware('can:audit-list');
+
+    // ── Profile ────────────────────────────────────────────
+    Route::get('/profile',  [AdminController::class, 'getProfile']);
+    Route::post('/profile', [AdminController::class, 'updateProfile']);
+});
+
+// ── ADMIN (Operations Manager) ROUTES ────────────────────────
+// These require permissions that an Admin/Manager typically has
+Route::middleware(['auth:sanctum', 'check.permissions:category-list,product-list,user-list'])->prefix('manager')->group(function () {
+    // Dashboard
+    Route::get('/stats', [ManagerController::class, 'stats']);
+
+    // ── Users ──────────────────────────────────────────────
+    Route::get('/users',                       [ManagerController::class, 'listUsers'])->middleware('can:user-list');
+    Route::patch('/users/{id}/deactivate',     [ManagerController::class, 'deactivateUser'])->middleware('can:user-deactivate');
+    Route::patch('/users/{id}/activate',       [ManagerController::class, 'activateUser'])->middleware('can:user-activate');
+
+    // ── Product Managers ──────────────────────────────────
+    Route::get('/product-managers',            [ManagerController::class, 'listProductManagers'])->middleware('can:pm-list');
+    Route::post('/product-managers',           [ManagerController::class, 'createProductManager'])->middleware('can:pm-create');
+
+    // ── Category Assignments ──────────────────────────────
+    Route::post('/assignments',                [ManagerController::class, 'assignCategory'])->middleware('can:pm-assign-category');
+    Route::delete('/assignments/{id}',         [ManagerController::class, 'removeAssignment'])->middleware('can:pm-remove-category');
+
+    // ── Categories ─────────────────────────────────────────
+    Route::get('/categories',                  [ManagerController::class, 'listCategories'])->middleware('can:category-list');
+    Route::post('/categories',                 [ManagerController::class, 'createCategory'])->middleware('can:category-create');
+    Route::put('/categories/{id}',             [ManagerController::class, 'updateCategory'])->middleware('can:category-edit');
+    Route::delete('/categories/{id}',          [ManagerController::class, 'deleteCategory'])->middleware('can:category-delete');
+    Route::post('/categories/{id}/subcategories', [ManagerController::class, 'addSubcategory'])->middleware('can:category-create');
+    Route::delete('/subcategories/{id}',       [ManagerController::class, 'removeSubcategory'])->middleware('can:category-delete');
+
+    // ── Products ───────────────────────────────────────────
+    Route::get('/products',                    [ManagerController::class, 'listProducts'])->middleware('can:product-list');
+    Route::get('/products/{id}',               [ManagerController::class, 'viewProduct'])->middleware('can:product-view');
+    Route::patch('/products/{id}/approve',     [ManagerController::class, 'approveProduct'])->middleware('can:product-approve');
+    Route::patch('/products/{id}/reject',      [ManagerController::class, 'rejectProduct'])->middleware('can:product-reject');
+
+    // ── Profile ────────────────────────────────────────────
+    Route::get('/profile',  [ManagerController::class, 'getProfile']);
+    Route::post('/profile', [ManagerController::class, 'updateProfile']);
+
+    // ── Messages ───────────────────────────────────────────
+    Route::get('/manager/messages', [ManagerController::class, 'getMessages'])->middleware('can:message-view');
+});
+
+// ── PRODUCT MANAGER ROUTES ──────────────────────────────────
+// These require permissions that a Product Manager typically has
+Route::middleware(['auth:sanctum', 'check.permissions:product-list,product-approve'])->prefix('pm')->group(function () {
+    // Dashboard
+    Route::get('/stats', [ProductManagerController::class, 'stats']);
+
+    // ── Products (scoped to their assigned categories) ────
+    Route::get('/products',                       [ProductManagerController::class, 'listProducts'])->middleware('can:product-list');
+    Route::get('/products/{id}',                  [ProductManagerController::class, 'viewProduct'])->middleware('can:product-view');
+    Route::patch('/products/{id}/approve',        [ProductManagerController::class, 'approveProduct'])->middleware('can:product-approve');
+    Route::patch('/products/{id}/reject',         [ProductManagerController::class, 'rejectProduct'])->middleware('can:product-reject');
+
+    // ── Messages ───────────────────────────────────────────
+    Route::get('/messages',                       [ProductManagerController::class, 'listMessages'])->middleware('can:message-view');
+
+    // ── Notifications ─────────────────────────────────────
+    Route::get('/notifications',                  [ProductManagerController::class, 'listNotifications'])->middleware('can:notification-view');
+    Route::patch('/notifications/{id}/read',      [ProductManagerController::class, 'markNotificationRead'])->middleware('can:notification-mark-read');
+    Route::patch('/notifications/read-all',       [ProductManagerController::class, 'markAllNotificationsRead'])->middleware('can:notification-mark-read');
+
+    // ── Profile ────────────────────────────────────────────
+    Route::get('/profile',  [ProductManagerController::class, 'getProfile']);
+    Route::post('/profile', [ProductManagerController::class, 'updateProfile']);
+});
+
+// ── SELLER / BUYER ROUTES (Authenticated Users) ─────────────
+Route::middleware('auth:sanctum')->group(function () {
+    // ── Products ───────────────────────────────────────────
+    Route::post('/products',                  [ProductController::class, 'store'])->middleware('can:product-create');
+    Route::put('/products/{id}',              [ProductController::class, 'update'])->middleware('can:product-edit');
+    Route::delete('/products/{id}',           [ProductController::class, 'destroy'])->middleware('can:product-delete');
+    Route::get('/products/my/listings',       [ProductController::class, 'myListings'])->middleware('can:product-list');
+    Route::post('/products/{id}/resubmit',    [ProductController::class, 'resubmit'])->middleware('can:product-create');
+
+    // ── Messaging ──────────────────────────────────────────
+    Route::post('/products/{id}/messages',    [ProductController::class, 'sendMessage'])->middleware('can:message-send');
+    Route::get('/products/{id}/messages',     [ProductController::class, 'getMessages'])->middleware('can:message-view');
+
+    // ── Notifications ─────────────────────────────────────
+    Route::get('/notifications',              [ProductController::class, 'notifications'])->middleware('can:notification-view');
+    Route::patch('/notifications/{id}/read',  [ProductController::class, 'markNotificationRead'])->middleware('can:notification-mark-read');
+
+    // ── Profile ────────────────────────────────────────────
+    Route::get('/profile',          [ProductController::class, 'getProfile']);
+    Route::post('/profile',         [ProductController::class, 'updateProfile']);
+});
+
+// ── MESSAGES (Authenticated Users) ──────────────────────────
+Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
+    Route::get('/unread-count',      [MessageController::class, 'unreadCount'])->middleware('can:message-view');
+    Route::get('/',                  [MessageController::class, 'index'])->middleware('can:message-view');
+    Route::get('/{productId}',       [MessageController::class, 'show'])->middleware('can:message-view');
+    Route::post('/',                 [MessageController::class, 'send'])->middleware('can:message-send');
+    Route::patch('/{id}/read',       [MessageController::class, 'markRead'])->middleware('can:message-view');
+});
+
+// ── NOTIFICATIONS (Authenticated Users) ──────────────────────
+Route::middleware('auth:sanctum')->prefix('notifications')->group(function () {
+    Route::get('/unread-count',      [NotificationController::class, 'unreadCount'])->middleware('can:notification-view');
+    Route::patch('/read-all',        [NotificationController::class, 'markAllRead'])->middleware('can:notification-mark-read');
+    Route::get('/',                  [NotificationController::class, 'index'])->middleware('can:notification-view');
+    Route::patch('/{id}/read',       [NotificationController::class, 'markRead'])->middleware('can:notification-mark-read');
+    Route::delete('/{id}',           [NotificationController::class, 'destroy'])->middleware('can:notification-delete');
+});
