@@ -65,6 +65,11 @@ class DatabaseSeeder extends Seeder
             'product-reject',
             'product-view',
 
+            // Product management (own listings — Regular User)
+            'product-create',
+            'product-edit',
+            'product-delete',
+
             // Messaging (Admin + PM + Regular User)
             'message-send',
             'message-view',
@@ -72,9 +77,13 @@ class DatabaseSeeder extends Seeder
             // Notifications
             'notification-view',
             'notification-mark-read',
+            'notification-delete',
 
             // Audit trail (Super Admin + Admin)
             'audit-list',
+
+            // Dashboard
+            'dashboard-view',
         ];
 
         foreach ($permissions as $permission) {
@@ -121,6 +130,7 @@ class DatabaseSeeder extends Seeder
             'notification-view',
             'notification-mark-read',
             'audit-list',
+            'dashboard-view',
         ]);
 
         // Product Manager — approves/rejects listings in assigned categories
@@ -137,6 +147,26 @@ class DatabaseSeeder extends Seeder
             'message-view',
             'notification-view',
             'notification-mark-read',
+            'dashboard-view',
+        ]);
+
+        // Regular User — buyers/sellers
+        $userRole = Role::updateOrCreate(
+            ['name' => 'User'],
+            ['guard_name' => 'web']
+        );
+        $userRole->syncPermissions([
+            'product-list',
+            'product-view',
+            'product-create',
+            'product-edit',
+            'product-delete',
+            'message-send',
+            'message-view',
+            'notification-view',
+            'notification-mark-read',
+            'notification-delete',
+            'dashboard-view',
         ]);
 
         // ── USERS ─────────────────────────────────────────────
@@ -183,8 +213,8 @@ class DatabaseSeeder extends Seeder
         );
         $pm->syncRoles($pmRole);
 
-        // Test Regular User — no role assigned
-        User::updateOrCreate(
+        // Test Regular User
+        $testUser = User::updateOrCreate(
             ['email' => 'user@ewaste.org'],
             [
                 'name'              => 'Test User',
@@ -195,9 +225,11 @@ class DatabaseSeeder extends Seeder
                 'email_verified_at' => now(),
             ]
         );
-        // No role assigned — regular users have no Spatie role
+        $testUser->syncRoles($userRole);
 
         // ── CATEGORIES ────────────────────────────────────────
         $this->call(CategorySeeder::class);
+
+        $this->command->info('✅ Roles, permissions, and test users seeded successfully!');
     }
 }

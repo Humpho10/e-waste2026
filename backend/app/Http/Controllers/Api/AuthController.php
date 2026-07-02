@@ -9,6 +9,9 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
+use App\Models\PasswordResetOtp;
+use App\Mail\PasswordResetOtpMail;
+use Illuminate\Support\Facades\Mail;
 
 class AuthController extends Controller
 {
@@ -32,65 +35,72 @@ class AuthController extends Controller
             'is_active' => true,
         ]);
 
+        // Assign the default buyer/seller role so new users get dashboard access.
+        $user->assignRole('User');
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
+        $permissions = $user->getAllPermissions()->pluck('name');
+        $role = $user->roles->first()?->name ?? 'User';
+
         return response()->json([
-            'message' => 'Registration successful',
-            'user'    => $user->load('roles'),
-            'token'   => $token,
+            'message'     => 'Registration successful',
+            'user'        => $user->load('roles'),
+            'token'       => $token,
+            'role'        => $role,
+            'permissions' => $permissions,
         ], 201);
     }
 
     // Login
     public function login(Request $request)
-{
-    $request->validate([
-        'email'    => 'required|email',
-        'password' => 'required',
-    ]);
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'password' => 'required',
+        ]);
 
-    if (!Auth::attempt($request->only('email', 'password'))) {
-        throw ValidationException::withMessages([
-            'email' => ['The provided credentials are incorrect.'],
+        if (!Auth::attempt($request->only('email', 'password'))) {
+            throw ValidationException::withMessages([
+                'email' => ['The provided credentials are incorrect.'],
+            ]);
+        }
+
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact support.',
+            ], 403);
+        }
+
+        $user->load('roles');
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $permissions = $user->getAllPermissions()->pluck('name');
+        $role = $user->roles->first()?->name ?? 'user';
+
+        return response()->json([
+            'message'     => 'Login successful',
+            'user'        => $user,
+            'token'       => $token,
+            'role'        => $role,
+            'permissions' => $permissions,
         ]);
     }
-     /** @var \App\Models\User $user */
-    $user = Auth::user();
-
-    if (!$user->is_active) {
-        return response()->json([
-            'message' => 'Your account has been deactivated. Please contact support.',
-        ], 403);
-    }
-
-    $user->load('roles');
-    $token = $user->createToken('auth_token')->plainTextToken;
-
-    // 🔥 NEW: Get all permissions for this user
-    $permissions = $user->getAllPermissions()->pluck('name');
-
-    $role = $user->roles->first()?->name ?? 'user';
-
-    return response()->json([
-        'message'     => 'Login successful',
-        'user'        => $user,
-        'token'       => $token,
-        'role'        => $role,
-        'permissions' => $permissions, // 👈 This is what React will use
-    ]);
-}
 
     // Get currently logged in user
     public function me(Request $request)
-{
-    $user = $request->user()->load('roles');
-    $permissions = $user->getAllPermissions()->pluck('name');
+    {
+        $user = $request->user()->load('roles');
+        $permissions = $user->getAllPermissions()->pluck('name');
 
-    return response()->json([
-        'user'        => $user,
-        'permissions' => $permissions,
-    ]);
-}
+        return response()->json([
+            'user'        => $user,
+            'permissions' => $permissions,
+        ]);
+    }
 
     // Logout
     public function logout(Request $request)
@@ -100,5 +110,65 @@ class AuthController extends Controller
         return response()->json([
             'message' => 'Logged out successfully',
         ]);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        // Don't reveal whether the email exists — respond the same either way.
+        if ($user) {
+            $otp = str_pad(random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+            $expiresInSeconds = 300; // 5 minutes
+
+            PasswordResetOtp::where('email', $request->email)->delete();
+            PasswordResetOtp::create([
+                'email'      => $request->email,
+                'otp'        => $otp,
+                'expires_at' => now()->addSeconds($expiresInSeconds),
+            ]);
+
+            Mail::to($request->email)->send(new PasswordResetOtpMail($otp));
+        }
+
+        return response()->json([
+            'message'    => 'If that email exists, a code has been sent.',
+            'expires_in' => 300,
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $request->validate([
+            'email'    => 'required|email',
+            'otp'      => 'required|digits:6',
+            'password' => 'required|min:8|confirmed', // expects password_confirmation
+        ]);
+
+        $record = PasswordResetOtp::where('email', $request->email)
+            ->where('otp', $request->otp)
+            ->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Invalid code.'], 422);
+        }
+
+        if ($record->expires_at->isPast()) {
+            return response()->json(['message' => 'This code has expired. Please request a new one.'], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+        if (!$user) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        $user->password = Hash::make($request->password);
+        $user->save();
+
+        PasswordResetOtp::where('email', $request->email)->delete();
+
+        return response()->json(['message' => 'Password reset successfully.']);
     }
 }

@@ -9,11 +9,14 @@ use App\Http\Controllers\ProductManagerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\StatsController;
 
 // ── Auth ──────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
+    Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
+    Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
 });
 
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
@@ -26,6 +29,8 @@ Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/subcategories', [CategoryController::class, 'subcategories']);
 Route::get('/products', [ProductController::class, 'browse']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
+
+Route::get('/stats', [StatsController::class, 'index']); // ← new public stats
 
 // ── SUPER ADMIN ROUTES ───────────────────────────────────────
 // These require permissions that only Super Admin has (or anyone with these specific permissions)
