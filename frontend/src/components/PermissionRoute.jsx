@@ -14,7 +14,7 @@ import { useAuth } from '../context/AuthContext';
 function PermissionRoute({ 
   children, 
   requiredPermissions = [], 
-  redirectTo = '/dashboard',
+  redirectTo = '/',
   requireAll = false 
 }) {
   const { token, loading, permissions } = useAuth();

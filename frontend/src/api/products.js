@@ -25,3 +25,16 @@ export const getUserProfile    = ()     => api.get('/profile');
 export const updateUserProfile = (data) => api.post('/profile', data, {
   headers: { 'Content-Type': 'multipart/form-data' }
 });
+
+// ── Homepage stats & photo search ──────────────────────────
+// TODO: build matching Laravel routes/controllers for these.
+// Until then, HomePage's .catch() fallback (SAMPLE_CATEGORIES/
+// SAMPLE_PRODUCTS/statsError) will handle these gracefully.
+
+
+// ── Homepage stats & photo search ──────────────────────────
+export const getStats = () => api.get('/stats');
+
+// TODO: build matching Laravel route/controller for image search
+export const searchByImage = () =>
+  Promise.reject(new Error('Image search not implemented yet'));

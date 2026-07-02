@@ -1,159 +1,212 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { browseProducts, getCategories } from '../api/products';
+import { browseProducts, getCategories, getStats, searchByImage } from '../api/products';
+import { logoutUser } from '../api/auth';
+import {
+  Recycle, Search, Menu, X, ChevronRight, ChevronDown, ArrowRight, Plus,
+  MapPin, Star, Shield, Tag, Chat, Users, CheckCircle, List, Camera,
+  categoryIcon,
+} from '../components/icons';
 
-// ── Icons ──────────────────────────────────────────────────
-const icons = {
-  Electronics:    '💻',
-  'Mobile Devices': '📱',
-  Accessories:    '🔌',
-  Networking:     '🌐',
-  Appliances:     '🖨️',
-  Other:          '📦',
+// ── Fallback data — keeps the page looking great even if the API is down ──
+const SAMPLE_CATEGORIES = [
+  {
+    category_id: 'c1', name: 'Computer Components',
+    subcategories: [
+      { subcategory_id: 's1', sub_category_name: 'RAM' },
+      { subcategory_id: 's2', sub_category_name: 'Laptop Screens' },
+      { subcategory_id: 's3', sub_category_name: 'Motherboards' },
+      { subcategory_id: 's4', sub_category_name: 'Power Supplies' },
+      { subcategory_id: 's5', sub_category_name: 'Hard Drives' },
+      { subcategory_id: 's6', sub_category_name: 'Processors (CPU)' },
+    ],
+  },
+  { category_id: 'c2', name: 'Mobile Phone Parts',     subcategories: [] },
+  { category_id: 'c3', name: 'Networking & Accessories', subcategories: [] },
+  { category_id: 'c4', name: 'Office Equipment',       subcategories: [] },
+  { category_id: 'c5', name: 'Entertainment & Audio',  subcategories: [] },
+];
+
+const SAMPLE_PRODUCTS = [
+  { product_id: 'p1', title: '8GB DDR4 Laptop RAM', price: 85000,  condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Kikuubo'    } },
+  { product_id: 'p2', title: '15.6" LCD Screen',    price: 120000, condition: 'Good',           category: { name: 'Computer'  }, seller: { location: 'Nakawa'     } },
+  { product_id: 'p3', title: 'Dell Motherboard',    price: 150000, condition: 'Fair',           category: { name: 'Computer'  }, seller: { location: 'Ntinda'     } },
+  { product_id: 'p4', title: '500W Power Supply',   price: 65000,  condition: 'For Parts Only', category: { name: 'Accessory' }, seller: { location: 'Wandegeya'  } },
+  { product_id: 'p5', title: 'iPhone 11 LCD Screen',price: 95000,  condition: 'Good',           category: { name: 'Phone'     }, seller: { location: 'Kikuubo'    } },
+  { product_id: 'p6', title: '1TB External HDD',    price: 110000, condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Ntinda'     } },
+].map(p => ({ ...p, _sample: true }));
+
+const conditionStyle = (c = '') => {
+  const k = c.toLowerCase();
+  if (k.includes('excellent')) return 'bg-green-50 text-green-700';
+  if (k.includes('good'))      return 'bg-blue-50 text-blue-700';
+  if (k.includes('fair'))      return 'bg-amber-50 text-amber-700';
+  return 'bg-gray-100 text-gray-500'; // parts only / unknown
 };
 
-// ── Navbar ─────────────────────────────────────────────────
-function Navbar({ searchQuery, onSearch }) {
+// ── Navbar ────────────────────────────────────────────────────
+function Navbar({ onAbout, onHome, onBrowse }) {
   const { user, token, role, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
 
   const handleLogout = async () => {
-    try { await import('../api/auth').then(m => m.logoutUser()); } catch {}
+    try { await logoutUser(); } catch {}
     logout();
+    setMenuOpen(false);
     navigate('/');
   };
 
-  const dashboardPath = () => {
-    switch(role) {
-      case 'Super-Admin':     return '/admin';
-      case 'Admin':           return '/manager';
-      case 'Product-Manager': return '/workspace';
-      default:                return '/dashboard';
-    }
-  };
+  const dashboardPath = () => ({
+    'Super-Admin': '/admin', 'Admin': '/manager', 'Product-Manager': '/workspace',
+  }[role] || '/dashboard');
+
+  const sellTo = token ? '/dashboard/create' : '/login';
+
+  const NavLinks = ({ onClick }) => (
+    <>
+      <button onClick={() => { onClick?.(); onHome(); }}   className="nav-pill text-left">Home</button>
+      <button onClick={() => { onClick?.(); onBrowse(); }} className="nav-pill text-left">Browse</button>
+      <Link to={sellTo} onClick={onClick} className="nav-pill">Sell</Link>
+      <button onClick={() => { onClick?.(); onAbout(); }} className="nav-pill text-left">About</button>
+    </>
+  );
 
   return (
-    <nav className="bg-white border-b border-gray-100 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between gap-4">
+    <nav className="bg-[#0b2545] text-blue-100 sticky top-0 z-50 shadow-md">
+      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
         {/* Logo */}
         <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="text-2xl">♻️</span>
-          <span className="text-xl font-bold text-blue-700">E-Waste Mart</span>
+          <span className="grid place-items-center w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300">
+            <Recycle width={18} height={18} />
+          </span>
+          <span className="text-lg font-bold text-white tracking-tight">E-Waste Mart</span>
         </Link>
 
-        {/* Nav links */}
-        <div className="hidden md:flex items-center gap-6 text-sm font-medium text-gray-600">
-          <Link to="/"       className="hover:text-blue-600 transition">Home</Link>
-          <Link to="/browse" className="hover:text-blue-600 transition">Browse</Link>
-          {token && <Link to="/dashboard/sell" className="hover:text-blue-600 transition">Sell</Link>}
-          <Link to="/about"  className="hover:text-blue-600 transition">About</Link>
+        {/* Desktop links */}
+        <div className="hidden md:flex items-center gap-7 text-sm font-medium">
+          <NavLinks />
         </div>
 
-        {/* Auth buttons */}
-        <div className="flex items-center gap-3">
+        {/* Desktop auth */}
+        <div className="hidden md:flex items-center gap-3">
           {token ? (
             <>
-              <Link
-                to={dashboardPath()}
-                className="text-sm text-blue-600 font-medium hover:underline hidden md:block"
-              >
-                {user?.name?.split(' ')[0]}'s Dashboard
+              <Link to={dashboardPath()} className="text-sm text-blue-200 font-medium hover:text-white transition">
+                {user?.name?.split(' ')[0] || 'My'}'s Dashboard
               </Link>
-              <button
-                onClick={handleLogout}
-                className="text-sm border border-gray-200 text-gray-600 hover:bg-gray-50 px-4 py-2 rounded-xl transition"
-              >
+              <button onClick={handleLogout}
+                className="btn-lift text-sm border border-blue-300/40 text-blue-100 hover:bg-white/10 hover:border-blue-200 px-4 py-2 rounded-lg">
                 Logout
               </button>
             </>
           ) : (
             <>
-              <Link
-                to="/login"
-                className="text-sm border border-blue-600 text-blue-600 hover:bg-blue-50 px-4 py-2 rounded-xl transition font-medium"
-              >
+              <Link to="/login"
+                className="btn-lift text-sm border border-blue-300/50 text-white hover:bg-white/10 hover:border-white px-4 py-2 rounded-lg font-medium">
                 Login
               </Link>
-              <Link
-                to="/register"
-                className="text-sm bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl transition font-medium"
-              >
+              <Link to="/register"
+                className="btn-lift text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow-sm">
                 Sign Up
               </Link>
             </>
           )}
         </div>
+
+        {/* Mobile toggle */}
+        <button className="md:hidden text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+          {menuOpen ? <X /> : <Menu />}
+        </button>
       </div>
+
+      {/* Mobile menu */}
+      {menuOpen && (
+        <div className="md:hidden border-t border-white/10 px-4 py-4 flex flex-col gap-4 text-sm font-medium bg-[#0b2545]">
+          <NavLinks onClick={() => setMenuOpen(false)} />
+          <div className="border-t border-white/10 pt-4 flex flex-col gap-2">
+            {token ? (
+              <>
+                <Link to={dashboardPath()} onClick={() => setMenuOpen(false)}
+                  className="btn-lift bg-blue-600 hover:bg-blue-500 text-white text-center py-2.5 rounded-lg">Go to Dashboard</Link>
+                <button onClick={handleLogout}
+                  className="btn-lift border border-blue-300/40 text-blue-100 hover:bg-white/10 py-2.5 rounded-lg">Logout</button>
+              </>
+            ) : (
+              <>
+                <Link to="/login" onClick={() => setMenuOpen(false)}
+                  className="btn-lift border border-blue-300/50 text-white hover:bg-white/10 text-center py-2.5 rounded-lg">Login</Link>
+                <Link to="/register" onClick={() => setMenuOpen(false)}
+                  className="btn-lift bg-blue-600 hover:bg-blue-500 text-white text-center py-2.5 rounded-lg">Sign Up</Link>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
 
-// ── Product Card ───────────────────────────────────────────
+// ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
   const { token } = useAuth();
   const navigate  = useNavigate();
+  const [imgError, setImgError] = useState(false);
+  const Icon = categoryIcon(`${product.category?.name} ${product.title}`);
 
   const handleClick = () => {
-    if (!token) {
-      navigate('/login');
-    } else {
-      navigate(`/products/${product.product_id}`);
-    }
+    if (!token)            navigate('/login');
+    else if (product._sample) navigate('/dashboard/browse');
+    else                   navigate(`/dashboard/product/${product.product_id}`);
   };
 
+  const img = product.images?.[0]?.image_path;
+
   return (
-    <div
+    <button
       onClick={handleClick}
-      className="bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-md hover:border-blue-200 cursor-pointer transition group"
+      className="text-left bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-lg hover:border-blue-200 hover:-translate-y-0.5 cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-400"
     >
-      {/* Image placeholder */}
-      <div className="w-full h-36 bg-blue-50 rounded-xl mb-3 flex items-center justify-center overflow-hidden">
-        {product.images?.[0] ? (
-          <img
-            src={`http://localhost:8000/storage/${product.images[0].image_path}`}
-            alt={product.title}
-            className="w-full h-full object-cover rounded-xl"
-          />
+      {/* Icon / image tile */}
+      <div className="w-full h-28 bg-gradient-to-br from-blue-50 to-sky-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden text-blue-500">
+        {img && !imgError ? (
+          <img src={`http://localhost:8000/storage/${img}`} alt={product.title}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover rounded-xl" />
         ) : (
-          <span className="text-4xl opacity-40">📦</span>
+          <Icon width={40} height={40} className="opacity-80 group-hover:scale-110 transition-transform" />
         )}
       </div>
 
-      {/* Category badge */}
-      <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2 py-0.5 rounded-full">
-        {product.category?.name}
+      <span className="text-[11px] text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md">
+        {product.category?.name || 'Component'}
       </span>
 
-      {/* Title */}
-      <h3 className="font-semibold text-gray-800 text-sm mt-2 group-hover:text-blue-600 transition line-clamp-2">
+      <h3 className="font-semibold text-gray-800 text-sm mt-2 group-hover:text-blue-600 transition line-clamp-2 min-h-[2.5rem]">
         {product.title}
       </h3>
 
-      {/* Price */}
-      <p className="text-blue-700 font-bold text-base mt-1">
+      <p className="text-[#0b2545] font-bold text-base mt-1">
         UGX {Number(product.price).toLocaleString()}
       </p>
 
-      {/* Condition + Location */}
-      <div className="flex items-center justify-between mt-2">
-        <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
+      <div className="flex items-center justify-between mt-2 gap-2">
+        <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${conditionStyle(product.condition)}`}>
           {product.condition}
         </span>
-        <span className="text-xs text-gray-400 flex items-center gap-1">
-          📍 {product.seller?.location || 'Uganda'}
+        <span className="text-[11px] text-gray-400 flex items-center gap-1 truncate">
+          <MapPin width={12} height={12} /> {product.seller?.location || 'Uganda'}
         </span>
       </div>
-    </div>
+    </button>
   );
 }
 
-// ── Skeleton Loader ────────────────────────────────────────
 function ProductSkeleton() {
   return (
     <div className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse">
-      <div className="w-full h-36 bg-gray-100 rounded-xl mb-3" />
+      <div className="w-full h-28 bg-gray-100 rounded-xl mb-3" />
       <div className="h-3 bg-gray-100 rounded w-16 mb-2" />
       <div className="h-4 bg-gray-100 rounded w-3/4 mb-1" />
       <div className="h-4 bg-gray-100 rounded w-1/2" />
@@ -161,187 +214,383 @@ function ProductSkeleton() {
   );
 }
 
-// ── Main HomePage ──────────────────────────────────────────
+// Animated count-up for the live counters.
+function CountUp({ value, className }) {
+  const [display, setDisplay] = useState(0);
+  useEffect(() => {
+    let raf;
+    const start = performance.now();
+    const duration = 1100;
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
+      setDisplay(Math.round(value * eased));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [value]);
+  const fmt = (n) => (n >= 1000 ? `${n.toLocaleString()}+` : n.toLocaleString());
+  return <span className={className}>{fmt(display)}</span>;
+}
+
+// Loading shimmer → animated real value (→ static fallback only on error).
+function StatNumber({ value, error, fallback }) {
+  const cls = 'font-bold text-gray-800 text-sm leading-none';
+  if (value != null) return <CountUp value={value} className={cls} />;
+  if (error) return <p className={cls}>{fallback}</p>;
+  return <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-pulse" />;
+}
+
+// ── HomePage ──────────────────────────────────────────────────
 export default function HomePage() {
   const [categories, setCategories]   = useState([]);
   const [products, setProducts]       = useState([]);
   const [loading, setLoading]         = useState(true);
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [query, setQuery]             = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
-  const [expandedCats, setExpandedCats]     = useState({});
-  const navigate = useNavigate();
+  const [expandedCats, setExpandedCats]     = useState({ c1: true });
+  const [stats, setStats]                   = useState(null);
+  const [statsError, setStatsError]         = useState(false);
+  const [imageSearch, setImageSearch]       = useState(null); // { labels: [] }
+  const [imageBusy, setImageBusy]           = useState(false);
+  const [imageError, setImageError]         = useState('');
   const { token } = useAuth();
+  const navigate     = useNavigate();
+  const listingsRef  = useRef(null);
+  const howRef       = useRef(null);
+  const featuredRef  = useRef([]);   // original featured listings, for restore
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
+    let alive = true;
     Promise.all([getCategories(), browseProducts({ per_page: 8 })])
       .then(([catRes, prodRes]) => {
-        setCategories(catRes.data.categories);
-        setProducts(prodRes.data.data || []);
+        if (!alive) return;
+        const cats = catRes.data.categories;
+        const prods = prodRes.data.data;
+        const list = prods?.length ? prods : SAMPLE_PRODUCTS;
+        setCategories(cats?.length ? cats : SAMPLE_CATEGORIES);
+        setProducts(list);
+        featuredRef.current = list;
       })
-      .finally(() => setLoading(false));
+      .catch(() => {
+        if (!alive) return;
+        setCategories(SAMPLE_CATEGORIES);
+        setProducts(SAMPLE_PRODUCTS);
+        featuredRef.current = SAMPLE_PRODUCTS;
+      })
+      .finally(() => alive && setLoading(false));
+
+    // Live counters — independent so a failure never blocks the listings.
+    getStats()
+      .then(res => { if (alive) setStats(res.data); })
+      .catch(() => { if (alive) setStatsError(true); });
+
+    return () => { alive = false; };
   }, []);
+
+  const scrollToListings = () =>
+    listingsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  // Browsing is open to everyone: guests explore the public listings right
+  // here on the homepage; signed-in users go to the full dashboard browser.
+  const goBrowse = () => {
+    if (token) { navigate('/dashboard/browse'); return; }
+    clearFilters();
+    scrollToListings();
+  };
 
   const handleSearch = (e) => {
     e.preventDefault();
-    navigate(`/browse?search=${searchQuery}`);
+    setQuery(searchInput.trim());
+    setActiveCategory(null);
+    scrollToListings();
   };
 
-  const handleCategoryClick = (catId) => {
-    setActiveCategory(catId);
-    navigate(`/browse?category_id=${catId}`);
+  const handleCategoryClick = (cat) => {
+    setActiveCategory(prev => (prev === cat.category_id ? null : cat.category_id));
+    setQuery('');
+    scrollToListings();
   };
 
-  const toggleExpand = (catId) => {
-    setExpandedCats(prev => ({ ...prev, [catId]: !prev[catId] }));
+  // ── Search by photo (Google Vision) ───────────────────────
+  const pickImage = () => { setImageError(''); fileInputRef.current?.click(); };
+
+  const handleImageChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';            // let the user re-pick the same file later
+    if (!file) return;
+    setImageBusy(true);
+    setImageError('');
+    setQuery(''); setSearchInput(''); setActiveCategory(null);
+    scrollToListings();
+    try {
+      const res = await searchByImage(file);
+      setProducts(res.data.products || []);
+      setImageSearch({ labels: res.data.labels || [] });
+    } catch (err) {
+      setImageError(
+        err.response?.data?.message ||
+        (err.response?.status === 503
+          ? 'Photo search isn’t enabled on the server yet.'
+          : 'Couldn’t search by that photo. Please try again.')
+      );
+      setImageSearch(null);
+      setProducts(featuredRef.current);
+    } finally {
+      setImageBusy(false);
+    }
   };
 
-  const displayedProducts = activeCategory
-    ? products.filter(p => p.category_id === activeCategory)
-    : products;
+  const toggleExpand = (id) => setExpandedCats(p => ({ ...p, [id]: !p[id] }));
+
+  const activeCatName = categories.find(c => c.category_id === activeCategory)?.name;
+
+  // In-place filtering for instant, working interactivity.
+  const displayedProducts = useMemo(() => {
+    let list = products;
+    if (activeCatName) {
+      const key = activeCatName.toLowerCase().split(' ')[0]; // e.g. "computer"
+      list = list.filter(p =>
+        (p.category?.name || '').toLowerCase().includes(key) ||
+        (activeCatName.toLowerCase().includes((p.category?.name || '').toLowerCase()))
+      );
+    }
+    if (query) {
+      const q = query.toLowerCase();
+      list = list.filter(p =>
+        p.title?.toLowerCase().includes(q) ||
+        p.category?.name?.toLowerCase().includes(q) ||
+        p.condition?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [products, activeCatName, query]);
+
+  const filterActive = Boolean(query || activeCategory || imageSearch);
+  const clearFilters = () => {
+    setQuery(''); setSearchInput(''); setActiveCategory(null);
+    setImageError('');
+    if (imageSearch) { setProducts(featuredRef.current); setImageSearch(null); }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans">
-      <Navbar searchQuery={searchQuery} onSearch={setSearchQuery} />
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+      <Navbar
+        onHome={scrollToTop}
+        onBrowse={goBrowse}
+        onAbout={() => howRef.current?.scrollIntoView({ behavior: 'smooth' })}
+      />
 
-      {/* ── Hero ──────────────────────────────────────────── */}
-      <section className="bg-gradient-to-br from-blue-700 via-blue-600 to-blue-500 text-white py-16 px-4">
-        <div className="max-w-3xl mx-auto text-center">
-          <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+      {/* ── Hero ────────────────────────────────────────────── */}
+      <section className="relative px-4 pt-16 pb-20 overflow-hidden bg-[#0b2545]">
+        {/* E-waste photo background (frontend/public/hero.webp) */}
+        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/hero.webp')" }} aria-hidden="true" />
+        {/* Navy overlay keeps the text readable over the busy photo */}
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0b2545]/92 via-[#0b2545]/88 to-[#0b2545]/96" aria-hidden="true" />
+        {/* Extra darkening focused behind the text for legibility */}
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_60%_55%_at_50%_42%,rgba(2,12,26,0.65),transparent_75%)]" aria-hidden="true" />
+
+        <div className="relative z-10 max-w-3xl mx-auto text-center">
+          <h1 className="text-3xl md:text-5xl font-extrabold leading-tight mb-4 text-white [text-shadow:0_2px_14px_rgba(0,0,0,0.75)]">
             Give Old Electronics a Second Life
           </h1>
-          <p className="text-blue-100 text-lg mb-8">
-            Buy & sell used components — RAM, screens, motherboards, and more.
+          <p className="text-blue-50 text-base md:text-lg mb-8 [text-shadow:0_1px_8px_rgba(0,0,0,0.7)]">
+            Buy &amp; sell used components — RAM, screens, motherboards, and more.
           </p>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Search for a part..."
-              className="flex-1 rounded-xl px-5 py-3 text-gray-800 text-sm focus:outline-none focus:ring-2 focus:ring-white shadow"
-            />
-            <button
-              type="submit"
-              className="bg-white text-blue-700 hover:bg-blue-50 px-6 py-3 rounded-xl font-semibold text-sm transition shadow"
-            >
-              🔍 Search
+            <div className="flex-1 relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width={18} height={18} />
+              <input
+                type="text" value={searchInput}
+                onChange={e => setSearchInput(e.target.value)}
+                placeholder="Search for a part..."
+                className="w-full rounded-xl pl-11 pr-12 py-3.5 text-gray-800 text-sm bg-white shadow-sm border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+              {/* Search by photo */}
+              <button type="button" onClick={pickImage} disabled={imageBusy}
+                title="Search by photo — snap or upload a picture of the part"
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition disabled:opacity-50">
+                <Camera width={20} height={20} />
+              </button>
+              <input
+                ref={fileInputRef} type="file" accept="image/*" capture="environment"
+                onChange={handleImageChange} className="hidden"
+              />
+            </div>
+            <button type="submit"
+              className="btn-lift bg-blue-600 text-white hover:bg-blue-700 px-6 py-3.5 rounded-xl font-semibold text-sm shadow-sm flex items-center gap-2">
+              <Search width={16} height={16} /> <span className="hidden sm:inline">Search</span>
             </button>
           </form>
+          <div className="mt-4 flex justify-center">
+                 <span className="inline-flex items-center gap-1.5 bg-blue-900/20 backdrop-blur-sm border border-blue-700/40 text-blue-100 text-xs px-3.5 py-1.5 rounded-full [text-shadow:0_1px_4px_rgba(0,0,0,0.5)]">
+  <Camera width={13} height={13} /> Tip: tap the camera to search using a photo of the part
+</span>
+          </div>
         </div>
       </section>
 
-      {/* ── Main Content ──────────────────────────────────── */}
+      {/* ── Main 3-column content ───────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6">
 
-        {/* ── Left Sidebar — Categories ──────────────────── */}
-        <aside className="w-56 shrink-0 hidden lg:block">
+        {/* Left — Categories */}
+        <aside className="w-60 shrink-0 hidden lg:block">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-20">
             <h2 className="font-bold text-gray-700 text-sm mb-4 flex items-center gap-2">
-              <span>☰</span> Browse Categories
+              <List width={16} height={16} className="text-blue-600" /> Browse Categories
             </h2>
             <ul className="space-y-1">
-              {categories.map(cat => (
-                <li key={cat.category_id}>
-                  <div
-                    className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer text-sm transition
-                      ${activeCategory === cat.category_id
-                        ? 'bg-blue-600 text-white font-semibold'
-                        : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'
-                      }`}
-                    onClick={() => handleCategoryClick(cat.category_id)}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span>{icons[cat.name] || '📦'}</span>
-                      {cat.name}
-                    </span>
-                    {cat.subcategories?.length > 0 && (
-                      <button
-                        onClick={e => { e.stopPropagation(); toggleExpand(cat.category_id); }}
-                        className="text-xs"
-                      >
-                        {expandedCats[cat.category_id] ? '▾' : '›'}
-                      </button>
-                    )}
-                  </div>
-
-                  {/* Subcategories */}
-                  {expandedCats[cat.category_id] && cat.subcategories?.length > 0 && (
-                    <ul className="ml-6 mt-1 space-y-0.5">
-                      {cat.subcategories.map(sub => (
-                        <li
-                          key={sub.subcategory_id}
-                          className="text-xs text-gray-500 hover:text-blue-600 cursor-pointer py-1 flex items-center gap-1.5"
-                          onClick={() => navigate(`/browse?subcategory_id=${sub.subcategory_id}`)}
+              {categories.map(cat => {
+                const Icon = categoryIcon(cat.name);
+                const active = activeCategory === cat.category_id;
+                return (
+                  <li key={cat.category_id}>
+                    <div
+                      className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer text-sm transition
+                        ${active ? 'bg-blue-600 text-white font-semibold shadow-sm'
+                                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
+                      onClick={() => handleCategoryClick(cat)}
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <Icon width={17} height={17} className={active ? 'text-white' : 'text-blue-500'} />
+                        {cat.name}
+                      </span>
+                      {cat.subcategories?.length > 0 && (
+                        <button
+                          onClick={e => { e.stopPropagation(); toggleExpand(cat.category_id); }}
+                          className="shrink-0"
                         >
-                          <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />
-                          {sub.sub_category_name}
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </li>
-              ))}
+                          {expandedCats[cat.category_id]
+                            ? <ChevronDown width={15} height={15} />
+                            : <ChevronRight width={15} height={15} />}
+                        </button>
+                      )}
+                    </div>
+
+                    {expandedCats[cat.category_id] && cat.subcategories?.length > 0 && (
+                      <ul className="ml-4 mt-1 space-y-0.5 border-l border-gray-100 pl-3">
+                        {cat.subcategories.map(sub => (
+                          <li key={sub.subcategory_id}
+                            className="text-xs text-gray-500 hover:text-blue-600 cursor-pointer py-1.5 flex items-center gap-2"
+                            onClick={() => { setSearchInput(sub.sub_category_name); setQuery(sub.sub_category_name); setActiveCategory(null); scrollToListings(); }}
+                          >
+                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />
+                            {sub.sub_category_name}
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })}
             </ul>
-            <Link
-              to="/browse"
-              className="mt-4 flex items-center gap-1 text-blue-600 text-xs font-medium hover:underline"
-            >
-              ➕ View All Categories
-            </Link>
+            <button onClick={goBrowse}
+              className="mt-4 flex items-center gap-1.5 text-blue-600 text-xs font-semibold hover:underline">
+              <Plus width={14} height={14} /> View All Categories
+            </button>
           </div>
         </aside>
 
-        {/* ── Center — Listings ──────────────────────────── */}
-        <main className="flex-1 min-w-0">
-          {/* Header */}
-          <div className="flex items-center justify-between mb-5">
+        {/* Center — Listings */}
+        <main ref={listingsRef} className="flex-1 min-w-0 scroll-mt-20">
+          <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
             <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
-              ⭐ Featured Listings
+              <Star width={18} height={18} className="text-amber-400" />
+              {filterActive ? 'Results' : 'Featured Listings'}
             </h2>
-            <Link to="/browse" className="text-blue-600 text-sm hover:underline font-medium">
-              View all →
-            </Link>
+            <button onClick={goBrowse}
+              className="text-blue-600 text-sm hover:underline font-medium flex items-center gap-1">
+              View all <ArrowRight width={14} height={14} />
+            </button>
           </div>
 
-          {/* Grid */}
-          {loading ? (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {Array(8).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
+          {/* Photo-search error */}
+          {imageError && (
+            <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl flex items-center justify-between gap-3">
+              <span className="flex items-center gap-2"><Camera width={16} height={16} /> {imageError}</span>
+              <button onClick={() => setImageError('')} className="hover:text-amber-900"><X width={15} height={15} /></button>
             </div>
-          ) : displayedProducts.length === 0 ? (
-            <div className="text-center py-20 bg-white rounded-2xl border border-gray-100">
-              <div className="text-5xl mb-4">📭</div>
-              <h3 className="font-bold text-gray-700 mb-2">No listings yet</h3>
-              <p className="text-gray-400 text-sm mb-4">Be the first to post an e-waste component</p>
-              {token && (
-                <Link
-                  to="/dashboard/sell"
-                  className="bg-blue-600 text-white px-6 py-2 rounded-xl text-sm font-medium hover:bg-blue-700 transition"
-                >
-                  Post a Listing
-                </Link>
+          )}
+
+          {/* Photo-search result banner */}
+          {imageSearch && !imageBusy && (
+            <div className="mb-4 flex items-center gap-2 text-sm flex-wrap">
+              <span className="inline-flex items-center gap-1.5 text-blue-700 font-medium">
+                <Camera width={15} height={15} /> Matches for your photo
+              </span>
+              {imageSearch.labels?.slice(0, 4).map(l => (
+                <span key={l} className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs capitalize">{l}</span>
+              ))}
+              <button onClick={clearFilters} className="inline-flex items-center gap-1 text-gray-400 hover:text-blue-700 text-xs">
+                <X width={13} height={13} /> clear
+              </button>
+            </div>
+          )}
+
+          {/* Text/category filter chip */}
+          {!imageSearch && (query || activeCategory) && (
+            <div className="mb-4 flex items-center gap-2 text-sm">
+              <span className="text-gray-500">Filtering by</span>
+              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+                {activeCatName || `"${query}"`}
+                <button onClick={clearFilters} className="hover:text-blue-900"><X width={13} height={13} /></button>
+              </span>
+              <span className="text-gray-400">· {displayedProducts.length} item{displayedProducts.length !== 1 ? 's' : ''}</span>
+            </div>
+          )}
+
+          {loading || imageBusy ? (
+            <>
+              {imageBusy && (
+                <p className="text-sm text-blue-600 mb-4 flex items-center gap-2">
+                  <Camera width={16} height={16} className="animate-pulse" /> Analyzing your photo…
+                </p>
               )}
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                {Array(6).fill(0).map((_, i) => <ProductSkeleton key={i} />)}
+              </div>
+            </>
+          ) : displayedProducts.length === 0 ? (
+            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+              <div className="grid place-items-center w-14 h-14 rounded-2xl bg-gray-50 mx-auto mb-4 text-gray-300">
+                {imageSearch ? <Camera width={26} height={26} /> : <Search width={26} height={26} />}
+              </div>
+              <h3 className="font-bold text-gray-700 mb-1">
+                {imageSearch ? 'No listings match your photo' : 'No matching listings'}
+              </h3>
+              <p className="text-gray-400 text-sm mb-4">
+                {imageSearch
+                  ? 'We couldn’t find a related part in stock yet. Try another angle or a clearer shot.'
+                  : 'Try a different search or category.'}
+              </p>
+              <button onClick={clearFilters}
+                className="btn-lift bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700">
+                {imageSearch ? 'Back to featured' : 'Clear filters'}
+              </button>
             </div>
           ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-4">
-              {displayedProducts.map(p => (
-                <ProductCard key={p.product_id} product={p} />
-              ))}
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {displayedProducts.map(p => <ProductCard key={p.product_id} product={p} />)}
             </div>
           )}
         </main>
 
-        {/* ── Right Sidebar — Trust signals ──────────────── */}
-        <aside className="w-52 shrink-0 hidden xl:block">
+        {/* Right — Trust signals */}
+        <aside className="w-56 shrink-0 hidden xl:block">
           <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20 space-y-4">
             {[
-              { icon: '🛡️', title: 'Verified Listings',   desc: 'All reviewed for quality'           },
-              { icon: '💰', title: 'Fair Pricing',         desc: 'Transparent & competitive'          },
-              { icon: '♻️', title: 'Circular Economy',     desc: 'Reduce e-waste together'            },
-              { icon: '💬', title: 'Direct Contact',       desc: 'Message sellers instantly'          },
-            ].map(({ icon, title, desc }) => (
+              { Icon: Shield, color: 'text-blue-600', title: 'Verified Listings', desc: 'All reviewed for quality' },
+              { Icon: Tag,    color: 'text-green-600', title: 'Fair Pricing',     desc: 'Transparent & competitive' },
+              { Icon: Recycle,color: 'text-emerald-600', title: 'Circular Economy', desc: 'Reduce e-waste together' },
+              { Icon: Chat,   color: 'text-sky-600',  title: 'Direct Contact',    desc: 'Message sellers instantly' },
+            ].map(({ Icon, color, title, desc }) => (
               <div key={title} className="flex items-start gap-3">
-                <span className="text-xl shrink-0">{icon}</span>
+                <Icon width={20} height={20} className={`shrink-0 mt-0.5 ${color}`} />
                 <div>
                   <p className="font-semibold text-gray-800 text-xs">{title}</p>
                   <p className="text-gray-400 text-xs">{desc}</p>
@@ -349,28 +598,26 @@ export default function HomePage() {
               </div>
             ))}
 
-            <div className="border-t border-gray-100 pt-4 space-y-2">
-              <div className="flex items-center gap-2">
-                <span className="text-blue-600 text-lg">👥</span>
+            <div className="border-t border-gray-100 pt-4 space-y-3">
+              <div className="flex items-center gap-2.5">
+                <Users width={20} height={20} className="text-blue-600" />
                 <div>
-                  <p className="font-bold text-gray-800 text-sm">1,200+</p>
-                  <p className="text-gray-400 text-xs">Active users</p>
+                  <StatNumber value={stats?.active_users} error={statsError} fallback="1,200+" />
+                  <p className="text-gray-400 text-xs mt-0.5">Active users</p>
                 </div>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-green-600 text-lg">✅</span>
+              <div className="flex items-center gap-2.5">
+                <CheckCircle width={20} height={20} className="text-green-600" />
                 <div>
-                  <p className="font-bold text-gray-800 text-sm">450+</p>
-                  <p className="text-gray-400 text-xs">Listings posted this week</p>
+                  <StatNumber value={stats?.listings_this_week} error={statsError} fallback="450+" />
+                  <p className="text-gray-400 text-xs mt-0.5">Listings this week</p>
                 </div>
               </div>
             </div>
 
             {!token && (
-              <Link
-                to="/register"
-                className="block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2.5 rounded-xl text-xs font-semibold transition mt-2"
-              >
+              <Link to="/register"
+                className="btn-lift block w-full bg-blue-600 hover:bg-blue-700 text-white text-center py-2.5 rounded-xl text-xs font-semibold mt-2">
                 Join Free Today
               </Link>
             )}
@@ -378,20 +625,20 @@ export default function HomePage() {
         </aside>
       </div>
 
-      {/* ── How It Works ──────────────────────────────────── */}
-      <section className="bg-white border-t border-gray-100 py-14 px-4 mt-4">
+      {/* ── How It Works ────────────────────────────────────── */}
+      <section ref={howRef} className="bg-white border-t border-gray-100 py-14 px-4 mt-4 scroll-mt-16">
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
           <p className="text-gray-500 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { step: '1', icon: '📋', title: 'List Your Parts',   desc: 'Post your e-waste components with photos, condition, and price.'           },
-              { step: '2', icon: '🔍', title: 'Browse & Search',   desc: 'Find exactly what you need by category, condition, or location.'            },
-              { step: '3', icon: '🤝', title: 'Connect & Trade',   desc: 'Message sellers directly and arrange a pickup or delivery.'                 },
-            ].map(({ step, icon, title, desc }) => (
+              { step: '1', Icon: Tag,    title: 'List Your Parts', desc: 'Post your e-waste components with photos, condition, and price.' },
+              { step: '2', Icon: Search, title: 'Browse & Search', desc: 'Find exactly what you need by category, condition, or location.' },
+              { step: '3', Icon: Chat,   title: 'Connect & Trade', desc: 'Message sellers directly and arrange a pickup or delivery.' },
+            ].map(({ step, Icon, title, desc }) => (
               <div key={step} className="text-center">
-                <div className="w-14 h-14 rounded-2xl bg-blue-50 flex items-center justify-center text-2xl mx-auto mb-4">
-                  {icon}
+                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4">
+                  <Icon width={24} height={24} />
                 </div>
                 <div className="text-xs font-bold text-blue-600 mb-1">STEP {step}</div>
                 <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
@@ -402,61 +649,57 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ── CTA Banner ────────────────────────────────────── */}
+      {/* ── CTA ─────────────────────────────────────────────── */}
       {!token && (
-        <section className="bg-gradient-to-r from-blue-700 to-blue-500 py-14 px-4 text-center text-white">
-          <h2 className="text-3xl font-bold mb-3">Ready to get started?</h2>
+        <section className="bg-gradient-to-r from-[#0b2545] to-blue-600 py-14 px-4 text-center text-white">
+          <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to get started?</h2>
           <p className="text-blue-100 mb-8 text-sm">
             Join thousands of Ugandans buying and selling e-waste components
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
-            <Link
-              to="/register"
-              className="bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm transition"
-            >
+            <Link to="/register"
+              className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
               Create Free Account
             </Link>
-            <Link
-              to="/browse"
-              className="border border-white text-white hover:bg-blue-600 px-8 py-3 rounded-xl font-semibold text-sm transition"
-            >
-              Browse Listings
+            <Link to="/login"
+              className="btn-lift border border-white/70 text-white hover:bg-white/10 hover:border-white px-8 py-3 rounded-xl font-semibold text-sm">
+              Sign In
             </Link>
           </div>
         </section>
       )}
 
-      {/* ── Footer ────────────────────────────────────────── */}
-      <footer className="bg-gray-900 text-gray-400 py-10 px-4 text-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-6">
-          <div>
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-xl">♻️</span>
-              <span className="font-bold text-white">E-Waste Mart</span>
+      {/* ── Footer ──────────────────────────────────────────── */}
+      <footer className="bg-[#0b2545] text-blue-200/70 py-10 px-4 text-sm">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8">
+          <div className="max-w-xs">
+            <div className="flex items-center gap-2 mb-3 text-white">
+              <Recycle width={20} height={20} className="text-blue-300" />
+              <span className="font-bold">E-Waste Mart</span>
             </div>
-            <p className="text-xs max-w-xs">
+            <p className="text-xs leading-relaxed">
               Empowering circular economy in Uganda through responsible e-waste trading.
             </p>
           </div>
           <div className="flex gap-12">
             <div>
-              <p className="font-semibold text-white mb-2 text-xs">Platform</p>
-              <ul className="space-y-1 text-xs">
-                <li><Link to="/browse" className="hover:text-white transition">Browse</Link></li>
-                <li><Link to="/login"  className="hover:text-white transition">Login</Link></li>
+              <p className="font-semibold text-white mb-3 text-xs">Platform</p>
+              <ul className="space-y-2 text-xs">
+                <li><button onClick={goBrowse} className="hover:text-white transition">Browse</button></li>
+                <li><Link to="/login" className="hover:text-white transition">Login</Link></li>
                 <li><Link to="/register" className="hover:text-white transition">Register</Link></li>
               </ul>
             </div>
             <div>
-              <p className="font-semibold text-white mb-2 text-xs">Company</p>
-              <ul className="space-y-1 text-xs">
-                <li><Link to="/about"   className="hover:text-white transition">About</Link></li>
-                <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
+              <p className="font-semibold text-white mb-3 text-xs">Company</p>
+              <ul className="space-y-2 text-xs">
+                <li><button onClick={() => howRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition">About</button></li>
+                <li><a href="mailto:hello@ewastemart.ug" className="hover:text-white transition">Contact</a></li>
               </ul>
             </div>
           </div>
         </div>
-        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-800 text-center text-xs">
+        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/10 text-center text-xs">
           © 2026 E-Waste Mart — Empowering circular economy in Uganda
         </div>
       </footer>

@@ -66,6 +66,8 @@ import PermissionsContent from './components/app-content/PermissionsContent';
 import AuditContent from './components/app-content/AuditContent';
 import ProductManagersContent from './components/app-content/ProductManagersContent';
 
+import ForgotPasswordPage from './pages/ForgotPasswordPage';
+
 // ─── Route Guards ────────────────────────────────────────────
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
@@ -89,6 +91,7 @@ function App() {
         <Route path="/" element={<HomePage />} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
         {/* ─── Super Admin ──────────────────────────────────── */}
         <Route path="/admin" element={
@@ -313,6 +316,8 @@ function App() {
 
           {/* ── Dashboard ── */}
           <Route path="dashboard-view"   element={<AppPage />} />
+
+          
 
           {/* ── Fallback for any unmapped permission ── */}
           <Route path=":permission" element={
