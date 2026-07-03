@@ -3,6 +3,8 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
+import ThemeToggle from '../components/ThemeToggle';
+import QuickSearch from '../components/QuickSearch';
 
 const navItems = [
   { path: '/workspace',               icon: '📊', label: 'Overview',       group: 'main',  badge: null       },
@@ -45,7 +47,7 @@ export default function WorkspaceLayout({ children }) {
     : null;
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
 
       {/* Sidebar */}
       <aside className={`
@@ -192,18 +194,22 @@ export default function WorkspaceLayout({ children }) {
       <div className={`flex-1 flex flex-col min-h-screen ${collapsed ? 'ml-[70px]' : 'ml-[240px]'} transition-all duration-200`}>
 
         {/* Top bar */}
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400">Workspace</span>
-            <span className="text-gray-300">/</span>
-            <span className="font-semibold text-gray-700">{currentLabel}</span>
+            <span className="text-gray-400 dark:text-gray-500">Workspace</span>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-200">{currentLabel}</span>
           </div>
 
           <div className="flex items-center gap-3">
+            <QuickSearch items={navItems} />
+
+            <ThemeToggle />
+
             {/* Message bell */}
             <Link
               to="/workspace/messages"
-              className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
+              className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
               <span className="text-base">💬</span>
               {msgCount > 0 && (
@@ -216,7 +222,7 @@ export default function WorkspaceLayout({ children }) {
             {/* Notification bell */}
             <Link
               to="/workspace/notifications"
-              className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
+              className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
               <span className="text-base">🔔</span>
               {notifCount > 0 && (
@@ -226,12 +232,12 @@ export default function WorkspaceLayout({ children }) {
               )}
             </Link>
 
-            <div className="w-px h-6 bg-gray-200" />
+            <div className="w-px h-6 bg-gray-200 dark:bg-slate-700" />
 
             {/* User pill */}
             <Link
               to="/workspace/profile"
-              className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 hover:bg-gray-100 transition"
+              className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
               <div className="w-6 h-6 rounded-lg overflow-hidden shrink-0">
                 {avatarUrl ? (
@@ -243,8 +249,8 @@ export default function WorkspaceLayout({ children }) {
                 )}
               </div>
               <div className="hidden md:block">
-                <p className="text-xs font-semibold text-gray-700 leading-none">{user?.name?.split(' ')[0]}</p>
-                <p className="text-xs text-teal-600">Product Manager</p>
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">{user?.name?.split(' ')[0]}</p>
+                <p className="text-xs text-teal-600 dark:text-teal-400">Product Manager</p>
               </div>
             </Link>
           </div>
@@ -252,9 +258,9 @@ export default function WorkspaceLayout({ children }) {
 
         <main className="flex-1 p-6">{children}</main>
 
-        <footer className="border-t border-gray-100 bg-white px-6 py-3 flex items-center justify-between">
-          <p className="text-xs text-gray-400">© 2026 E-Waste Mart</p>
-          <p className="text-xs text-gray-400">Product Manager Workspace</p>
+        <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex items-center justify-between">
+          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Product Manager Workspace</p>
         </footer>
       </div>
     </div>

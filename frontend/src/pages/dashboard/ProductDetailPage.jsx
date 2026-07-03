@@ -54,12 +54,12 @@ export default function ProductDetailPage() {
     <DashboardLayout>
       <div className="max-w-4xl mx-auto animate-pulse">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          <div className="aspect-square bg-gray-100 rounded-2xl" />
+          <div className="aspect-square bg-gray-100 dark:bg-slate-800 rounded-2xl" />
           <div className="space-y-4">
-            <div className="h-6 bg-gray-100 rounded w-3/4" />
-            <div className="h-8 bg-gray-100 rounded w-1/3" />
-            <div className="h-4 bg-gray-100 rounded w-full" />
-            <div className="h-4 bg-gray-100 rounded w-2/3" />
+            <div className="h-6 bg-gray-100 dark:bg-slate-800 rounded w-3/4" />
+            <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-1/3" />
+            <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-full" />
+            <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-2/3" />
           </div>
         </div>
       </div>
@@ -70,8 +70,8 @@ export default function ProductDetailPage() {
     <DashboardLayout>
       <div className="text-center py-20">
         <div className="text-5xl mb-4">🔍</div>
-        <h3 className="font-bold text-gray-700 mb-2">Listing not found</h3>
-        <button onClick={() => navigate(-1)} className="text-blue-600 hover:underline text-sm">Go back</button>
+        <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">Listing not found</h3>
+        <button onClick={() => navigate(-1)} className="text-blue-600 dark:text-blue-400 hover:underline text-sm">Go back</button>
       </div>
     </DashboardLayout>
   );
@@ -88,7 +88,7 @@ export default function ProductDetailPage() {
         {/* Back */}
         <button
           onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-6 transition"
+          className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 text-sm mb-6 transition"
         >
           ← Back to listings
         </button>
@@ -97,7 +97,7 @@ export default function ProductDetailPage() {
 
           {/* Images with carousel */}
           <div>
-            <div className="aspect-square rounded-2xl overflow-hidden bg-blue-50 flex items-center justify-center mb-3 border border-gray-100 relative group">
+            <div className="aspect-square rounded-2xl overflow-hidden bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center mb-3 border border-gray-100 dark:border-slate-800 relative group">
               {images.length > 0 ? (
                 <>
                   <img
@@ -128,7 +128,7 @@ export default function ProductDetailPage() {
                           <button
                             key={i}
                             onClick={() => setActiveImg(i)}
-                            className={`w-2 h-2 rounded-full transition ${activeImg === i ? 'bg-white' : 'bg-white/50'}`}
+                            className={`w-2 h-2 rounded-full transition ${activeImg === i ? 'bg-white dark:bg-slate-900' : 'bg-white/50'}`}
                           />
                         ))}
                       </div>
@@ -151,7 +151,7 @@ export default function ProductDetailPage() {
                   <button
                     key={i}
                     onClick={() => setActiveImg(i)}
-                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition shrink-0 ${activeImg === i ? 'border-blue-500' : 'border-gray-200 opacity-60 hover:opacity-100'}`}
+                    className={`w-14 h-14 rounded-xl overflow-hidden border-2 transition shrink-0 ${activeImg === i ? 'border-blue-500' : 'border-gray-200 dark:border-slate-700 opacity-60 hover:opacity-100'}`}
                   >
                     <img
                       src={img.image_url}  // 🔥 FIXED: use image_url instead of manual path
@@ -170,56 +170,56 @@ export default function ProductDetailPage() {
 
           {/* Details - unchanged */}
           <div>
-            <span className="text-xs text-blue-600 font-medium bg-blue-50 px-2.5 py-1 rounded-full">
+            <span className="text-xs text-blue-600 dark:text-blue-400 font-medium bg-blue-50 dark:bg-blue-950/40 px-2.5 py-1 rounded-full">
               {product.category?.name}
             </span>
 
-            <h1 className="text-2xl font-bold text-gray-800 mt-3 mb-2">{product.title}</h1>
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mt-3 mb-2">{product.title}</h1>
 
-            <p className="text-3xl font-bold text-blue-700 mb-4">
+            <p className="text-3xl font-bold text-blue-700 dark:text-blue-400 mb-4">
               UGX {Number(product.price).toLocaleString()}
             </p>
 
             <div className="flex flex-wrap gap-2 mb-5">
-              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium">
+              <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 text-xs px-3 py-1.5 rounded-full font-medium">
                 Condition: {product.condition}
               </span>
-              <span className="bg-gray-100 text-gray-700 text-xs px-3 py-1.5 rounded-full font-medium">
+              <span className="bg-gray-100 dark:bg-slate-800 text-gray-700 dark:text-gray-200 text-xs px-3 py-1.5 rounded-full font-medium">
                 {product.subCategory?.sub_category_name}
               </span>
             </div>
 
             <div className="mb-5">
-              <h3 className="font-semibold text-gray-700 mb-2 text-sm">Description</h3>
-              <p className="text-gray-600 text-sm leading-relaxed">{product.description}</p>
+              <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-2 text-sm">Description</h3>
+              <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed">{product.description}</p>
             </div>
 
             {product.specification && (
               <div className="mb-5">
-                <h3 className="font-semibold text-gray-700 mb-2 text-sm">Specifications</h3>
-                <p className="text-gray-600 text-sm leading-relaxed bg-gray-50 rounded-xl p-3">
+                <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-2 text-sm">Specifications</h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3">
                   {product.specification}
                 </p>
               </div>
             )}
 
-            <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-              <h3 className="font-semibold text-gray-700 mb-3 text-sm uppercase tracking-wide">Seller Info</h3>
+            <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-4 border border-slate-100">
+              <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3 text-sm uppercase tracking-wide">Seller Info</h3>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">
                   {product.seller?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800">{product.seller?.name}</p>
-                  <p className="text-xs text-gray-400">📍 {product.seller?.location || 'Uganda'}</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-100">{product.seller?.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">📍 {product.seller?.location || 'Uganda'}</p>
                 </div>
               </div>
               {!isSeller && (
                 <div className="space-y-1.5">
                   {product.seller?.phone && (
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400">📞</span>
-                      <a href={`tel:${product.seller.phone}`} className="text-blue-600 font-medium hover:underline">
+                      <span className="text-gray-400 dark:text-gray-500">📞</span>
+                      <a href={`tel:${product.seller.phone}`} className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
                         {product.seller.phone}
                       </a>
                     </div>
@@ -232,19 +232,19 @@ export default function ProductDetailPage() {
 
         {/* Message seller - unchanged */}
         {showMessageSection ? (
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 mb-4">Message the Seller</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4">Message the Seller</h3>
 
             {sent ? (
-              <div className="bg-green-50 border border-green-200 rounded-xl px-4 py-4 flex items-center gap-3">
+              <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 rounded-xl px-4 py-4 flex items-center gap-3">
                 <span className="text-2xl">✅</span>
                 <div>
-                  <p className="font-semibold text-green-700">Message sent!</p>
-                  <p className="text-green-600 text-sm">The seller will get back to you soon.</p>
+                  <p className="font-semibold text-green-700 dark:text-green-400">Message sent!</p>
+                  <p className="text-green-600 dark:text-green-400 text-sm">The seller will get back to you soon.</p>
                 </div>
                 <button
                   onClick={() => setSent(false)}
-                  className="ml-auto text-green-600 text-sm hover:underline"
+                  className="ml-auto text-green-600 dark:text-green-400 text-sm hover:underline"
                 >
                   Send another
                 </button>
@@ -252,7 +252,7 @@ export default function ProductDetailPage() {
             ) : (
               <form onSubmit={handleSendMessage} className="space-y-4">
                 {msgError && (
-                  <div className="bg-red-50 border border-red-200 text-red-600 text-sm px-4 py-3 rounded-xl">
+                  <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-600 dark:text-red-400 text-sm px-4 py-3 rounded-xl">
                     {msgError}
                   </div>
                 )}
@@ -262,7 +262,7 @@ export default function ProductDetailPage() {
                   rows={4}
                   required
                   placeholder={`Hi, I'm interested in "${product.title}". Is it still available?`}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                 />
                 <button
                   type="submit"
@@ -280,8 +280,8 @@ export default function ProductDetailPage() {
             )}
           </div>
         ) : !isSeller && !canSendMessage ? (
-          <div className="bg-gray-50 rounded-2xl border border-gray-200 p-6 text-center">
-            <p className="text-gray-400 text-sm">You don't have permission to send messages.</p>
+          <div className="bg-gray-50 dark:bg-slate-800/60 rounded-2xl border border-gray-200 dark:border-slate-700 p-6 text-center">
+            <p className="text-gray-400 dark:text-gray-500 text-sm">You don't have permission to send messages.</p>
           </div>
         ) : null}
       </div>

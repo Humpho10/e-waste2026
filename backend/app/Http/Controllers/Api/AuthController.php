@@ -12,6 +12,8 @@ use Spatie\Permission\PermissionRegistrar;
 use App\Models\PasswordResetOtp;
 use App\Mail\PasswordResetOtpMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -83,6 +85,96 @@ class AuthController extends Controller
 
         return response()->json([
             'message'     => 'Login successful',
+            'user'        => $user,
+            'token'       => $token,
+            'role'        => $role,
+            'permissions' => $permissions,
+        ]);
+    }
+
+    // Sign in / sign up with a Google Identity Services credential (ID token).
+    // The frontend posts { credential } after the user picks an account in
+    // the Google button — we verify it server-side before trusting anything.
+    public function google(Request $request)
+    {
+        $request->validate([
+            'credential' => 'required|string',
+        ]);
+
+        $clientId = config('services.google.client_id');
+
+        if (!$clientId) {
+            return response()->json([
+                'message' => 'Google sign-in is not configured on the server yet.',
+            ], 503);
+        }
+
+        // Verify the ID token with Google. This checks the signature, audience
+        // and expiry for us — no extra package required.
+        $verify = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $request->credential,
+        ]);
+
+        if (!$verify->ok()) {
+            return response()->json([
+                'message' => 'Your Google sign-in could not be verified. Please try again.',
+            ], 401);
+        }
+
+        $payload = $verify->json();
+
+        if (($payload['aud'] ?? null) !== $clientId) {
+            return response()->json([
+                'message' => 'This Google sign-in was issued for a different app.',
+            ], 401);
+        }
+
+        if (($payload['email_verified'] ?? 'false') !== 'true') {
+            return response()->json([
+                'message' => 'Your Google email address is not verified.',
+            ], 422);
+        }
+
+        $email = $payload['email'] ?? null;
+        $name  = $payload['name'] ?? explode('@', (string) $email)[0] ?? 'Google User';
+
+        if (!$email) {
+            return response()->json([
+                'message' => 'Google did not return an email address for this account.',
+            ], 422);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user) {
+            $user = User::create([
+                'name'              => $name,
+                'email'             => $email,
+                // Random password — this account only ever signs in via Google,
+                // but the column is required (and this keeps it unusable for
+                // normal login attempts).
+                'password'          => Hash::make(Str::random(32)),
+                'email_verified_at' => now(),
+                'is_active'         => true,
+            ]);
+
+            $user->assignRole('User');
+        }
+
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact support.',
+            ], 403);
+        }
+
+        $user->load('roles');
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $permissions = $user->getAllPermissions()->pluck('name');
+        $role = $user->roles->first()?->name ?? 'User';
+
+        return response()->json([
+            'message'     => 'Google sign-in successful',
             'user'        => $user,
             'token'       => $token,
             'role'        => $role,

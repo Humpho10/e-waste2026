@@ -71,13 +71,13 @@ import ForgotPasswordPage from './pages/ForgotPasswordPage';
 // ─── Route Guards ────────────────────────────────────────────
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 dark:text-gray-500">Loading...</div>;
   return token ? children : <Navigate to="/login" />;
 }
 
 function GuestRoute({ children }) {
   const { token, loading, redirectPath } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 dark:text-gray-500">Loading...</div>;
   if (!token) return children;
   return <Navigate to={redirectPath()} />;
 }
@@ -323,8 +323,8 @@ function App() {
           <Route path=":permission" element={
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-              <p className="text-gray-500 text-sm">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 You don't have permission to view this page.
                 <br />
                 Please contact your administrator if you believe this is an error.

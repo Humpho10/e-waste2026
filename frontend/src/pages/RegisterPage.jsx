@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast'; // adjust path if needed
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import { BrandPanel } from './LoginPage';
 import { Recycle, Eye, EyeOff, ArrowLeft } from '../components/icons';
+import ThemeToggle from '../components/ThemeToggle';
 
 const REDIRECT_MAP = {
   'Super-Admin': '/admin',
@@ -77,33 +78,36 @@ export default function RegisterPage() {
 
   const inputCls = (name) =>
     `w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-      fieldError(name) ? 'border-red-400 bg-red-50' : 'border-gray-200'
+      fieldError(name) ? 'border-red-400 bg-red-50 dark:bg-red-950/40' : 'border-gray-200 dark:border-slate-700'
     }`;
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-slate-950">
       <BrandPanel subtitle="Create your free account and start trading e-waste components today." />
 
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           {/* Back to browsing — no account needed to explore listings */}
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 mb-6 transition">
-            <ArrowLeft width={16} height={16} /> Back to browsing
-          </Link>
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
+              <ArrowLeft width={16} height={16} /> Back to browsing
+            </Link>
+            <ThemeToggle className="lg:hidden" />
+          </div>
 
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
-              <Recycle width={26} height={26} className="text-blue-600" />
+              <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
               <span className="text-2xl font-bold text-[#0b2545]">E-Waste Mart</span>
             </Link>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">Create your account</h1>
-            <p className="text-gray-500 text-sm mb-6">Join the marketplace — it's free</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-slate-800">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Create your account</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Join the marketplace — it's free</p>
 
             {errors.general && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-5">
                 {errors.general}
               </div>
             )}
@@ -116,48 +120,48 @@ export default function RegisterPage() {
             />
 
             <div className="flex items-center gap-3 my-6">
-              <span className="h-px bg-gray-200 flex-1" />
-              <span className="text-xs text-gray-400">or with your email</span>
-              <span className="h-px bg-gray-200 flex-1" />
+              <span className="h-px bg-gray-200 dark:bg-slate-700 flex-1" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">or with your email</span>
+              <span className="h-px bg-gray-200 dark:bg-slate-700 flex-1" />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Full Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Full Name</label>
                 <input type="text" required value={form.name} onChange={set('name')}
                   placeholder="John Mukasa" className={inputCls('name')} />
-                {fieldError('name') && <p className="text-red-500 text-xs mt-1">{fieldError('name')}</p>}
+                {fieldError('name') && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('name')}</p>}
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Phone</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Phone</label>
                   <input type="tel" required value={form.phone} onChange={set('phone')}
                     placeholder="0700 000 000" className={inputCls('phone')} />
-                  {fieldError('phone') && <p className="text-red-500 text-xs mt-1">{fieldError('phone')}</p>}
+                  {fieldError('phone') && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('phone')}</p>}
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1.5">Location</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Location</label>
                   <input type="text" required value={form.location} onChange={set('location')}
                     placeholder="Kampala" className={inputCls('location')} />
-                  {fieldError('location') && <p className="text-red-500 text-xs mt-1">{fieldError('location')}</p>}
+                  {fieldError('location') && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('location')}</p>}
                 </div>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email Address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email Address</label>
                 <input type="email" required value={form.email} onChange={set('email')}
                   placeholder="you@example.com" className={inputCls('email')} />
-                {fieldError('email') && <p className="text-red-500 text-xs mt-1">{fieldError('email')}</p>}
+                {fieldError('email') && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('email')}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Password</label>
                 <div className="relative">
                   <input type={showPw ? 'text' : 'password'} required value={form.password} onChange={set('password')}
                     placeholder="Min. 8 characters" className={`${inputCls('password')} pr-11`} />
                   <button type="button" onClick={() => setShowPw(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                     {showPw ? <EyeOff width={18} height={18} /> : <Eye width={18} height={18} />}
                   </button>
                 </div>
@@ -165,30 +169,30 @@ export default function RegisterPage() {
                   <div className="flex items-center gap-2 mt-2">
                     <div className="flex-1 flex gap-1">
                       {[1, 2, 3, 4].map(i => (
-                        <span key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? STRENGTH[strength].color : 'bg-gray-200'}`} />
+                        <span key={i} className={`h-1 flex-1 rounded-full ${i <= strength ? STRENGTH[strength].color : 'bg-gray-200 dark:bg-slate-700'}`} />
                       ))}
                     </div>
-                    <span className="text-xs text-gray-400 w-12">{STRENGTH[strength].label}</span>
+                    <span className="text-xs text-gray-400 dark:text-gray-500 w-12">{STRENGTH[strength].label}</span>
                   </div>
                 )}
-                {fieldError('password') && <p className="text-red-500 text-xs mt-1">{fieldError('password')}</p>}
+                {fieldError('password') && <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('password')}</p>}
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Confirm Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Confirm Password</label>
                 <div className="relative">
                   <input type={showPw2 ? 'text' : 'password'} required value={form.password_confirmation}
                     onChange={set('password_confirmation')} placeholder="Repeat password"
                     className={`w-full border rounded-xl px-4 py-2.5 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                      mismatch || fieldError('password_confirmation') ? 'border-red-400 bg-red-50' : 'border-gray-200'
+                      mismatch || fieldError('password_confirmation') ? 'border-red-400 bg-red-50 dark:bg-red-950/40' : 'border-gray-200 dark:border-slate-700'
                     }`} />
                   <button type="button" onClick={() => setShowPw2(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                     {showPw2 ? <EyeOff width={18} height={18} /> : <Eye width={18} height={18} />}
                   </button>
                 </div>
                 {(mismatch || fieldError('password_confirmation')) && (
-                  <p className="text-red-500 text-xs mt-1">{fieldError('password_confirmation') || 'Passwords do not match.'}</p>
+                  <p className="text-red-500 dark:text-red-400 text-xs mt-1">{fieldError('password_confirmation') || 'Passwords do not match.'}</p>
                 )}
               </div>
 
@@ -198,9 +202,9 @@ export default function RegisterPage() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
               Already have an account?{' '}
-              <Link to="/login" className="text-blue-600 font-semibold hover:underline">Sign in</Link>
+              <Link to="/login" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Sign in</Link>
             </p>
           </div>
         </div>

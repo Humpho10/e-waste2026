@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast'; // adjust path if needed
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import { Recycle, Eye, EyeOff, Shield, Tag, Chat, ArrowLeft } from '../components/icons';
+import ThemeToggle from '../components/ThemeToggle';
 
 const REDIRECT_MAP = {
   'Super-Admin': '/admin',
@@ -31,10 +32,13 @@ export function BrandPanel({ subtitle = 'Buy & sell used electronic components a
 
       {/* Content sits above the background */}
       <div className="relative z-10 flex flex-1 flex-col justify-between">
-        <Link to="/" className="flex items-center gap-2">
-          <Recycle width={24} height={24} className="text-blue-300" />
-          <span className="text-xl font-bold">E-Waste Mart</span>
-        </Link>
+        <div className="flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2">
+            <Recycle width={24} height={24} className="text-blue-300" />
+            <span className="text-xl font-bold">E-Waste Mart</span>
+          </Link>
+          <ThemeToggle variant="navbar" />
+        </div>
 
         <div>
           <h2 className="text-3xl font-extrabold leading-snug mb-3 drop-shadow">Give Old Electronics a Second Life</h2>
@@ -95,30 +99,33 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-slate-950">
       <BrandPanel />
 
       <div className="flex-1 flex items-center justify-center px-4 py-10">
         <div className="w-full max-w-md">
           {/* Back to browsing — no account needed to explore listings */}
-          <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-blue-600 mb-6 transition">
-            <ArrowLeft width={16} height={16} /> Back to browsing
-          </Link>
+          <div className="flex items-center justify-between mb-6">
+            <Link to="/" className="inline-flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition">
+              <ArrowLeft width={16} height={16} /> Back to browsing
+            </Link>
+            <ThemeToggle className="lg:hidden" />
+          </div>
 
           {/* Mobile logo */}
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
-              <Recycle width={26} height={26} className="text-blue-600" />
+              <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
               <span className="text-2xl font-bold text-[#0b2545]">E-Waste Mart</span>
             </Link>
           </div>
 
-          <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-            <h1 className="text-2xl font-bold text-gray-800 mb-1">Welcome back</h1>
-            <p className="text-gray-500 text-sm mb-6">Sign in to continue to your account</p>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-slate-800">
+            <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-1">Welcome back</h1>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Sign in to continue to your account</p>
 
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-lg mb-5">
+              <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
               </div>
             )}
@@ -131,35 +138,35 @@ export default function LoginPage() {
             />
 
             <div className="flex items-center gap-3 my-6">
-              <span className="h-px bg-gray-200 flex-1" />
-              <span className="text-xs text-gray-400">or sign in with email</span>
-              <span className="h-px bg-gray-200 flex-1" />
+              <span className="h-px bg-gray-200 dark:bg-slate-700 flex-1" />
+              <span className="text-xs text-gray-400 dark:text-gray-500">or sign in with email</span>
+              <span className="h-px bg-gray-200 dark:bg-slate-700 flex-1" />
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1.5">Email address</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1.5">Email address</label>
                 <input
                   type="email" required value={form.email}
                   onChange={e => setForm({ ...form, email: e.target.value })}
                   placeholder="you@example.com"
-                  className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
               <div>
                 <div className="flex items-center justify-between mb-1.5">
-                  <label className="block text-sm font-medium text-gray-700">Password</label>
-                  <Link to="/forgot-password" className="text-xs text-blue-600 hover:underline">Forgot?</Link>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200">Password</label>
+                  <Link to="/forgot-password" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Forgot?</Link>
                 </div>
                 <div className="relative">
                   <input
                     type={showPw ? 'text' : 'password'} required value={form.password}
                     onChange={e => setForm({ ...form, password: e.target.value })}
                     placeholder="••••••••"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 pr-11 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                   <button type="button" onClick={() => setShowPw(s => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600">
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                     {showPw ? <EyeOff width={18} height={18} /> : <Eye width={18} height={18} />}
                   </button>
                 </div>
@@ -171,9 +178,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <p className="text-center text-sm text-gray-500 mt-6">
+            <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
               Don't have an account?{' '}
-              <Link to="/register" className="text-blue-600 font-semibold hover:underline">Create one</Link>
+              <Link to="/register" className="text-blue-600 dark:text-blue-400 font-semibold hover:underline">Create one</Link>
             </p>
           </div>
         </div>

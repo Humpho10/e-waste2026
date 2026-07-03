@@ -109,12 +109,12 @@ export default function ResubmitListingPage() {
   if (loading) return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-pulse space-y-4">
-        <div className="h-8 bg-gray-100 rounded w-48" />
-        <div className="bg-white rounded-2xl border border-gray-100 p-8 space-y-4">
+        <div className="h-8 bg-gray-100 dark:bg-slate-800 rounded w-48" />
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 space-y-4">
           {Array(4).fill(0).map((_, i) => (
             <div key={i} className="space-y-2">
-              <div className="h-3 bg-gray-100 rounded w-24" />
-              <div className="h-10 bg-gray-100 rounded" />
+              <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-24" />
+              <div className="h-10 bg-gray-100 dark:bg-slate-800 rounded" />
             </div>
           ))}
         </div>
@@ -128,8 +128,8 @@ export default function ResubmitListingPage() {
       <DashboardLayout>
         <div className="max-w-2xl mx-auto text-center py-16">
           <div className="text-5xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-          <p className="text-gray-500">You don't have permission to resubmit listings.</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
+          <p className="text-gray-500 dark:text-gray-400">You don't have permission to resubmit listings.</p>
         </div>
       </DashboardLayout>
     );
@@ -147,23 +147,23 @@ export default function ResubmitListingPage() {
         <div className="mb-8">
           <button
             onClick={() => navigate('/dashboard/listings')}
-            className="flex items-center gap-2 text-gray-500 hover:text-gray-700 text-sm mb-4 transition"
+            className="flex items-center gap-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 text-sm mb-4 transition"
           >
             ← Back to listings
           </button>
-          <h2 className="text-2xl font-bold text-gray-800">Resubmit Listing</h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Resubmit Listing</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             Correct the issues and resubmit for approval. No additional fee required.
           </p>
         </div>
 
         {/* Rejection reason */}
         {product.rejection_reason && (
-          <div className="bg-red-50 border border-red-200 rounded-2xl p-5 mb-6 flex gap-3">
+          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 rounded-2xl p-5 mb-6 flex gap-3">
             <span className="text-2xl shrink-0">❌</span>
             <div>
-              <p className="font-semibold text-red-700 text-sm mb-1">Reason for rejection</p>
-              <p className="text-red-600 text-sm leading-relaxed">{product.rejection_reason}</p>
+              <p className="font-semibold text-red-700 dark:text-red-400 text-sm mb-1">Reason for rejection</p>
+              <p className="text-red-600 dark:text-red-400 text-sm leading-relaxed">{product.rejection_reason}</p>
             </div>
           </div>
         )}
@@ -171,40 +171,40 @@ export default function ResubmitListingPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
 
           {/* Details */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 space-y-5">
-            <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Listing Details</h3>
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 space-y-5">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">Listing Details</h3>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                 Title <span className="text-red-400">*</span>
               </label>
               <input
                 type="text" required value={form.title}
                 onChange={e => setForm({ ...form, title: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                 Description <span className="text-red-400">*</span>
               </label>
               <textarea
                 required rows={4} value={form.description}
                 onChange={e => setForm({ ...form, description: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60 resize-none"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                   Condition <span className="text-red-400">*</span>
                 </label>
                 <select
                   required value={form.condition}
                   onChange={e => setForm({ ...form, condition: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60"
                 >
                   <option value="">Select condition</option>
                   {['New', 'Good', 'Fair', 'Poor'].map(c => (
@@ -214,40 +214,40 @@ export default function ResubmitListingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                   Price (UGX) <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="number" required min="0" value={form.price}
                   onChange={e => setForm({ ...form, price: e.target.value })}
-                  className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                  className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                Specifications <span className="text-gray-400 font-normal">(optional)</span>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
+                Specifications <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span>
               </label>
               <textarea
                 rows={3} value={form.specification}
                 onChange={e => setForm({ ...form, specification: e.target.value })}
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60 resize-none"
               />
             </div>
           </div>
 
           {/* Images */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-            <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide mb-1">Photos</h3>
-            <p className="text-xs text-gray-400 mb-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide mb-1">Photos</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
               {visibleExisting.length + newImages.length} / 5 photos · Remove old photos or add new ones
             </p>
 
             {/* Existing images */}
             {existingImages.length > 0 && (
               <div className="mb-4">
-                <p className="text-xs font-medium text-gray-500 mb-2">Current photos</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">Current photos</p>
                 <div className="grid grid-cols-5 gap-2">
                   {existingImages.map(img => {
                     const isRemoved = removedImageIds.includes(img.productImage_id);
@@ -267,7 +267,7 @@ export default function ResubmitListingPage() {
                               : 'bg-black/0 group-hover:bg-black/40 opacity-0 group-hover:opacity-100'
                             }`}
                         >
-                          <span className="bg-white text-xs px-2 py-1 rounded-full font-medium">
+                          <span className="bg-white dark:bg-slate-900 text-xs px-2 py-1 rounded-full font-medium">
                             {isRemoved ? 'Removed — Undo' : 'Remove'}
                           </span>
                         </button>
@@ -280,21 +280,21 @@ export default function ResubmitListingPage() {
 
             {/* Upload new */}
             {remainingSlots > 0 && (
-              <label className="block border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-6 text-center cursor-pointer transition mb-4">
+              <label className="block border-2 border-dashed border-gray-200 dark:border-slate-700 hover:border-blue-400 rounded-2xl p-6 text-center cursor-pointer transition mb-4">
                 <input
                   type="file" multiple accept="image/jpeg,image/png,image/jpg"
                   className="hidden" onChange={handleImageChange}
                 />
                 <span className="text-3xl block mb-2">📸</span>
-                <p className="font-medium text-gray-700 text-sm">Click to add new photos</p>
-                <p className="text-xs text-gray-400 mt-1">{remainingSlots} slot{remainingSlots !== 1 ? 's' : ''} remaining</p>
+                <p className="font-medium text-gray-700 dark:text-gray-200 text-sm">Click to add new photos</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{remainingSlots} slot{remainingSlots !== 1 ? 's' : ''} remaining</p>
               </label>
             )}
 
             {/* New image previews */}
             {newPreviews.length > 0 && (
               <div>
-                <p className="text-xs font-medium text-gray-500 mb-2">New photos to add</p>
+                <p className="text-xs font-medium text-gray-500 dark:text-gray-400 mb-2">New photos to add</p>
                 <div className="grid grid-cols-5 gap-2">
                   {newPreviews.map((src, i) => (
                     <div key={i} className="relative group aspect-square rounded-xl overflow-hidden">
@@ -317,11 +317,11 @@ export default function ResubmitListingPage() {
           </div>
 
           {/* Info banner */}
-          <div className="bg-blue-50 border border-blue-200 rounded-2xl px-5 py-4 flex gap-3">
+          <div className="bg-blue-50 dark:bg-blue-950/40 border border-blue-200 dark:border-blue-800/50 rounded-2xl px-5 py-4 flex gap-3">
             <span className="text-blue-500 shrink-0 text-lg">ℹ️</span>
             <div>
-              <p className="text-sm font-semibold text-blue-700">No additional fee required</p>
-              <p className="text-xs text-blue-600 mt-0.5">
+              <p className="text-sm font-semibold text-blue-700 dark:text-blue-400">No additional fee required</p>
+              <p className="text-xs text-blue-600 dark:text-blue-400 mt-0.5">
                 Since you already paid the listing fee, resubmitting is free.
                 Your listing will go back to the reviewer for re-approval.
               </p>
@@ -333,7 +333,7 @@ export default function ResubmitListingPage() {
             <button
               type="button"
               onClick={() => navigate('/dashboard/listings')}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-3 rounded-xl text-sm font-medium transition"
             >
               Cancel
             </button>

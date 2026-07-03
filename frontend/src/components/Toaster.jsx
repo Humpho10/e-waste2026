@@ -26,8 +26,8 @@ export function useToasts() {
 }
 
 const styles = {
-  success: { bar: 'bg-green-500', icon: '✓', ring: 'border-green-100', text: 'text-green-700' },
-  error:   { bar: 'bg-red-500',   icon: '✕', ring: 'border-red-100',   text: 'text-red-700'   },
+  success: { bar: 'bg-green-500', icon: '✓', ring: 'border-green-100', text: 'text-green-700 dark:text-green-400' },
+  error:   { bar: 'bg-red-500',   icon: '✕', ring: 'border-red-100',   text: 'text-red-700 dark:text-red-400'   },
   info:    { bar: 'bg-slate-700', icon: 'ℹ', ring: 'border-slate-100', text: 'text-slate-700' },
 };
 
@@ -47,7 +47,7 @@ export function Toaster({ toasts = [], onDismiss }) {
             <div
               key={t.id}
               style={{ animation: 'toastIn 0.22s ease-out' }}
-              className={`flex items-center gap-3 bg-white rounded-xl shadow-lg border ${s.ring} pl-0 pr-3 py-3 overflow-hidden`}
+              className={`flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl shadow-lg border ${s.ring} pl-0 pr-3 py-3 overflow-hidden`}
             >
               <div className={`w-1.5 self-stretch ${s.bar}`} />
               <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs shrink-0 ${s.bar}`}>
@@ -57,7 +57,7 @@ export function Toaster({ toasts = [], onDismiss }) {
               {onDismiss && (
                 <button
                   onClick={() => onDismiss(t.id)}
-                  className="text-gray-300 hover:text-gray-500 transition shrink-0"
+                  className="text-gray-300 dark:text-gray-600 hover:text-gray-500 transition shrink-0"
                 >
                   ✕
                 </button>

@@ -111,8 +111,8 @@ function RolesPage() {
     <AdminLayout>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Roles</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage roles and their permissions</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Roles</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage roles and their permissions</p>
         </div>
         {/* 👇 "Create Role" button only appears if user has role-create permission */}
         {canCreateRole && (
@@ -126,20 +126,20 @@ function RolesPage() {
       </div>
 
       {loading ? (
-        <div className="text-gray-400">Loading roles...</div>
+        <div className="text-gray-400 dark:text-gray-500">Loading roles...</div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {roles.map(role => (
-            <div key={role.id} className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
+            <div key={role.id} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 p-6">
               {/* Role Header */}
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center text-lg">
+                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-lg">
                     🛡️
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800">{role.name}</h3>
-                    <p className="text-xs text-gray-400">
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">{role.name}</h3>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">
                       {role.permissions?.length || 0} permissions
                       {role.users_count !== undefined && ` · ${role.users_count} users`}
                     </p>
@@ -150,7 +150,7 @@ function RolesPage() {
                   {canEditRole && (
                     <button
                       onClick={() => openEdit(role)}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Edit
                     </button>
@@ -159,13 +159,13 @@ function RolesPage() {
                   {canDeleteRole && !systemRoles.includes(role.name) && (
                     <button
                       onClick={() => handleDelete(role.id, role.name)}
-                      className="text-xs text-red-500 hover:underline"
+                      className="text-xs text-red-500 dark:text-red-400 hover:underline"
                     >
                       Delete
                     </button>
                   )}
                   {systemRoles.includes(role.name) && (
-                    <span className="text-xs text-gray-300 italic">System role</span>
+                    <span className="text-xs text-gray-300 dark:text-gray-600 italic">System role</span>
                   )}
                 </div>
               </div>
@@ -176,13 +176,13 @@ function RolesPage() {
                   role.permissions.map(p => (
                     <span
                       key={p.id}
-                      className="bg-gray-100 text-gray-600 text-xs px-2 py-1 rounded-full"
+                      className="bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 text-xs px-2 py-1 rounded-full"
                     >
                       {p.name}
                     </span>
                   ))
                 ) : (
-                  <span className="text-gray-400 text-sm italic">No permissions assigned</span>
+                  <span className="text-gray-400 dark:text-gray-500 text-sm italic">No permissions assigned</span>
                 )}
               </div>
             </div>
@@ -193,11 +193,11 @@ function RolesPage() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg w-full max-w-2xl max-h-[90vh] flex flex-col">
 
             {/* Modal Header */}
-            <div className="px-6 py-4 border-b border-gray-100">
-              <h3 className="text-lg font-bold text-gray-800">
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+              <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100">
                 {editing ? `Edit Role — ${editing.name}` : 'Create New Role'}
               </h3>
             </div>
@@ -205,13 +205,13 @@ function RolesPage() {
             {/* Modal Body */}
             <div className="px-6 py-4 overflow-y-auto flex-1">
               {error && (
-                <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded mb-4">{error}</div>
+                <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-2 rounded mb-4">{error}</div>
               )}
 
               <form onSubmit={handleSubmit}>
                 {/* Role Name */}
                 <div className="mb-6">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
                     Role Name
                   </label>
                   <input
@@ -220,29 +220,29 @@ function RolesPage() {
                     required
                     onChange={e => setForm({ ...form, name: e.target.value })}
                     placeholder="e.g. Content-Editor"
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Use hyphens for spaces e.g. Product-Manager</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Use hyphens for spaces e.g. Product-Manager</p>
                 </div>
 
                 {/* Permissions */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <label className="text-sm font-medium text-gray-700">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-200">
                       Assign Permissions
                     </label>
                     <div className="flex gap-3 text-xs">
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, permissions: permissions.map(p => p.name) })}
-                        className="text-green-600 hover:underline"
+                        className="text-green-600 dark:text-green-400 hover:underline"
                       >
                         Select all
                       </button>
                       <button
                         type="button"
                         onClick={() => setForm({ ...form, permissions: [] })}
-                        className="text-red-500 hover:underline"
+                        className="text-red-500 dark:text-red-400 hover:underline"
                       >
                         Clear all
                       </button>
@@ -250,10 +250,10 @@ function RolesPage() {
                   </div>
 
                   {/* Grouped permissions */}
-                  <div className="space-y-4 border border-gray-100 rounded-lg p-4 bg-gray-50 max-h-64 overflow-y-auto">
+                  <div className="space-y-4 border border-gray-100 dark:border-slate-800 rounded-lg p-4 bg-gray-50 dark:bg-slate-800/60 max-h-64 overflow-y-auto">
                     {Object.entries(groupedPermissions).map(([group, perms]) => (
                       <div key={group}>
-                        <p className="text-xs font-bold text-gray-500 uppercase mb-2">{group}</p>
+                        <p className="text-xs font-bold text-gray-500 dark:text-gray-400 uppercase mb-2">{group}</p>
                         <div className="flex flex-wrap gap-2">
                           {perms.map(p => (
                             <label
@@ -261,7 +261,7 @@ function RolesPage() {
                               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs cursor-pointer border transition
                                 ${form.permissions.includes(p.name)
                                   ? 'bg-green-600 text-white border-green-600'
-                                  : 'bg-white text-gray-600 border-gray-200 hover:border-green-400'
+                                  : 'bg-white dark:bg-slate-900 text-gray-600 dark:text-gray-300 border-gray-200 dark:border-slate-700 hover:border-green-400'
                                 }`}
                             >
                               <input
@@ -277,7 +277,7 @@ function RolesPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
                     {form.permissions.length} permission{form.permissions.length !== 1 ? 's' : ''} selected
                   </p>
                 </div>
@@ -285,7 +285,7 @@ function RolesPage() {
             </div>
 
             {/* Modal Footer */}
-            <div className="px-6 py-4 border-t border-gray-100 flex gap-3">
+            <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex gap-3">
               <button
                 onClick={handleSubmit}
                 disabled={submitting}
@@ -296,7 +296,7 @@ function RolesPage() {
               <button
                 type="button"
                 onClick={() => setShowModal(false)}
-                className="flex-1 border border-gray-300 text-gray-600 hover:bg-gray-50 py-2 rounded-lg text-sm"
+                className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2 rounded-lg text-sm"
               >
                 Cancel
               </button>

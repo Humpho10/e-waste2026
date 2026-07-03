@@ -79,8 +79,8 @@ export default function UsersContent() {
     <>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Users</h2>
-          <p className="text-gray-500 text-sm mt-1">Manage all platform users</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Users</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Manage all platform users</p>
         </div>
         {canCreateUser && (
           <button
@@ -93,36 +93,36 @@ export default function UsersContent() {
       </div>
 
       {loading ? (
-        <div className="text-gray-400">Loading users...</div>
+        <div className="text-gray-400 dark:text-gray-500">Loading users...</div>
       ) : (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['#', 'Name', 'Email', 'Role', 'Joined', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-gray-500 font-medium">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-gray-500 dark:text-gray-400 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {users.map((user, i) => (
-                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50">
-                  <td className="px-4 py-3 text-gray-400">{i + 1}</td>
+                <tr key={user.id} className="border-b border-gray-50 hover:bg-gray-50 dark:hover:bg-slate-800">
+                  <td className="px-4 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-green-100 text-green-700 flex items-center justify-center font-bold text-xs">
+                      <div className="w-8 h-8 rounded-full bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 flex items-center justify-center font-bold text-xs">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-medium text-gray-800">{user.name}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-100">{user.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">{user.email}</td>
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">{user.email}</td>
                   <td className="px-4 py-3">
-                    <span className="bg-green-100 text-green-700 px-2 py-1 rounded-full text-xs font-medium">
+                    <span className="bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400 px-2 py-1 rounded-full text-xs font-medium">
                       {user.roles?.[0]?.name || 'No role'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-gray-400">
+                  <td className="px-4 py-3 text-gray-400 dark:text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
                   </td>
                   <td className="px-4 py-3">
@@ -130,7 +130,7 @@ export default function UsersContent() {
                       {canEditUser && (
                         <button
                           onClick={() => openEdit(user)}
-                          className="text-blue-600 hover:underline text-xs"
+                          className="text-blue-600 dark:text-blue-400 hover:underline text-xs"
                         >
                           Edit
                         </button>
@@ -138,7 +138,7 @@ export default function UsersContent() {
                       {canDeleteUser && (
                         <button
                           onClick={() => handleDelete(user.id)}
-                          className="text-red-500 hover:underline text-xs"
+                          className="text-red-500 dark:text-red-400 hover:underline text-xs"
                         >
                           Delete
                         </button>
@@ -154,46 +154,46 @@ export default function UsersContent() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">
               {editing ? 'Edit User' : 'Add New User'}
             </h3>
             {error && (
-              <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded mb-4">{error}</div>
+              <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-2 rounded mb-4">{error}</div>
             )}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Name</label>
                 <input
                   type="text" value={form.name} required
                   onChange={e => setForm({ ...form, name: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Email</label>
                 <input
                   type="email" value={form.email} required
                   onChange={e => setForm({ ...form, email: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
               </div>
               {!editing && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Password</label>
                   <input
                     type="password" value={form.password} required
                     onChange={e => setForm({ ...form, password: e.target.value })}
-                    className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                   />
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Role</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Role</label>
                 <select
                   value={form.role}
                   onChange={e => setForm({ ...form, role: e.target.value })}
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 >
                   <option value="">No role</option>
                   {roles.map(r => (
@@ -211,7 +211,7 @@ export default function UsersContent() {
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="flex-1 border border-gray-300 text-gray-600 hover:bg-gray-50 py-2 rounded-lg text-sm"
+                  className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2 rounded-lg text-sm"
                 >
                   Cancel
                 </button>

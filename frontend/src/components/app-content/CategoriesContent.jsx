@@ -141,8 +141,8 @@ export default function CategoriesContent() {
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Categories</h2>
-          <p className="text-gray-500 text-sm mt-1">{categories.length} categories defined</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Categories</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{categories.length} categories defined</p>
         </div>
         {canCreateCategory && (
           <button
@@ -157,13 +157,13 @@ export default function CategoriesContent() {
       {categories.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">🔍</span>
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">🔍</span>
             <input
               type="text"
               placeholder="Search categories..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900"
             />
           </div>
         </div>
@@ -172,19 +172,19 @@ export default function CategoriesContent() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-6">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-100" />
-                <div className="h-4 bg-gray-100 rounded w-28" />
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800" />
+                <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-28" />
               </div>
-              <div className="h-3 bg-gray-100 rounded w-20" />
+              <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-20" />
             </div>
           ))}
         </div>
       ) : filtered.length === 0 && search ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <p className="mb-1">No categories match "{search}"</p>
-          <button onClick={() => setSearch('')} className="text-orange-500 text-sm hover:underline">
+          <button onClick={() => setSearch('')} className="text-orange-500 dark:text-orange-400 text-sm hover:underline">
             Clear
           </button>
         </div>
@@ -193,16 +193,16 @@ export default function CategoriesContent() {
           {filtered.map((cat) => (
             <div
               key={cat.category_id}
-              className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all p-6 group"
+              className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-orange-100 transition-all p-6 group"
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center text-xl">
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-xl">
                     {catIcons[cat.name] || '📦'}
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800">{cat.name}</h3>
-                    <p className="text-xs text-gray-400">{cat.products_count ?? 0} listings</p>
+                    <h3 className="font-bold text-gray-800 dark:text-gray-100">{cat.name}</h3>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{cat.products_count ?? 0} listings</p>
                   </div>
                 </div>
                 <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition">
@@ -229,7 +229,7 @@ export default function CategoriesContent() {
       {/* Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5">
               <div className="flex items-center justify-between">
                 <div>
@@ -248,14 +248,14 @@ export default function CategoriesContent() {
             </div>
             <div className="p-6">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2">
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2">
                   <span>⚠️</span>
                   <span>{error}</span>
                 </div>
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                     Category Name
                   </label>
                   <input
@@ -264,14 +264,14 @@ export default function CategoriesContent() {
                     required
                     placeholder="e.g. Computer Components"
                     onChange={(e) => setForm({ name: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
+                    className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 dark:bg-slate-800/60"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">
                     Subcategories
-                    <span className="text-gray-400 font-normal ml-1">
+                    <span className="text-gray-400 dark:text-gray-500 font-normal ml-1">
                       ({editingSubcats.length})
                     </span>
                   </label>
@@ -282,8 +282,8 @@ export default function CategoriesContent() {
                         key={i}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
                           sub.isNew
-                            ? 'bg-blue-50 border-blue-300 text-blue-700'
-                            : 'bg-gray-50 border-gray-200 text-gray-700'
+                            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 text-blue-700 dark:text-blue-400'
+                            : 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200'
                         }`}
                       >
                         <span>{sub.name}</span>
@@ -291,14 +291,14 @@ export default function CategoriesContent() {
                         <button
                           type="button"
                           onClick={() => removeSubcat(i)}
-                          className="text-gray-400 hover:text-red-500 transition ml-1"
+                          className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition ml-1"
                         >
                           ×
                         </button>
                       </div>
                     ))}
                     {editingSubcats.length === 0 && (
-                      <p className="text-xs text-gray-300 italic">No subcategories yet</p>
+                      <p className="text-xs text-gray-300 dark:text-gray-600 italic">No subcategories yet</p>
                     )}
                   </div>
 
@@ -314,7 +314,7 @@ export default function CategoriesContent() {
                         }
                       }}
                       placeholder="Add subcategory name..."
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      className="flex-1 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                     <button
                       type="button"
@@ -324,7 +324,7 @@ export default function CategoriesContent() {
                       + Add
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Press Enter or click Add. Click × to remove.
                   </p>
                 </div>
@@ -344,7 +344,7 @@ export default function CategoriesContent() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm transition"
+                    className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2.5 rounded-xl text-sm transition"
                   >
                     Cancel
                   </button>

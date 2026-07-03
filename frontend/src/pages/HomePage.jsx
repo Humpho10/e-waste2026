@@ -8,6 +8,7 @@ import {
   MapPin, Star, Shield, Tag, Chat, Users, CheckCircle, List, Camera,
   categoryIcon,
 } from '../components/icons';
+import ThemeToggle from '../components/ThemeToggle';
 
 // ── Fallback data — keeps the page looking great even if the API is down ──
 const SAMPLE_CATEGORIES = [
@@ -39,10 +40,10 @@ const SAMPLE_PRODUCTS = [
 
 const conditionStyle = (c = '') => {
   const k = c.toLowerCase();
-  if (k.includes('excellent')) return 'bg-green-50 text-green-700';
-  if (k.includes('good'))      return 'bg-blue-50 text-blue-700';
-  if (k.includes('fair'))      return 'bg-amber-50 text-amber-700';
-  return 'bg-gray-100 text-gray-500'; // parts only / unknown
+  if (k.includes('excellent')) return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
+  if (k.includes('good'))      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400';
+  if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
+  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
 };
 
 // ── Navbar ────────────────────────────────────────────────────
@@ -91,13 +92,14 @@ function Navbar({ onAbout, onHome, onBrowse }) {
 
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle variant="navbar" />
           {token ? (
             <>
               <Link to={dashboardPath()} className="text-sm text-blue-200 font-medium hover:text-white transition">
                 {user?.name?.split(' ')[0] || 'My'}'s Dashboard
               </Link>
               <button onClick={handleLogout}
-                className="btn-lift text-sm border border-blue-300/40 text-blue-100 hover:bg-white/10 hover:border-blue-200 px-4 py-2 rounded-lg">
+                className="btn-lift text-sm border border-blue-300/40 text-blue-100 hover:bg-white/10 hover:border-blue-200 dark:hover:border-blue-800 px-4 py-2 rounded-lg">
                 Logout
               </button>
             </>
@@ -116,9 +118,12 @@ function Navbar({ onAbout, onHome, onBrowse }) {
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-          {menuOpen ? <X /> : <Menu />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle variant="navbar" />
+          <button className="text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            {menuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -166,7 +171,7 @@ function ProductCard({ product }) {
   return (
     <button
       onClick={handleClick}
-      className="text-left bg-white border border-gray-100 rounded-2xl p-4 hover:shadow-lg hover:border-blue-200 hover:-translate-y-0.5 cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-400"
+      className="text-left bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-4 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 hover:-translate-y-0.5 cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-400"
     >
       {/* Icon / image tile */}
       <div className="w-full h-28 bg-gradient-to-br from-blue-50 to-sky-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden text-blue-500">
@@ -179,11 +184,11 @@ function ProductCard({ product }) {
         )}
       </div>
 
-      <span className="text-[11px] text-blue-700 font-semibold bg-blue-50 px-2 py-0.5 rounded-md">
+      <span className="text-[11px] text-blue-700 dark:text-blue-400 font-semibold bg-blue-50 dark:bg-blue-950/40 px-2 py-0.5 rounded-md">
         {product.category?.name || 'Component'}
       </span>
 
-      <h3 className="font-semibold text-gray-800 text-sm mt-2 group-hover:text-blue-600 transition line-clamp-2 min-h-[2.5rem]">
+      <h3 className="font-semibold text-gray-800 dark:text-gray-100 text-sm mt-2 group-hover:text-blue-600 transition line-clamp-2 min-h-[2.5rem]">
         {product.title}
       </h3>
 
@@ -195,7 +200,7 @@ function ProductCard({ product }) {
         <span className={`text-[11px] px-2 py-0.5 rounded-full font-medium ${conditionStyle(product.condition)}`}>
           {product.condition}
         </span>
-        <span className="text-[11px] text-gray-400 flex items-center gap-1 truncate">
+        <span className="text-[11px] text-gray-400 dark:text-gray-500 flex items-center gap-1 truncate">
           <MapPin width={12} height={12} /> {product.seller?.location || 'Uganda'}
         </span>
       </div>
@@ -205,11 +210,11 @@ function ProductCard({ product }) {
 
 function ProductSkeleton() {
   return (
-    <div className="bg-white border border-gray-100 rounded-2xl p-4 animate-pulse">
-      <div className="w-full h-28 bg-gray-100 rounded-xl mb-3" />
-      <div className="h-3 bg-gray-100 rounded w-16 mb-2" />
-      <div className="h-4 bg-gray-100 rounded w-3/4 mb-1" />
-      <div className="h-4 bg-gray-100 rounded w-1/2" />
+    <div className="bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-4 animate-pulse">
+      <div className="w-full h-28 bg-gray-100 dark:bg-slate-800 rounded-xl mb-3" />
+      <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-16 mb-2" />
+      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-3/4 mb-1" />
+      <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-1/2" />
     </div>
   );
 }
@@ -236,10 +241,10 @@ function CountUp({ value, className }) {
 
 // Loading shimmer → animated real value (→ static fallback only on error).
 function StatNumber({ value, error, fallback }) {
-  const cls = 'font-bold text-gray-800 text-sm leading-none';
+  const cls = 'font-bold text-gray-800 dark:text-gray-100 text-sm leading-none';
   if (value != null) return <CountUp value={value} className={cls} />;
   if (error) return <p className={cls}>{fallback}</p>;
-  return <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-pulse" />;
+  return <span className="inline-block h-4 w-12 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />;
 }
 
 // ── HomePage ──────────────────────────────────────────────────
@@ -379,7 +384,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 font-sans text-gray-800 dark:text-gray-100">
       <Navbar
         onHome={scrollToTop}
         onBrowse={goBrowse}
@@ -404,17 +409,17 @@ export default function HomePage() {
           </p>
           <form onSubmit={handleSearch} className="flex gap-2 max-w-xl mx-auto">
             <div className="flex-1 relative">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" width={18} height={18} />
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" width={18} height={18} />
               <input
                 type="text" value={searchInput}
                 onChange={e => setSearchInput(e.target.value)}
                 placeholder="Search for a part..."
-                className="w-full rounded-xl pl-11 pr-12 py-3.5 text-gray-800 text-sm bg-white shadow-sm border border-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full rounded-xl pl-11 pr-12 py-3.5 text-gray-800 dark:text-gray-100 text-sm bg-white dark:bg-slate-900 shadow-sm border border-blue-100 dark:border-blue-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
               {/* Search by photo */}
               <button type="button" onClick={pickImage} disabled={imageBusy}
                 title="Search by photo — snap or upload a picture of the part"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition disabled:opacity-50">
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-lg text-gray-400 dark:text-gray-500 hover:text-blue-600 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 transition disabled:opacity-50">
                 <Camera width={20} height={20} />
               </button>
               <input
@@ -440,9 +445,9 @@ export default function HomePage() {
 
         {/* Left — Categories */}
         <aside className="w-60 shrink-0 hidden lg:block">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 sticky top-20">
-            <h2 className="font-bold text-gray-700 text-sm mb-4 flex items-center gap-2">
-              <List width={16} height={16} className="text-blue-600" /> Browse Categories
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-4 sticky top-20">
+            <h2 className="font-bold text-gray-700 dark:text-gray-200 text-sm mb-4 flex items-center gap-2">
+              <List width={16} height={16} className="text-blue-600 dark:text-blue-400" /> Browse Categories
             </h2>
             <ul className="space-y-1">
               {categories.map(cat => {
@@ -453,7 +458,7 @@ export default function HomePage() {
                     <div
                       className={`flex items-center justify-between px-3 py-2 rounded-xl cursor-pointer text-sm transition
                         ${active ? 'bg-blue-600 text-white font-semibold shadow-sm'
-                                 : 'text-gray-700 hover:bg-blue-50 hover:text-blue-600'}`}
+                                 : 'text-gray-700 dark:text-gray-200 hover:bg-blue-50 dark:hover:bg-blue-950/40 hover:text-blue-600 dark:hover:text-blue-400'}`}
                       onClick={() => handleCategoryClick(cat)}
                     >
                       <span className="flex items-center gap-2.5">
@@ -473,10 +478,10 @@ export default function HomePage() {
                     </div>
 
                     {expandedCats[cat.category_id] && cat.subcategories?.length > 0 && (
-                      <ul className="ml-4 mt-1 space-y-0.5 border-l border-gray-100 pl-3">
+                      <ul className="ml-4 mt-1 space-y-0.5 border-l border-gray-100 dark:border-slate-800 pl-3">
                         {cat.subcategories.map(sub => (
                           <li key={sub.subcategory_id}
-                            className="text-xs text-gray-500 hover:text-blue-600 cursor-pointer py-1.5 flex items-center gap-2"
+                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer py-1.5 flex items-center gap-2"
                             onClick={() => { setSearchInput(sub.sub_category_name); setQuery(sub.sub_category_name); setActiveCategory(null); scrollToListings(); }}
                           >
                             <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />
@@ -490,7 +495,7 @@ export default function HomePage() {
               })}
             </ul>
             <button onClick={goBrowse}
-              className="mt-4 flex items-center gap-1.5 text-blue-600 text-xs font-semibold hover:underline">
+              className="mt-4 flex items-center gap-1.5 text-blue-600 dark:text-blue-400 text-xs font-semibold hover:underline">
               <Plus width={14} height={14} /> View All Categories
             </button>
           </div>
@@ -499,19 +504,19 @@ export default function HomePage() {
         {/* Center — Listings */}
         <main ref={listingsRef} className="flex-1 min-w-0 scroll-mt-20">
           <div className="flex items-center justify-between mb-5 flex-wrap gap-2">
-            <h2 className="font-bold text-gray-800 text-lg flex items-center gap-2">
+            <h2 className="font-bold text-gray-800 dark:text-gray-100 text-lg flex items-center gap-2">
               <Star width={18} height={18} className="text-amber-400" />
               {filterActive ? 'Results' : 'Featured Listings'}
             </h2>
             <button onClick={goBrowse}
-              className="text-blue-600 text-sm hover:underline font-medium flex items-center gap-1">
+              className="text-blue-600 dark:text-blue-400 text-sm hover:underline font-medium flex items-center gap-1">
               View all <ArrowRight width={14} height={14} />
             </button>
           </div>
 
           {/* Photo-search error */}
           {imageError && (
-            <div className="mb-4 bg-amber-50 border border-amber-200 text-amber-800 text-sm px-4 py-3 rounded-xl flex items-center justify-between gap-3">
+            <div className="mb-4 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800/50 text-amber-800 dark:text-amber-300 text-sm px-4 py-3 rounded-xl flex items-center justify-between gap-3">
               <span className="flex items-center gap-2"><Camera width={16} height={16} /> {imageError}</span>
               <button onClick={() => setImageError('')} className="hover:text-amber-900"><X width={15} height={15} /></button>
             </div>
@@ -520,13 +525,13 @@ export default function HomePage() {
           {/* Photo-search result banner */}
           {imageSearch && !imageBusy && (
             <div className="mb-4 flex items-center gap-2 text-sm flex-wrap">
-              <span className="inline-flex items-center gap-1.5 text-blue-700 font-medium">
+              <span className="inline-flex items-center gap-1.5 text-blue-700 dark:text-blue-400 font-medium">
                 <Camera width={15} height={15} /> Matches for your photo
               </span>
               {imageSearch.labels?.slice(0, 4).map(l => (
-                <span key={l} className="bg-blue-50 text-blue-700 px-2.5 py-0.5 rounded-full text-xs capitalize">{l}</span>
+                <span key={l} className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-2.5 py-0.5 rounded-full text-xs capitalize">{l}</span>
               ))}
-              <button onClick={clearFilters} className="inline-flex items-center gap-1 text-gray-400 hover:text-blue-700 text-xs">
+              <button onClick={clearFilters} className="inline-flex items-center gap-1 text-gray-400 dark:text-gray-500 hover:text-blue-700 text-xs">
                 <X width={13} height={13} /> clear
               </button>
             </div>
@@ -535,19 +540,19 @@ export default function HomePage() {
           {/* Text/category filter chip */}
           {!imageSearch && (query || activeCategory) && (
             <div className="mb-4 flex items-center gap-2 text-sm">
-              <span className="text-gray-500">Filtering by</span>
-              <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 px-3 py-1 rounded-full font-medium">
+              <span className="text-gray-500 dark:text-gray-400">Filtering by</span>
+              <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full font-medium">
                 {activeCatName || `"${query}"`}
-                <button onClick={clearFilters} className="hover:text-blue-900"><X width={13} height={13} /></button>
+                <button onClick={clearFilters} className="hover:text-blue-900 dark:hover:text-blue-300"><X width={13} height={13} /></button>
               </span>
-              <span className="text-gray-400">· {displayedProducts.length} item{displayedProducts.length !== 1 ? 's' : ''}</span>
+              <span className="text-gray-400 dark:text-gray-500">· {displayedProducts.length} item{displayedProducts.length !== 1 ? 's' : ''}</span>
             </div>
           )}
 
           {loading || imageBusy ? (
             <>
               {imageBusy && (
-                <p className="text-sm text-blue-600 mb-4 flex items-center gap-2">
+                <p className="text-sm text-blue-600 dark:text-blue-400 mb-4 flex items-center gap-2">
                   <Camera width={16} height={16} className="animate-pulse" /> Analyzing your photo…
                 </p>
               )}
@@ -556,14 +561,14 @@ export default function HomePage() {
               </div>
             </>
           ) : displayedProducts.length === 0 ? (
-            <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
-              <div className="grid place-items-center w-14 h-14 rounded-2xl bg-gray-50 mx-auto mb-4 text-gray-300">
+            <div className="text-center py-16 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800">
+              <div className="grid place-items-center w-14 h-14 rounded-2xl bg-gray-50 dark:bg-slate-800/60 mx-auto mb-4 text-gray-300 dark:text-gray-600">
                 {imageSearch ? <Camera width={26} height={26} /> : <Search width={26} height={26} />}
               </div>
-              <h3 className="font-bold text-gray-700 mb-1">
+              <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-1">
                 {imageSearch ? 'No listings match your photo' : 'No matching listings'}
               </h3>
-              <p className="text-gray-400 text-sm mb-4">
+              <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">
                 {imageSearch
                   ? 'We couldn’t find a related part in stock yet. Try another angle or a clearer shot.'
                   : 'Try a different search or category.'}
@@ -582,35 +587,35 @@ export default function HomePage() {
 
         {/* Right — Trust signals */}
         <aside className="w-56 shrink-0 hidden xl:block">
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 sticky top-20 space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-5 sticky top-20 space-y-4">
             {[
-              { Icon: Shield, color: 'text-blue-600', title: 'Verified Listings', desc: 'All reviewed for quality' },
-              { Icon: Tag,    color: 'text-green-600', title: 'Fair Pricing',     desc: 'Transparent & competitive' },
+              { Icon: Shield, color: 'text-blue-600 dark:text-blue-400', title: 'Verified Listings', desc: 'All reviewed for quality' },
+              { Icon: Tag,    color: 'text-green-600 dark:text-green-400', title: 'Fair Pricing',     desc: 'Transparent & competitive' },
               { Icon: Recycle,color: 'text-emerald-600', title: 'Circular Economy', desc: 'Reduce e-waste together' },
               { Icon: Chat,   color: 'text-sky-600',  title: 'Direct Contact',    desc: 'Message sellers instantly' },
             ].map(({ Icon, color, title, desc }) => (
               <div key={title} className="flex items-start gap-3">
                 <Icon width={20} height={20} className={`shrink-0 mt-0.5 ${color}`} />
                 <div>
-                  <p className="font-semibold text-gray-800 text-xs">{title}</p>
-                  <p className="text-gray-400 text-xs">{desc}</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100 text-xs">{title}</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs">{desc}</p>
                 </div>
               </div>
             ))}
 
-            <div className="border-t border-gray-100 pt-4 space-y-3">
+            <div className="border-t border-gray-100 dark:border-slate-800 pt-4 space-y-3">
               <div className="flex items-center gap-2.5">
-                <Users width={20} height={20} className="text-blue-600" />
+                <Users width={20} height={20} className="text-blue-600 dark:text-blue-400" />
                 <div>
                   <StatNumber value={stats?.active_users} error={statsError} fallback="1,200+" />
-                  <p className="text-gray-400 text-xs mt-0.5">Active users</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">Active users</p>
                 </div>
               </div>
               <div className="flex items-center gap-2.5">
-                <CheckCircle width={20} height={20} className="text-green-600" />
+                <CheckCircle width={20} height={20} className="text-green-600 dark:text-green-400" />
                 <div>
                   <StatNumber value={stats?.listings_this_week} error={statsError} fallback="450+" />
-                  <p className="text-gray-400 text-xs mt-0.5">Listings this week</p>
+                  <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">Listings this week</p>
                 </div>
               </div>
             </div>
@@ -626,10 +631,10 @@ export default function HomePage() {
       </div>
 
       {/* ── How It Works ────────────────────────────────────── */}
-      <section ref={howRef} className="bg-white border-t border-gray-100 py-14 px-4 mt-4 scroll-mt-16">
+      <section ref={howRef} className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 py-14 px-4 mt-4 scroll-mt-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
-          <p className="text-gray-500 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">How It Works</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: '1', Icon: Tag,    title: 'List Your Parts', desc: 'Post your e-waste components with photos, condition, and price.' },
@@ -637,12 +642,12 @@ export default function HomePage() {
               { step: '3', Icon: Chat,   title: 'Connect & Trade', desc: 'Message sellers directly and arrange a pickup or delivery.' },
             ].map(({ step, Icon, title, desc }) => (
               <div key={step} className="text-center">
-                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4">
+                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mx-auto mb-4">
                   <Icon width={24} height={24} />
                 </div>
-                <div className="text-xs font-bold text-blue-600 mb-1">STEP {step}</div>
-                <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm">{desc}</p>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">STEP {step}</div>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{desc}</p>
               </div>
             ))}
           </div>
@@ -658,7 +663,7 @@ export default function HomePage() {
           </p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link to="/register"
-              className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
+              className="btn-lift bg-white dark:bg-slate-900 text-blue-700 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 px-8 py-3 rounded-xl font-semibold text-sm shadow">
               Create Free Account
             </Link>
             <Link to="/login"

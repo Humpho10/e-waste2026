@@ -15,6 +15,7 @@ use App\Http\Controllers\StatsController;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
+    Route::post('/google',   [AuthController::class, 'google']);            // ← new — Google Identity Services sign-in
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
     Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
 });

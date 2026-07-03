@@ -2,6 +2,44 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── Dark mode polish ─────────────────────────────────────────────
+   Applies once <html> carries the `dark` class (see ThemeContext).
+   These are safety-net rules for native form controls and scrollbars,
+   which don't automatically follow Tailwind's text/bg utility classes. */
+html, body { transition: background-color 0.15s ease, color 0.15s ease; }
+
+.dark body {
+  background-color: #020617; /* slate-950 */
+  color-scheme: dark;
+}
+
+/* Native inputs/selects/textareas: give every one of them a sane dark
+   appearance even where a component didn't declare its own bg-* class. */
+.dark input:not([type="checkbox"]):not([type="radio"]),
+.dark select,
+.dark textarea {
+  background-color: #1e293b; /* slate-800 */
+  color: #f1f5f9;            /* slate-100 */
+  border-color: #475569;     /* slate-600 */
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #64748b; /* slate-500 */
+}
+
+.dark input:focus,
+.dark select:focus,
+.dark textarea:focus {
+  background-color: #1e293b;
+}
+
+/* Scrollbars */
+.dark ::-webkit-scrollbar { width: 10px; height: 10px; }
+.dark ::-webkit-scrollbar-track { background: #0f172a; }
+.dark ::-webkit-scrollbar-thumb { background: #334155; border-radius: 9999px; }
+.dark ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
 @keyframes slide-in {
   from {
     opacity: 0;

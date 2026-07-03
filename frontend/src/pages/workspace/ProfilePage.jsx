@@ -91,17 +91,17 @@ export default function ProfilePage() {
     <WorkspaceLayout>
       <div className="max-w-2xl mx-auto">
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">My Profile</h2>
-          <p className="text-gray-500 text-sm mt-1">Update your personal information and password</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">My Profile</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Update your personal information and password</p>
         </div>
 
         {loading ? (
-          <div className="bg-white rounded-2xl border border-gray-100 p-8 animate-pulse space-y-4">
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-8 animate-pulse space-y-4">
             <div className="flex items-center gap-6">
-              <div className="w-20 h-20 rounded-2xl bg-gray-100" />
+              <div className="w-20 h-20 rounded-2xl bg-gray-100 dark:bg-slate-800" />
               <div className="space-y-2">
-                <div className="h-4 bg-gray-100 rounded w-32" />
-                <div className="h-3 bg-gray-100 rounded w-48" />
+                <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-32" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-48" />
               </div>
             </div>
           </div>
@@ -109,13 +109,13 @@ export default function ProfilePage() {
           <form onSubmit={handleSubmit}>
 
             {/* Avatar section */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-              <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Profile Photo</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 mb-6">
+              <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4 text-sm uppercase tracking-wide">Profile Photo</h3>
               <div className="flex items-center gap-6">
                 {/* Avatar preview */}
                 <div
                   onClick={() => fileRef.current?.click()}
-                  className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 hover:border-teal-400 transition relative group shrink-0"
+                  className="w-20 h-20 rounded-2xl overflow-hidden cursor-pointer border-2 border-dashed border-gray-200 dark:border-slate-700 hover:border-teal-400 transition relative group shrink-0"
                 >
                   {avatarUrl ? (
                     <>
@@ -127,7 +127,7 @@ export default function ProfilePage() {
                   ) : (
                     <div className="w-full h-full bg-teal-50 flex flex-col items-center justify-center">
                       <span className="text-2xl">📷</span>
-                      <span className="text-xs text-teal-600 mt-1">Upload</span>
+                      <span className="text-xs text-teal-600 dark:text-teal-400 mt-1">Upload</span>
                     </div>
                   )}
                 </div>
@@ -139,13 +139,13 @@ export default function ProfilePage() {
                   onChange={handleAvatarChange}
                 />
                 <div>
-                  <p className="font-semibold text-gray-800">{form.name}</p>
-                  <p className="text-sm text-gray-400">{user?.email}</p>
-                  <p className="text-xs text-teal-600 font-medium mt-1">Product Manager</p>
+                  <p className="font-semibold text-gray-800 dark:text-gray-100">{form.name}</p>
+                  <p className="text-sm text-gray-400 dark:text-gray-500">{user?.email}</p>
+                  <p className="text-xs text-teal-600 dark:text-teal-400 font-medium mt-1">Product Manager</p>
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="mt-2 text-xs text-teal-600 hover:underline"
+                    className="mt-2 text-xs text-teal-600 dark:text-teal-400 hover:underline"
                   >
                     Click photo or button to change
                   </button>
@@ -154,16 +154,16 @@ export default function ProfilePage() {
             </div>
 
             {/* Personal info */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-              <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Personal Information</h3>
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 mb-6">
+              <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-4 text-sm uppercase tracking-wide">Personal Information</h3>
 
               {success && (
-                <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+                <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 text-green-700 dark:text-green-400 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
                   <span>✅</span><span>{success}</span>
                 </div>
               )}
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
                   <span>⚠️</span><span>{error}</span>
                 </div>
               )}
@@ -175,46 +175,46 @@ export default function ProfilePage() {
                   { label: 'Location',  name: 'location', type: 'text', placeholder: 'e.g. Kampala'       },
                 ].map(({ label, name, type, placeholder }) => (
                   <div key={name}>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
+                    <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
                     <input
                       type={type}
                       value={form[name]}
                       onChange={e => setForm({ ...form, [name]: e.target.value })}
                       placeholder={placeholder}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50"
+                      className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 dark:bg-slate-800/60"
                     />
                   </div>
                 ))}
 
                 {/* Email — read only */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">Email Address</label>
                   <input
                     type="email"
                     value={user?.email || ''}
                     disabled
-                    className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm bg-gray-100 text-gray-400 cursor-not-allowed"
+                    className="w-full border border-gray-100 dark:border-slate-800 rounded-xl px-4 py-2.5 text-sm bg-gray-100 dark:bg-slate-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
                   />
-                  <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Email cannot be changed</p>
                 </div>
               </div>
             </div>
 
             {/* Password section */}
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+            <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 mb-6">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Password</h3>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">Password</h3>
                 <button
                   type="button"
                   onClick={() => setChangePass(!changePass)}
-                  className="text-sm text-teal-600 hover:underline font-medium"
+                  className="text-sm text-teal-600 dark:text-teal-400 hover:underline font-medium"
                 >
                   {changePass ? 'Cancel' : 'Change password'}
                 </button>
               </div>
 
               {!changePass ? (
-                <p className="text-sm text-gray-400">
+                <p className="text-sm text-gray-400 dark:text-gray-500">
                   ••••••••••••  <span className="text-xs">(hidden for security)</span>
                 </p>
               ) : (
@@ -224,13 +224,13 @@ export default function ProfilePage() {
                     { label: 'Confirm Password', name: 'password_confirmation', placeholder: 'Repeat new password' },
                   ].map(({ label, name, placeholder }) => (
                     <div key={name}>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">{label}</label>
+                      <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">{label}</label>
                       <input
                         type="password"
                         value={form[name]}
                         onChange={e => setForm({ ...form, [name]: e.target.value })}
                         placeholder={placeholder}
-                        className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50"
+                        className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 dark:bg-slate-800/60"
                       />
                     </div>
                   ))}

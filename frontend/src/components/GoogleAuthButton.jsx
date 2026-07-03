@@ -103,7 +103,7 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
         onClick={() =>
           onError?.('Google sign-in isn’t configured yet — add VITE_GOOGLE_CLIENT_ID to enable it.')
         }
-        className="btn-lift w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+        className="btn-lift w-full flex items-center justify-center gap-2.5 border border-gray-200 dark:border-slate-700 rounded-xl py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-gray-300"
         title="Set VITE_GOOGLE_CLIENT_ID in frontend/.env to enable"
       >
         <Google />
@@ -117,7 +117,7 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
       {/* Google renders its own button into this node */}
       <div ref={targetRef} className="flex justify-center [&>div]:w-full" />
       {!ready && (
-        <div className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-400">
+        <div className="w-full flex items-center justify-center gap-2.5 border border-gray-200 dark:border-slate-700 rounded-xl py-3 text-sm font-medium text-gray-400 dark:text-gray-500">
           <Google /> Loading Google…
         </div>
       )}
