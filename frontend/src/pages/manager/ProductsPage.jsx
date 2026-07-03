@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getManagerProducts, approveProduct, rejectProduct } from '../../api/manager';
 import { useToast } from '../../components/Toast';
@@ -261,8 +262,6 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
 // ---------- Main Page ----------
 export default function ProductsPage() {
   const [searchParams] = useSearchParams();
-  const [products, setProducts] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState(searchParams.get('status') || 'all');
   const [search, setSearch] = useState('');
   const [rejectTarget, setRejectTarget] = useState(null);
@@ -271,33 +270,32 @@ export default function ProductsPage() {
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canApprove = permissions?.includes('product-approve') || false;
   const canReject = permissions?.includes('product-reject') || false;
 
-  const fetchProducts = () => {
-    setLoading(true);
-    getManagerProducts(status !== 'all' ? { status } : {})
-      .then(res => setProducts(res.data.products))
-      .finally(() => setLoading(false));
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['manager-products', status],
+    queryFn: () => getManagerProducts(status !== 'all' ? { status } : {}).then(res => res.data.products),
+  });
+
+  const setProductStatus = (productId, newStatus) => {
+    queryClient.setQueryData(['manager-products', status], (old = []) =>
+      old.map(p => p.product_id === productId ? { ...p, status: newStatus } : p)
+    );
   };
 
-  useEffect(() => {
-    fetchProducts();
-  }, [status]);
+  const approveMutation = useMutation({
+    mutationFn: (productId) => approveProduct(productId),
+    onSuccess: (_res, productId) => setProductStatus(productId, 'approved'),
+  });
 
   const handleApprove = async (product) => {
     if (!window.confirm(`Approve "${product.title}"?`)) return;
     setApproving(product.product_id);
     try {
-      await approveProduct(product.product_id);
-      setProducts(prev =>
-        prev.map(p =>
-          p.product_id === product.product_id
-            ? { ...p, status: 'approved' }
-            : p
-        )
-      );
+      await approveMutation.mutateAsync(product.product_id);
       toast(`"${product.title}" has been approved and is now live`, 'success');
     } catch (err) {
       const msg = err.response?.data?.message || 'Failed to approve';
@@ -491,13 +489,7 @@ export default function ProductsPage() {
           product={rejectTarget}
           onClose={() => setRejectTarget(null)}
           onRejected={(productId) => {
-            setProducts(prev =>
-              prev.map(p =>
-                p.product_id === productId
-                  ? { ...p, status: 'rejected' }
-                  : p
-              )
-            );
+            setProductStatus(productId, 'rejected');
             setRejectTarget(null);
           }}
           toast={toast}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getNotifications, markRead, markAllRead, deleteNotification } from '../../api/notifications';
 // 👇 Import toast hook
@@ -14,50 +14,46 @@ const typeConfig = {
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(true);
-
   // 👇 Get toast function
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
-  const fetchNotifs = () => {
-    getNotifications()
-      .then(res => setNotifications(res.data.notifications || []))
-      .finally(() => setLoading(false));
-  };
+  const { data: notifications = [], isLoading: loading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => getNotifications().then(res => res.data.notifications || []),
+  });
 
-  useEffect(() => { fetchNotifs(); }, []);
+  const invalidateNotifs = () => queryClient.invalidateQueries({ queryKey: ['notifications'] });
 
-  const handleMarkRead = async (id) => {
-    try {
-      await markRead(id);
-      fetchNotifs();
-    } catch (err) {
-      toast(err.response?.data?.message || 'Failed to mark as read', 'error');
-    }
-  };
+  const markReadMutation = useMutation({
+    mutationFn: markRead,
+    onSuccess: invalidateNotifs,
+    onError: (err) => toast(err.response?.data?.message || 'Failed to mark as read', 'error'),
+  });
 
-  const handleMarkAllRead = async () => {
-    try {
-      await markAllRead();
-      fetchNotifs();
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllRead,
+    onSuccess: () => {
+      invalidateNotifs();
       // 👇 Success toast
       toast('All notifications marked as read', 'info');
-    } catch (err) {
-      toast(err.response?.data?.message || 'Failed to mark all as read', 'error');
-    }
-  };
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to mark all as read', 'error'),
+  });
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteNotification(id);
-      fetchNotifs();
+  const deleteMutation = useMutation({
+    mutationFn: deleteNotification,
+    onSuccess: () => {
+      invalidateNotifs();
       // 👇 Success toast
       toast('Notification removed', 'info');
-    } catch (err) {
-      toast(err.response?.data?.message || 'Failed to delete notification', 'error');
-    }
-  };
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to delete notification', 'error'),
+  });
+
+  const handleMarkRead = (id) => markReadMutation.mutate(id);
+  const handleMarkAllRead = () => markAllReadMutation.mutate();
+  const handleDelete = (id) => deleteMutation.mutate(id);
 
   const unread = notifications.filter(n => !n.is_read).length;
 

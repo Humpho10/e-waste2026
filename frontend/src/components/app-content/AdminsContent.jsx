@@ -1,40 +1,51 @@
 // src/components/app-content/AdminsContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getAdmins, createAdmin, deleteAdmin } from '../../api/admin';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AdminsContent() {
-  const [admins, setAdmins] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canCreateAdmin = permissions?.includes('admin-create') || false;
   const canDeleteAdmin = permissions?.includes('admin-delete') || false;
 
-  const fetchAdmins = () => {
-    setLoading(true);
-    getAdmins()
-      .then(res => setAdmins(res.data.admins))
-      .finally(() => setLoading(false));
-  };
+  // Shared with admin/AdminsPage.jsx — same endpoint.
+  const { data: admins = [], isLoading: loading } = useQuery({
+    queryKey: ['admins'],
+    queryFn: () => getAdmins().then(res => res.data.admins),
+  });
 
-  useEffect(() => { fetchAdmins(); }, []);
+  const invalidateAdmins = () => queryClient.invalidateQueries({ queryKey: ['admins'] });
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Remove ${name} as Admin? This cannot be undone.`)) return;
-    try {
-      await deleteAdmin(id);
-      fetchAdmins();
+  const createMutation = useMutation({
+    mutationFn: (data) => createAdmin(data),
+    onSuccess: () => {
+      toast('Admin created successfully', 'success');
+      setShowModal(false);
+      invalidateAdmins();
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to create admin', 'error'),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteAdmin(id),
+    onSuccess: () => {
       toast('Admin removed successfully', 'success');
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Could not delete admin';
-      toast(msg, 'error');
-    }
+      invalidateAdmins();
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Could not delete admin', 'error'),
+  });
+
+  const handleDelete = (id, name) => {
+    if (!window.confirm(`Remove ${name} as Admin? This cannot be undone.`)) return;
+    deleteMutation.mutate(id);
   };
 
   const filtered = admins.filter(a =>
@@ -165,7 +176,7 @@ export default function AdminsContent() {
                 <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
               </div>
             </div>
-            <form onSubmit={async (e) => {
+            <form onSubmit={(e) => {
               e.preventDefault();
               const formData = new FormData(e.target);
               const data = {
@@ -173,14 +184,7 @@ export default function AdminsContent() {
                 email: formData.get('email'),
                 password: formData.get('password'),
               };
-              try {
-                await createAdmin(data);
-                toast('Admin created successfully', 'success');
-                setShowModal(false);
-                fetchAdmins();
-              } catch (err) {
-                toast(err.response?.data?.message || 'Failed to create admin', 'error');
-              }
+              createMutation.mutate(data);
             }} className="p-6 space-y-4">
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-1.5">Full Name</label>
@@ -204,4 +208,4 @@ export default function AdminsContent() {
       )}
     </>
   );
-}
+}

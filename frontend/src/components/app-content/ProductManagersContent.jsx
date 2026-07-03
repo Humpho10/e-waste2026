@@ -1,28 +1,39 @@
 // src/components/app-content/ProductManagersContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getProductManagers, createProductManager, getManagerCategories } from '../../api/manager';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 export default function ProductManagersContent() {
-  const [pms, setPms] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch] = useState('');
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canCreatePM = permissions?.includes('pm-create') || false;
 
-  const fetchPMs = () => {
-    setLoading(true);
-    getProductManagers()
-      .then(res => setPms(res.data.product_managers))
-      .finally(() => setLoading(false));
-  };
+  // Shared with manager/ProductManagersPage.jsx — same endpoint.
+  const { data: pms = [], isLoading: loading } = useQuery({
+    queryKey: ['product-managers'],
+    queryFn: () => getProductManagers().then(res => res.data.product_managers),
+  });
 
-  useEffect(() => { fetchPMs(); }, []);
+  const invalidatePMs = () => queryClient.invalidateQueries({ queryKey: ['product-managers'] });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => createProductManager(data),
+    onSuccess: () => {
+      toast('Product Manager created successfully', 'success');
+      setShowModal(false);
+      invalidatePMs();
+    },
+    onError: (err) => {
+      toast(err.response?.data?.error || err.response?.data?.message || 'Failed to create', 'error');
+    },
+  });
 
   const filtered = pms.filter(pm =>
     pm.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -156,7 +167,7 @@ export default function ProductManagersContent() {
               </div>
             </div>
             <div className="p-6 overflow-y-auto flex-1">
-              <form onSubmit={async (e) => {
+              <form onSubmit={(e) => {
                 e.preventDefault();
                 const formData = new FormData(e.target);
                 const data = {
@@ -167,14 +178,7 @@ export default function ProductManagersContent() {
                   location: formData.get('location'),
                   category_id: Array.from(e.target.querySelectorAll('input[name="category_id"]:checked')).map(cb => parseInt(cb.value)),
                 };
-                try {
-                  await createProductManager(data);
-                  toast('Product Manager created successfully', 'success');
-                  setShowModal(false);
-                  fetchPMs();
-                } catch (err) {
-                  toast(err.response?.data?.error || err.response?.data?.message || 'Failed to create', 'error');
-                }
+                createMutation.mutate(data);
               }}>
                 <div className="grid grid-cols-2 gap-4">
                   {[
@@ -211,4 +215,4 @@ export default function ProductManagersContent() {
       )}
     </>
   );
-}
+}

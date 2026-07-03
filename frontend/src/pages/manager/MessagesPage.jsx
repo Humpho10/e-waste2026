@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
@@ -8,51 +9,57 @@ import { useToast } from '../../components/Toast'; // or '../context/ToastContex
 
 export default function WorkspaceMessagesPage() {
   const { user }                          = useAuth();
-  const [conversations, setConversations] = useState([]);
   const [active, setActive]               = useState(null);
-  const [messages, setMessages]           = useState([]);
   const [newMsg, setNewMsg]               = useState('');
-  const [loading, setLoading]             = useState(true);
-  const [sending, setSending]             = useState(false);
 
   // 👇 Get the refresh function from context
   const { refresh } = useBadge();
   // 👇 Get toast function
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
+  const { data: conversations = [], isLoading: loading } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: () => getConversations().then(res => res.data.conversations || []),
+  });
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ['messages', active?.product_id],
+    queryFn: () => getProductMessages(active.product_id).then(res => res.data.messages || []),
+    enabled: !!active,
+  });
+
+  // Refresh the notification badge whenever a conversation is opened
+  // (viewing a thread marks its messages as read server-side).
   useEffect(() => {
-    getConversations()
-      .then(res => setConversations(res.data.conversations || []))
-      .finally(() => setLoading(false));
-  }, []);
+    if (active) refresh();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [active]);
 
-  // ✅ Single declaration – now with refresh()
-  const openConversation = async (conv) => {
-    setActive(conv);
-    const res = await getProductMessages(conv.product_id);
-    setMessages(res.data.messages || []);
-    refresh(); // messages were marked read, update badge
-  };
+  const openConversation = (conv) => setActive(conv);
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!newMsg.trim() || !active) return;
-    setSending(true);
-    try {
-      await sendMessage({ product_id: active.product_id, message_text: newMsg });
+  const sendMutation = useMutation({
+    mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
+    onSuccess: () => {
       // 👇 Success toast
       toast('Message sent', 'success');
       setNewMsg('');
-      const res = await getProductMessages(active.product_id);
-      setMessages(res.data.messages || []);
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id] });
+    },
+    onError: (err) => {
       // 👇 Error toast
       const errorMsg = err.response?.data?.message || 'Failed to send message';
       toast(errorMsg, 'error');
-    } finally {
-      setSending(false);
-    }
+    },
+  });
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!newMsg.trim() || !active) return;
+    sendMutation.mutate(newMsg);
   };
+
+  const sending = sendMutation.isPending;
 
   return (
     <ManagerLayout>

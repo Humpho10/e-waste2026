@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast'; // adjust path if needed
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import { BrandPanel } from './LoginPage';
-import { Recycle, Eye, EyeOff, ArrowLeft } from '../components/icons';
+import { Recycle, Eye, EyeOff, ArrowLeft, CheckCircle } from '../components/icons';
 
 const REDIRECT_MAP = {
   'Super-Admin': '/admin',
@@ -39,6 +39,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [showPw, setShowPw]   = useState(false);
   const [showPw2, setShowPw2] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState(null);
 
   const strength = useMemo(() => passwordStrength(form.password), [form.password]);
   const mismatch = form.password_confirmation && form.password !== form.password_confirmation;
@@ -58,7 +59,8 @@ export default function RegisterPage() {
     setLoading(true);
     try {
       const res = await registerUser(form);
-      finish(res.data);
+      // No auto-login — the account needs email verification before signing in.
+      setRegisteredEmail(res.data.email || form.email);
     } catch (err) {
       if (err.response?.status === 422) {
         setErrors(err.response.data.errors || {});
@@ -79,6 +81,38 @@ export default function RegisterPage() {
     `w-full border rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
       fieldError(name) ? 'border-red-400 bg-red-50' : 'border-gray-200'
     }`;
+
+  // 👇 Account created — wait for email verification before signing in.
+  if (registeredEmail) {
+    return (
+      <div className="min-h-screen flex bg-gray-50">
+        <BrandPanel subtitle="Create your free account and start trading e-waste components today." />
+        <div className="flex-1 flex items-center justify-center px-4 py-10">
+          <div className="w-full max-w-md">
+            <div className="text-center mb-8 lg:hidden">
+              <Link to="/" className="inline-flex items-center gap-2">
+                <Recycle width={26} height={26} className="text-blue-600" />
+                <span className="text-2xl font-bold text-[#0b2545]">E-Waste Mart</span>
+              </Link>
+            </div>
+            <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100 text-center">
+              <div className="grid place-items-center w-14 h-14 rounded-2xl bg-green-50 text-green-600 mx-auto mb-4">
+                <CheckCircle width={28} height={28} />
+              </div>
+              <h1 className="text-xl font-bold text-gray-800 mb-2">Check your email</h1>
+              <p className="text-gray-500 text-sm mb-6">
+                We've sent a verification link to <span className="font-medium text-gray-700">{registeredEmail}</span>.
+                Click it to confirm your account, then sign in below.
+              </p>
+              <Link to="/login" className="btn-lift inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold">
+                Go to sign in
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50">

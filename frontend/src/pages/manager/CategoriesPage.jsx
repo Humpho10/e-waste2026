@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import {
   getManagerCategories,
@@ -12,13 +13,10 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 export default function CategoriesPage() {
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '' });
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
 
   // --- Subcategory state ---
@@ -30,22 +28,19 @@ export default function CategoriesPage() {
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
   const canCreateCategory = permissions?.includes('category-create') || false;
   const canEditCategory = permissions?.includes('category-edit') || false;
   const canDeleteCategory = permissions?.includes('category-delete') || false;
 
-  const fetchCategories = () => {
-    setLoading(true);
-    getManagerCategories()
-      .then(res => setCategories(res.data.categories))
-      .finally(() => setLoading(false));
-  };
+  const { data: categories = [], isLoading: loading } = useQuery({
+    queryKey: ['manager-categories'],
+    queryFn: () => getManagerCategories().then(res => res.data.categories),
+  });
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
+  const invalidateCategories = () => queryClient.invalidateQueries({ queryKey: ['manager-categories'] });
 
   // --- Open / close modal ---
   const openCreate = () => {
@@ -87,11 +82,8 @@ export default function CategoriesPage() {
   };
 
   // --- Submit category (with subcategories) ---
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
+  const saveMutation = useMutation({
+    mutationFn: async ({ editing, form, editingSubcats }) => {
       let savedCategory;
 
       if (editing) {
@@ -105,14 +97,10 @@ export default function CategoriesPage() {
         const toRemove = originalIds.filter((id) => !remainingIds.includes(id));
 
         await Promise.all(toRemove.map((id) => removeSubcategory(id)));
-
-        toast('Category updated successfully', 'success');
       } else {
         // 1. Create new category
         const res = await createCategory(form);
         savedCategory = res.data.category;
-
-        toast('Category created successfully', 'success');
       }
 
       // 3. Add new subcategories (for both create and edit)
@@ -123,28 +111,44 @@ export default function CategoriesPage() {
         )
       );
 
+      return { editing };
+    },
+    onSuccess: ({ editing }) => {
+      toast(editing ? 'Category updated successfully' : 'Category created successfully', 'success');
       setShowModal(false);
-      fetchCategories();
-    } catch (err) {
+      invalidateCategories();
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Something went wrong';
       setError(msg);
       toast(msg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    saveMutation.mutate({ editing, form, editingSubcats });
   };
 
+  const submitting = saveMutation.isPending;
+
   // --- Delete category ---
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete category "${name}"? This cannot be undone.`)) return;
-    try {
-      await deleteCategory(id);
-      fetchCategories();
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteCategory(id),
+    onSuccess: () => {
       toast('Category deleted successfully', 'success');
-    } catch (err) {
+      invalidateCategories();
+    },
+    onError: (err) => {
       const msg = err.response?.data?.error || 'Could not delete — category may have products';
       toast(msg, 'warning');
-    }
+    },
+  });
+
+  const handleDelete = (id, name) => {
+    if (!window.confirm(`Delete category "${name}"? This cannot be undone.`)) return;
+    deleteMutation.mutate(id);
   };
 
   const filtered = categories.filter((c) =>

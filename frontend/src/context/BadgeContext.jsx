@@ -1,49 +1,56 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { createContext, useContext } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from './AuthContext';
 
 const BadgeContext = createContext();
 
+const fetchUnreadCounts = async (token) => {
+  // Both endpoints work for every role since they're in auth:sanctum group
+  const [notifRes, msgRes] = await Promise.all([
+    fetch('http://localhost:8000/api/notifications/unread-count', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      }
+    }),
+    fetch('http://localhost:8000/api/messages/unread-count', {
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Accept': 'application/json',
+      }
+    }),
+  ]);
+
+  const notifCount = notifRes.ok ? (await notifRes.json()).unread_count ?? 0 : 0;
+  const msgCount = msgRes.ok ? (await msgRes.json()).unread_count ?? 0 : 0;
+  return { notifCount, msgCount };
+};
+
 export function BadgeProvider({ children }) {
   const { token } = useAuth();
-  const [notifCount, setNotifCount] = useState(0);
-  const [msgCount,   setMsgCount]   = useState(0);
+  const queryClient = useQueryClient();
 
-  const refresh = useCallback(async () => {
-    if (!token) return;
-    try {
-      // Both endpoints work for every role since they're in auth:sanctum group
-      const [notifRes, msgRes] = await Promise.all([
-        fetch('http://localhost:8000/api/notifications/unread-count', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          }
-        }),
-        fetch('http://localhost:8000/api/messages/unread-count', {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Accept': 'application/json',
-          }
-        }),
-      ]);
+  const { data } = useQuery({
+    queryKey: ['unread-counts'],
+    queryFn: () => fetchUnreadCounts(token),
+    enabled: !!token,
+    refetchInterval: token ? 15000 : false, // poll every 15 seconds
+  });
 
-      if (notifRes.ok) {
-        const notifData = await notifRes.json();
-        setNotifCount(notifData.unread_count ?? 0);
-      }
-      if (msgRes.ok) {
-        const msgData = await msgRes.json();
-        setMsgCount(msgData.unread_count ?? 0);
-      }
-    } catch {}
-  }, [token]);
+  const notifCount = token ? (data?.notifCount ?? 0) : 0;
+  const msgCount = token ? (data?.msgCount ?? 0) : 0;
 
-  useEffect(() => {
-    if (!token) { setNotifCount(0); setMsgCount(0); return; }
-    refresh();
-    const interval = setInterval(refresh, 15000); // poll every 15 seconds
-    return () => clearInterval(interval);
-  }, [token, refresh]);
+  const refresh = () => queryClient.invalidateQueries({ queryKey: ['unread-counts'] });
+
+  const setNotifCount = (value) => queryClient.setQueryData(['unread-counts'], (old) => ({
+    notifCount: typeof value === 'function' ? value(old?.notifCount ?? 0) : value,
+    msgCount: old?.msgCount ?? 0,
+  }));
+
+  const setMsgCount = (value) => queryClient.setQueryData(['unread-counts'], (old) => ({
+    notifCount: old?.notifCount ?? 0,
+    msgCount: typeof value === 'function' ? value(old?.msgCount ?? 0) : value,
+  }));
 
   return (
     <BadgeContext.Provider value={{ notifCount, msgCount, refresh, setNotifCount, setMsgCount }}>

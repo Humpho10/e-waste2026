@@ -11,7 +11,10 @@ use Illuminate\Validation\ValidationException;
 use Spatie\Permission\PermissionRegistrar;
 use App\Models\PasswordResetOtp;
 use App\Mail\PasswordResetOtpMail;
+use App\Models\EmailVerification;
+use App\Mail\VerifyEmailMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -38,17 +41,12 @@ class AuthController extends Controller
         // Assign the default buyer/seller role so new users get dashboard access.
         $user->assignRole('User');
 
-        $token = $user->createToken('auth_token')->plainTextToken;
+        $this->sendVerificationEmail($user);
 
-        $permissions = $user->getAllPermissions()->pluck('name');
-        $role = $user->roles->first()?->name ?? 'User';
-
+        // No token/auto-login — the user must verify their email, then sign in.
         return response()->json([
-            'message'     => 'Registration successful',
-            'user'        => $user->load('roles'),
-            'token'       => $token,
-            'role'        => $role,
-            'permissions' => $permissions,
+            'message' => 'Registration successful. Please check your email to verify your account before signing in.',
+            'email'   => $user->email,
         ], 201);
     }
 
@@ -170,5 +168,66 @@ class AuthController extends Controller
         PasswordResetOtp::where('email', $request->email)->delete();
 
         return response()->json(['message' => 'Password reset successfully.']);
+    }
+
+    // Confirm a user's email address using the token from the verification link.
+    public function verifyEmail(Request $request)
+    {
+        $request->validate(['token' => 'required|string']);
+
+        $record = EmailVerification::where('token', $request->token)->first();
+
+        if (!$record) {
+            return response()->json(['message' => 'Invalid or already-used verification link.'], 422);
+        }
+
+        if ($record->expires_at->isPast()) {
+            return response()->json(['message' => 'This verification link has expired. Please request a new one.'], 422);
+        }
+
+        $user = User::where('email', $record->email)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Account not found.'], 404);
+        }
+
+        if (!$user->email_verified_at) {
+            $user->email_verified_at = now();
+            $user->save();
+        }
+
+        EmailVerification::where('email', $record->email)->delete();
+
+        return response()->json(['message' => 'Email verified successfully.']);
+    }
+
+    // Resend the verification email to the currently authenticated user.
+    public function resendVerification(Request $request)
+    {
+        $user = $request->user();
+
+        if ($user->email_verified_at) {
+            return response()->json(['message' => 'This account is already verified.'], 400);
+        }
+
+        $this->sendVerificationEmail($user);
+
+        return response()->json(['message' => 'Verification email sent.']);
+    }
+
+    // Generate a fresh verification token for the user and email it to them.
+    private function sendVerificationEmail(User $user): void
+    {
+        EmailVerification::where('email', $user->email)->delete();
+
+        $token = Str::random(64);
+
+        EmailVerification::create([
+            'email'      => $user->email,
+            'token'      => $token,
+            'expires_at' => now()->addHours(24),
+        ]);
+
+        Mail::to($user->email)->send(new VerifyEmailMail($user->name, $token));
     }
 }

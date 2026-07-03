@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
@@ -22,6 +23,7 @@ export default function WorkspaceLayout({ children }) {
   const { notifCount, msgCount }      = useBadge();
   const location                      = useLocation();
   const navigate                      = useNavigate();
+  const queryClient                   = useQueryClient();
   const [collapsed, setCollapsed]     = useState(false);
   const [loggingOut, setLoggingOut]   = useState(false);
 
@@ -29,6 +31,7 @@ export default function WorkspaceLayout({ children }) {
     setLoggingOut(true);
     try { await logoutUser(); } catch {}
     logout();
+    queryClient.clear(); // wipe cached data so it doesn't leak into the next session
     navigate('/');
   };
 

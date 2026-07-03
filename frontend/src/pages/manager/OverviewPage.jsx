@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getManagerStats } from '../../api/manager';
 import { useAuth } from '../../context/AuthContext';
@@ -38,16 +38,11 @@ function SkeletonRow() {
 
 export default function ManagerOverviewPage() {
   const { user } = useAuth();
-  const [stats, setStats]     = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
 
-  useEffect(() => {
-    getManagerStats()
-      .then(res => setStats(res.data.stats))
-      .catch(() => setError('Failed to load stats'))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: stats, isLoading: loading, isError, refetch } = useQuery({
+    queryKey: ['manager-stats'],
+    queryFn: () => getManagerStats().then(res => res.data.stats),
+  });
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
@@ -73,9 +68,9 @@ export default function ManagerOverviewPage() {
         </p>
       </div>
 
-      {error && (
+      {isError && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6">
-          {error} — <button onClick={() => window.location.reload()} className="underline">Retry</button>
+          Failed to load stats — <button onClick={() => refetch()} className="underline">Retry</button>
         </div>
       )}
 

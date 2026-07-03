@@ -116,6 +116,13 @@ class ProductController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to create products.'], 403);
         }
 
+        if (!$this->user->email_verified_at) {
+            return response()->json([
+                'message'          => 'Please verify your email address before creating a listing.',
+                'email_unverified' => true,
+            ], 403);
+        }
+
         $validated = $request->validate([
             'category_id'    => 'required|exists:categories,category_id',
             'subcategory_id' => 'required|exists:sub_categories,subcategory_id',

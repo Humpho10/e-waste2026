@@ -1,7 +1,9 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getCategories, createProduct } from '../../api/products';
+import { resendVerification } from '../../api/auth';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
@@ -15,19 +17,23 @@ const steps = [
 export default function CreateListingPage() {
   const navigate = useNavigate();
   const [step, setStep]             = useState(1);
-  const [categories, setCategories] = useState([]);
-  const [subcategories, setSubcategories] = useState([]);
-  const [submitting, setSubmitting] = useState(false);
   const [error, setError]           = useState('');
   const [images, setImages]         = useState([]);
   const [previews, setPreviews]     = useState([]);
 
   // 👇 Get permissions and toast
-  const { permissions } = useAuth();
+  const { permissions, user } = useAuth();
   const { toast } = useToast();
 
   // 👇 Check if user has permission to create listings
   const canCreate = permissions?.includes('product-create') || false;
+  const isVerified = !!user?.email_verified_at;
+
+  const resendMutation = useMutation({
+    mutationFn: resendVerification,
+    onSuccess: () => toast('Verification email sent. Check your inbox.', 'success'),
+    onError: (err) => toast(err.response?.data?.message || 'Could not send verification email.', 'error'),
+  });
 
   const [form, setForm] = useState({
     category_id:    '',
@@ -39,17 +45,13 @@ export default function CreateListingPage() {
     specification:  '',
   });
 
-  useEffect(() => {
-    getCategories().then(res => setCategories(res.data.categories));
-  }, []);
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories().then(res => res.data.categories),
+  });
 
-  useEffect(() => {
-    if (form.category_id) {
-      const cat = categories.find(c => c.category_id == form.category_id);
-      setSubcategories(cat?.subcategories || []);
-      setForm(prev => ({ ...prev, subcategory_id: '' }));
-    }
-  }, [form.category_id, categories]);
+  // Derived from categories + the selected category_id — no effect needed.
+  const subcategories = categories.find(c => c.category_id == form.category_id)?.subcategories || [];
 
   const handleImageChange = (e) => {
     const existing = images.length;
@@ -65,35 +67,36 @@ export default function CreateListingPage() {
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleSubmit = async () => {
-    setError('');
-    setSubmitting(true);
-    try {
-      const data = new FormData();
-      Object.entries(form).forEach(([key, val]) => {
-        if (val) data.append(key, val);
-      });
-      images.forEach((img, i) => {
-        data.append(`images[${i}]`, img);
-      });
-      await createProduct(data);
+  const createMutation = useMutation({
+    mutationFn: (data) => createProduct(data),
+    onSuccess: () => {
       toast('Listing submitted for approval successfully', 'success');
       navigate('/dashboard/listings');
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = err.response?.data?.errors;
-      let errorMsg;
-      if (errors) {
-        errorMsg = Object.values(errors).flat().join(' · ');
-      } else {
-        errorMsg = err.response?.data?.message || 'Failed to submit listing.';
-      }
+      const errorMsg = errors
+        ? Object.values(errors).flat().join(' · ')
+        : err.response?.data?.message || 'Failed to submit listing.';
       setError(errorMsg);
       toast(errorMsg || 'Failed to submit listing', 'error');
       setStep(2);
-    } finally {
-      setSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmit = () => {
+    setError('');
+    const data = new FormData();
+    Object.entries(form).forEach(([key, val]) => {
+      if (val) data.append(key, val);
+    });
+    images.forEach((img, i) => {
+      data.append(`images[${i}]`, img);
+    });
+    createMutation.mutate(data);
   };
+
+  const submitting = createMutation.isPending;
 
   const canNext = () => {
     if (step === 1) return form.category_id && form.subcategory_id;
@@ -112,6 +115,28 @@ export default function CreateListingPage() {
           <div className="text-5xl mb-4">🚫</div>
           <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
           <p className="text-gray-500">You don't have permission to create listings.</p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  // 👇 Block listing creation until the user has verified their email
+  if (!isVerified) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto text-center py-16">
+          <div className="text-5xl mb-4">📧</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify your email first</h2>
+          <p className="text-gray-500 mb-6">
+            You need to verify your email address before you can create a listing. Check your inbox for the verification link.
+          </p>
+          <button
+            onClick={() => resendMutation.mutate()}
+            disabled={resendMutation.isPending}
+            className="btn-lift bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+          >
+            {resendMutation.isPending ? 'Sending…' : 'Resend verification email'}
+          </button>
         </div>
       </DashboardLayout>
     );
@@ -174,7 +199,7 @@ export default function CreateListingPage() {
                   <button
                     key={cat.category_id}
                     type="button"
-                    onClick={() => setForm({ ...form, category_id: cat.category_id })}
+                    onClick={() => setForm({ ...form, category_id: cat.category_id, subcategory_id: '' })}
                     className={`p-4 rounded-xl border-2 text-left transition
                       ${form.category_id == cat.category_id
                         ? 'border-blue-500 bg-blue-50'

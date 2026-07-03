@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage } from '../api/products';
@@ -244,52 +245,47 @@ function StatNumber({ value, error, fallback }) {
 
 // ── HomePage ──────────────────────────────────────────────────
 export default function HomePage() {
-  const [categories, setCategories]   = useState([]);
-  const [products, setProducts]       = useState([]);
-  const [loading, setLoading]         = useState(true);
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery]             = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
   const [expandedCats, setExpandedCats]     = useState({ c1: true });
-  const [stats, setStats]                   = useState(null);
-  const [statsError, setStatsError]         = useState(false);
   const [imageSearch, setImageSearch]       = useState(null); // { labels: [] }
-  const [imageBusy, setImageBusy]           = useState(false);
+  const [imageSearchProducts, setImageSearchProducts] = useState([]);
   const [imageError, setImageError]         = useState('');
   const { token } = useAuth();
   const navigate     = useNavigate();
   const listingsRef  = useRef(null);
   const howRef       = useRef(null);
-  const featuredRef  = useRef([]);   // original featured listings, for restore
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    let alive = true;
-    Promise.all([getCategories(), browseProducts({ per_page: 8 })])
-      .then(([catRes, prodRes]) => {
-        if (!alive) return;
+  // Categories + featured products are fetched together, matching the
+  // original's Promise.all — either one failing falls back to sample data
+  // for both, rather than mixing real + sample results.
+  const { data: homeData, isLoading: loading } = useQuery({
+    queryKey: ['home-featured'],
+    queryFn: async () => {
+      try {
+        const [catRes, prodRes] = await Promise.all([getCategories(), browseProducts({ per_page: 8 })]);
         const cats = catRes.data.categories;
         const prods = prodRes.data.data;
-        const list = prods?.length ? prods : SAMPLE_PRODUCTS;
-        setCategories(cats?.length ? cats : SAMPLE_CATEGORIES);
-        setProducts(list);
-        featuredRef.current = list;
-      })
-      .catch(() => {
-        if (!alive) return;
-        setCategories(SAMPLE_CATEGORIES);
-        setProducts(SAMPLE_PRODUCTS);
-        featuredRef.current = SAMPLE_PRODUCTS;
-      })
-      .finally(() => alive && setLoading(false));
+        return {
+          categories: cats?.length ? cats : SAMPLE_CATEGORIES,
+          products: prods?.length ? prods : SAMPLE_PRODUCTS,
+        };
+      } catch {
+        return { categories: SAMPLE_CATEGORIES, products: SAMPLE_PRODUCTS };
+      }
+    },
+  });
 
-    // Live counters — independent so a failure never blocks the listings.
-    getStats()
-      .then(res => { if (alive) setStats(res.data); })
-      .catch(() => { if (alive) setStatsError(true); });
+  const categories = homeData?.categories || [];
+  const baseProducts = homeData?.products || [];
 
-    return () => { alive = false; };
-  }, []);
+  // Live counters — independent query so a failure never blocks the listings.
+  const { data: stats, isError: statsError } = useQuery({
+    queryKey: ['home-stats'],
+    queryFn: () => getStats().then(res => res.data),
+  });
 
   const scrollToListings = () =>
     listingsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -320,35 +316,40 @@ export default function HomePage() {
   // ── Search by photo (Google Vision) ───────────────────────
   const pickImage = () => { setImageError(''); fileInputRef.current?.click(); };
 
-  const handleImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';            // let the user re-pick the same file later
-    if (!file) return;
-    setImageBusy(true);
-    setImageError('');
-    setQuery(''); setSearchInput(''); setActiveCategory(null);
-    scrollToListings();
-    try {
-      const res = await searchByImage(file);
-      setProducts(res.data.products || []);
+  const imageSearchMutation = useMutation({
+    mutationFn: (file) => searchByImage(file),
+    onSuccess: (res) => {
+      setImageSearchProducts(res.data.products || []);
       setImageSearch({ labels: res.data.labels || [] });
-    } catch (err) {
+    },
+    onError: (err) => {
       setImageError(
         err.response?.data?.message ||
         (err.response?.status === 503
           ? 'Photo search isn’t enabled on the server yet.'
           : 'Couldn’t search by that photo. Please try again.')
       );
-      setImageSearch(null);
-      setProducts(featuredRef.current);
-    } finally {
-      setImageBusy(false);
-    }
+      setImageSearch(null); // reverting imageSearch to null falls back to baseProducts
+    },
+  });
+
+  const imageBusy = imageSearchMutation.isPending;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';            // let the user re-pick the same file later
+    if (!file) return;
+    setImageError('');
+    setQuery(''); setSearchInput(''); setActiveCategory(null);
+    scrollToListings();
+    imageSearchMutation.mutate(file);
   };
 
   const toggleExpand = (id) => setExpandedCats(p => ({ ...p, [id]: !p[id] }));
 
   const activeCatName = categories.find(c => c.category_id === activeCategory)?.name;
+
+  const products = imageSearch ? imageSearchProducts : baseProducts;
 
   // In-place filtering for instant, working interactivity.
   const displayedProducts = useMemo(() => {
@@ -375,7 +376,7 @@ export default function HomePage() {
   const clearFilters = () => {
     setQuery(''); setSearchInput(''); setActiveCategory(null);
     setImageError('');
-    if (imageSearch) { setProducts(featuredRef.current); setImageSearch(null); }
+    if (imageSearch) { setImageSearch(null); } // reverts products to baseProducts
   };
 
   return (

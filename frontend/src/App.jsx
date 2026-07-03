@@ -67,6 +67,7 @@ import AuditContent from './components/app-content/AuditContent';
 import ProductManagersContent from './components/app-content/ProductManagersContent';
 
 import ForgotPasswordPage from './pages/ForgotPasswordPage';
+import VerifyEmailPage from './pages/VerifyEmailPage';
 
 // ─── Route Guards ────────────────────────────────────────────
 function ProtectedRoute({ children }) {
@@ -92,6 +93,7 @@ function App() {
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
 
         {/* ─── Super Admin ──────────────────────────────────── */}
         <Route path="/admin" element={
