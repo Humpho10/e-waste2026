@@ -1,6 +1,7 @@
 // src/components/app-content/MyListingsContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { myListings, deleteProduct } from '../../api/products';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
@@ -14,38 +15,38 @@ const statusConfig = {
 
 export default function MyListingsContent() {
   const [searchParams] = useSearchParams();
-  const [listings, setListings] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [status, setStatus] = useState(searchParams.get('status') || 'all');
   const [deleting, setDeleting] = useState(null);
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canEdit = permissions?.includes('product-edit') || false;
   const canDelete = permissions?.includes('product-delete') || false;
   const canResubmit = permissions?.includes('product-create') || false;
   const canCreate = permissions?.includes('product-create') || false;
 
-  const fetchListings = () => {
-    setLoading(true);
-    myListings(status !== 'all' ? { status } : {})
-      .then(res => setListings(res.data.products || []))
-      .finally(() => setLoading(false));
-  };
+  // Shared with dashboard/MyListingsPage.jsx and dashboard/ResubmitListingPage.jsx.
+  const { data: listings = [], isLoading: loading } = useQuery({
+    queryKey: ['my-listings', status],
+    queryFn: () => myListings(status !== 'all' ? { status } : {}).then(res => res.data.products || []),
+  });
 
-  useEffect(() => { fetchListings(); }, [status]);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteProduct(id),
+    onSuccess: () => {
+      toast('Listing deleted successfully', 'success');
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Could not delete.', 'error'),
+  });
 
   const handleDelete = async (id, title) => {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
     setDeleting(id);
     try {
-      await deleteProduct(id);
-      toast('Listing deleted successfully', 'success');
-      fetchListings();
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Could not delete.';
-      toast(msg, 'error');
+      await deleteMutation.mutateAsync(id);
     } finally {
       setDeleting(null);
     }
@@ -184,4 +185,4 @@ export default function MyListingsContent() {
       )}
     </>
   );
-}
+}

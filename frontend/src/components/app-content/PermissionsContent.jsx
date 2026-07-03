@@ -1,61 +1,69 @@
 // src/components/app-content/PermissionsContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getPermissions, createPermission, deletePermission } from '../../api/admin';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 export default function PermissionsContent() {
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ name: '' });
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   const { permissions: userPermissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canCreatePermission = userPermissions?.includes('permission-create') || false;
   const canDeletePermission = userPermissions?.includes('permission-delete') || false;
 
-  const fetchPermissions = () => {
-    getPermissions()
-      .then(res => setPermissions(res.data.permissions))
-      .finally(() => setLoading(false));
-  };
+  // Shared with admin/PermissionsPage.jsx and admin/RolesPage.jsx — same endpoint.
+  const { data: permissions = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-permissions'],
+    queryFn: () => getPermissions().then(res => res.data.permissions),
+  });
 
-  useEffect(() => { fetchPermissions(); }, []);
+  const invalidatePermissions = () => queryClient.invalidateQueries({ queryKey: ['admin-permissions'] });
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
-      await createPermission(form);
+  const createMutation = useMutation({
+    mutationFn: (data) => createPermission(data),
+    onSuccess: () => {
       toast('Permission created successfully', 'success');
       setShowModal(false);
       setForm({ name: '' });
-      fetchPermissions();
-    } catch (err) {
+      invalidatePermissions();
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Something went wrong.';
       setError(msg);
       toast(msg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    createMutation.mutate(form);
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete permission "${name}"?`)) return;
-    try {
-      await deletePermission(id);
+  const submitting = createMutation.isPending;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deletePermission(id),
+    onSuccess: () => {
       toast('Permission deleted successfully', 'success');
-      fetchPermissions();
-    } catch (err) {
+      invalidatePermissions();
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Could not delete.';
       toast(msg, 'error');
-    }
+    },
+  });
+
+  const handleDelete = (id, name) => {
+    if (!window.confirm(`Delete permission "${name}"?`)) return;
+    deleteMutation.mutate(id);
   };
 
   const filtered = permissions.filter(p =>
@@ -170,4 +178,4 @@ export default function PermissionsContent() {
       )}
     </>
   );
-}
+}

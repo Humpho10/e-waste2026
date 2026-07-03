@@ -17,11 +17,13 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
     Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
+    Route::post('/verify-email',    [AuthController::class, 'verifyEmail']);    // ← new
 });
 
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
+    Route::post('/resend-verification', [AuthController::class, 'resendVerification']); // ← new
 });
 
 // ── Public Routes (No Auth Required) ─────────────────────────

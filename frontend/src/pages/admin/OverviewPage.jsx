@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getStats } from '../../api/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -59,16 +59,11 @@ function RoleBadge({ role }) {
 
 export default function OverviewPage() {
   const { user } = useAuth();
-  const [stats, setStats]     = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError]     = useState(null);
 
-  useEffect(() => {
-    getStats()
-      .then(res => setStats(res.data))
-      .catch(err => setError(err.response?.data?.message || 'Failed to load stats'))
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: stats, isLoading: loading, isError, error, refetch } = useQuery({
+    queryKey: ['admin-stats'],
+    queryFn: () => getStats().then(res => res.data),
+  });
 
   const statCards = [
     { icon: '👥', label: 'Total Users',       value: stats?.total_users,       bg: 'bg-blue-50',   to: '/admin/users'       },
@@ -100,9 +95,9 @@ export default function OverviewPage() {
       </div>
 
       {/* Error */}
-      {error && (
+      {isError && (
         <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6">
-          {error} — <button onClick={() => window.location.reload()} className="underline">Retry</button>
+          {error?.response?.data?.message || 'Failed to load stats'} — <button onClick={() => refetch()} className="underline">Retry</button>
         </div>
       )}
 

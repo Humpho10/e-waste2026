@@ -1,50 +1,50 @@
 // src/components/app-content/MessagesContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 
 export default function MessagesContent() {
   const { user, permissions } = useAuth();
-  const [conversations, setConversations] = useState([]);
   const [active, setActive]               = useState(null);
-  const [messages, setMessages]           = useState([]);
   const [newMsg, setNewMsg]               = useState('');
-  const [loading, setLoading]             = useState(true);
-  const [sending, setSending]             = useState(false);
 
   const { toast } = useToast();
+  const queryClient = useQueryClient();
   const canSend = permissions?.includes('message-send') || false;
 
-  useEffect(() => {
-    getConversations()
-      .then(res => setConversations(res.data.conversations || []))
-      .finally(() => setLoading(false));
-  }, []);
+  // Shared with workspace/dashboard/manager MessagesPage.jsx — same endpoints.
+  const { data: conversations = [], isLoading: loading } = useQuery({
+    queryKey: ['conversations'],
+    queryFn: () => getConversations().then(res => res.data.conversations || []),
+  });
 
-  const openConversation = async (conv) => {
-    setActive(conv);
-    const res = await getProductMessages(conv.product_id);
-    setMessages(res.data.messages || []);
-  };
+  const { data: messages = [] } = useQuery({
+    queryKey: ['messages', active?.product_id],
+    queryFn: () => getProductMessages(active.product_id).then(res => res.data.messages || []),
+    enabled: !!active,
+  });
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    if (!newMsg.trim() || !active || !canSend) return;
-    setSending(true);
-    try {
-      await sendMessage({ product_id: active.product_id, message_text: newMsg });
+  const openConversation = (conv) => setActive(conv);
+
+  const sendMutation = useMutation({
+    mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
+    onSuccess: () => {
       toast('Message sent', 'success');
       setNewMsg('');
-      const res = await getProductMessages(active.product_id);
-      setMessages(res.data.messages || []);
-    } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Failed to send message';
-      toast(errorMsg, 'error');
-    } finally {
-      setSending(false);
-    }
+      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id] });
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to send message', 'error'),
+  });
+
+  const handleSend = (e) => {
+    e.preventDefault();
+    if (!newMsg.trim() || !active || !canSend) return;
+    sendMutation.mutate(newMsg);
   };
+
+  const sending = sendMutation.isPending;
 
   return (
     <div className="h-[600px] bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex">
@@ -164,4 +164,4 @@ export default function MessagesContent() {
       </div>
     </div>
   );
-}
+}

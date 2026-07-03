@@ -8,3 +8,6 @@ export const googleAuth   = (credential) => api.post('/auth/google', { credentia
 
 export const forgotPassword = (email) => api.post('/auth/forgot-password', { email });
 export const resetPassword  = (data)  => api.post('/auth/reset-password', data);
+
+export const verifyEmail        = (token) => api.post('/auth/verify-email', { token });
+export const resendVerification = ()      => api.post('/auth/resend-verification');

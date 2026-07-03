@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, resubmitProduct } from '../../api/products';
 import { useToast } from '../../components/Toast';
@@ -10,13 +11,12 @@ export default function ResubmitListingPage() {
   const navigate   = useNavigate();
   const { toast }  = useToast();
   const { permissions } = useAuth(); // 👈 Get permissions
+  const queryClient = useQueryClient();
 
   // 👈 Check if user has permission to create/resubmit
   const canResubmit = permissions?.includes('product-create') || false;
 
-  const [product, setProduct]       = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [formSeeded, setFormSeeded] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', condition: '', price: '', specification: '',
   });
@@ -26,39 +26,51 @@ export default function ResubmitListingPage() {
   const [newImages, setNewImages]   = useState([]);
   const [newPreviews, setNewPreviews] = useState([]);
 
+  // Shares a cache entry with MyListingsPage's status="all" view.
+  const { data: listings, isLoading: loading } = useQuery({
+    queryKey: ['my-listings', 'all'],
+    queryFn: () => myListings().then(res => res.data.products || []),
+    enabled: canResubmit,
+  });
+
+  const product = listings?.find(p => p.product_id == id);
+
+  // Seed the editable form once the listing is found — render-time pattern
+  // (not a useEffect) for the same reason as ProfileForm.jsx: TanStack
+  // Query v5 has no onSuccess on useQuery, and setState-in-effect trips the
+  // project's react-hooks/set-state-in-effect lint rule.
+  if (product && !formSeeded) {
+    setForm({
+      title:         product.title         || '',
+      description:   product.description   || '',
+      condition:     product.condition      || '',
+      price:         product.price          || '',
+      specification: product.specification  || '',
+    });
+    setExistingImages(product.images || []);
+    setFormSeeded(true);
+  }
+
+  // Redirect / toast side effects only — no local setState here, so this
+  // stays safe inside a useEffect.
   useEffect(() => {
-    // 👈 If user doesn't have permission, redirect immediately
     if (!canResubmit) {
       toast('You do not have permission to resubmit listings.', 'error');
       navigate('/dashboard/listings');
       return;
     }
-
-    myListings()
-      .then(res => {
-        const found = res.data.products?.find(p => p.product_id == id);
-        if (!found) {
-          toast('Listing not found', 'error');
-          navigate('/dashboard/listings');
-          return;
-        }
-        if (found.status !== 'rejected') {
-          toast('Only rejected listings can be resubmitted', 'warning');
-          navigate('/dashboard/listings');
-          return;
-        }
-        setProduct(found);
-        setForm({
-          title:         found.title         || '',
-          description:   found.description   || '',
-          condition:     found.condition      || '',
-          price:         found.price          || '',
-          specification: found.specification  || '',
-        });
-        setExistingImages(found.images || []);
-      })
-      .finally(() => setLoading(false));
-  }, [id, canResubmit]);
+    if (loading) return;
+    if (!product) {
+      toast('Listing not found', 'error');
+      navigate('/dashboard/listings');
+      return;
+    }
+    if (product.status !== 'rejected') {
+      toast('Only rejected listings can be resubmitted', 'warning');
+      navigate('/dashboard/listings');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id, canResubmit, loading, product]);
 
   const remainingSlots = 5 - (existingImages.length - removedImageIds.length) - newImages.length;
 
@@ -80,32 +92,36 @@ export default function ResubmitListingPage() {
     );
   };
 
-  const handleSubmit = async (e) => {
+  const resubmitMutation = useMutation({
+    mutationFn: (data) => resubmitProduct(id, data),
+    onSuccess: () => {
+      toast('Listing resubmitted successfully — no additional fee required', 'success');
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
+      navigate('/dashboard/listings');
+    },
+    onError: (err) => {
+      const errors = err.response?.data?.errors;
+      toast(errors ? Object.values(errors).flat().join(' · ') : err.response?.data?.message || 'Failed to resubmit', 'error');
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (!canResubmit) {
       toast('You do not have permission to resubmit.', 'error');
       return;
     }
-    setSubmitting(true);
-    try {
-      const data = new FormData();
-      Object.entries(form).forEach(([key, val]) => {
-        if (val !== '' && val !== null) data.append(key, val);
-      });
-      newImages.forEach((img, i) => data.append(`images[${i}]`, img));
-      removedImageIds.forEach((id, i) => data.append(`remove_images[${i}]`, id));
+    const data = new FormData();
+    Object.entries(form).forEach(([key, val]) => {
+      if (val !== '' && val !== null) data.append(key, val);
+    });
+    newImages.forEach((img, i) => data.append(`images[${i}]`, img));
+    removedImageIds.forEach((id, i) => data.append(`remove_images[${i}]`, id));
 
-      await resubmitProduct(id, data);
-      toast('Listing resubmitted successfully — no additional fee required', 'success');
-      navigate('/dashboard/listings');
-    } catch (err) {
-      const errors = err.response?.data?.errors;
-      toast(errors ? Object.values(errors).flat().join(' · ') : err.response?.data?.message || 'Failed to resubmit', 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    resubmitMutation.mutate(data);
   };
 
+  const submitting = resubmitMutation.isPending;
   if (loading) return (
     <DashboardLayout>
       <div className="max-w-2xl mx-auto animate-pulse space-y-4">

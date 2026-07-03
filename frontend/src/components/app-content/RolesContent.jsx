@@ -1,21 +1,19 @@
 // src/components/app-content/RolesContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getRoles, createRole, updateRole, deleteRole, getPermissions } from '../../api/admin';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 export default function RolesContent() {
-  const [roles, setRoles] = useState([]);
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing] = useState(null);
   const [form, setForm] = useState({ name: '', permissions: [] });
   const [error, setError] = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   const { permissions: userPermissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canCreateRole = userPermissions?.includes('role-create') || false;
   const canEditRole = userPermissions?.includes('role-edit') || false;
@@ -23,16 +21,19 @@ export default function RolesContent() {
 
   const systemRoles = ['Super-Admin', 'Admin', 'Product-Manager'];
 
-  const fetchData = () => {
-    Promise.all([getRoles(), getPermissions()])
-      .then(([rolesRes, permsRes]) => {
-        setRoles(rolesRes.data.roles);
-        setPermissions(permsRes.data.permissions);
-      })
-      .finally(() => setLoading(false));
-  };
+  // Shared with admin/RolesPage.jsx and admin/UsersPage.jsx — same endpoint.
+  const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: () => getRoles().then(res => res.data.roles),
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  // Shared with admin/RolesPage.jsx and admin/PermissionsPage.jsx — same endpoint.
+  const { data: permissions = [], isLoading: permissionsLoading } = useQuery({
+    queryKey: ['admin-permissions'],
+    queryFn: () => getPermissions().then(res => res.data.permissions),
+  });
+
+  const loading = rolesLoading || permissionsLoading;
 
   const openCreate = () => {
     setEditing(null);
@@ -60,39 +61,43 @@ export default function RolesContent() {
     }));
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSubmitting(true);
-    try {
-      if (editing) {
-        await updateRole(editing.id, form);
-        toast('Role updated successfully', 'success');
-      } else {
-        await createRole(form);
-        toast('Role created successfully', 'success');
-      }
+  const saveMutation = useMutation({
+    mutationFn: ({ editing, form }) => editing ? updateRole(editing.id, form) : createRole(form),
+    onSuccess: (_res, { editing }) => {
+      toast(editing ? 'Role updated successfully' : 'Role created successfully', 'success');
       setShowModal(false);
-      fetchData();
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Something went wrong.';
       setError(msg);
       toast(msg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    saveMutation.mutate({ editing, form });
   };
 
-  const handleDelete = async (id, name) => {
-    if (!window.confirm(`Delete role "${name}"?`)) return;
-    try {
-      await deleteRole(id);
+  const submitting = saveMutation.isPending;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteRole(id),
+    onSuccess: () => {
       toast('Role deleted successfully', 'success');
-      fetchData();
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Could not delete.';
       toast(msg, 'error');
-    }
+    },
+  });
+
+  const handleDelete = (id, name) => {
+    if (!window.confirm(`Delete role "${name}"?`)) return;
+    deleteMutation.mutate(id);
   };
 
   const groupedPermissions = permissions.reduce((acc, p) => {
@@ -244,4 +249,4 @@ export default function RolesContent() {
       )}
     </>
   );
-}
+}

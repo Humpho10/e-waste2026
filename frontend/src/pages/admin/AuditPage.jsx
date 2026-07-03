@@ -1,15 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getAuditTrail } from '../../api/admin';
 
 function AuditPage() {
-  const [audit, setAudit]     = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch]   = useState('');
 
-  useEffect(() => {
-    getAuditTrail().then(res => setAudit(res.data.audit)).finally(() => setLoading(false));
-  }, []);
+  const { data: audit = [], isLoading: loading } = useQuery({
+    queryKey: ['audit-trail'],
+    queryFn: () => getAuditTrail().then(res => res.data.audit),
+  });
 
   const filtered = audit.filter(a =>
     a.user.toLowerCase().includes(search.toLowerCase()) ||

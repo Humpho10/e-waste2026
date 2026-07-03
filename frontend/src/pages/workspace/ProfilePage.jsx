@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMProfile, updatePMProfile } from '../../api/productManager';
 import { useAuth } from '../../context/AuthContext';
@@ -6,6 +7,7 @@ import { useAuth } from '../../context/AuthContext';
 export default function ProfilePage() {
   const { user, login, token } = useAuth();
   const fileRef = useRef();
+  const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
     name: '', phone: '', location: '',
@@ -13,28 +15,32 @@ export default function ProfilePage() {
   });
   const [avatar,      setAvatar]      = useState(null);
   const [preview,     setPreview]     = useState(null);
-  const [loading,     setLoading]     = useState(true);
-  const [submitting,  setSubmitting]  = useState(false);
   const [success,     setSuccess]     = useState('');
   const [error,       setError]       = useState('');
   const [changePass,  setChangePass]  = useState(false);
+  const [profileSeeded, setProfileSeeded] = useState(false);
 
-  useEffect(() => {
-    getPMProfile()
-      .then(res => {
-        const u = res.data.user;
-        setForm(f => ({
-          ...f,
-          name:     u.name     || '',
-          phone:    u.phone    || '',
-          location: u.location || '',
-        }));
-        if (u.avatar) {
-          setPreview(`http://localhost:8000/storage/${u.avatar}`);
-        }
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: profile, isLoading: loading } = useQuery({
+    queryKey: ['pm-profile'],
+    queryFn: () => getPMProfile().then(res => res.data.user),
+  });
+
+  // Seed local editable form state once the profile loads. This runs during
+  // render (React's documented "adjusting state" pattern) rather than in a
+  // useEffect, since TanStack Query v5 dropped the onSuccess option on
+  // useQuery and an effect-based setState here would cause an extra render.
+  if (profile && !profileSeeded) {
+    setForm(f => ({
+      ...f,
+      name:     profile.name     || '',
+      phone:    profile.phone    || '',
+      location: profile.location || '',
+    }));
+    if (profile.avatar) {
+      setPreview(`http://localhost:8000/storage/${profile.avatar}`);
+    }
+    setProfileSeeded(true);
+  }
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -43,7 +49,27 @@ export default function ProfilePage() {
     setPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = async (e) => {
+  const updateMutation = useMutation({
+    mutationFn: (data) => updatePMProfile(data),
+    onSuccess: (res) => {
+      // Update auth context with new user data
+      login(res.data.user, token, 'Product-Manager');
+      queryClient.setQueryData(['pm-profile'], res.data.user);
+      setSuccess('Profile updated successfully!');
+      setChangePass(false);
+      setForm(f => ({ ...f, password: '', password_confirmation: '' }));
+    },
+    onError: (err) => {
+      const errors = err.response?.data?.errors;
+      if (errors) {
+        setError(Object.values(errors).flat().join(' · '));
+      } else {
+        setError(err.response?.data?.message || 'Failed to update profile.');
+      }
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
     setSuccess('');
@@ -53,37 +79,22 @@ export default function ProfilePage() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      const data = new FormData();
-      data.append('name',     form.name);
-      data.append('phone',    form.phone);
-      data.append('location', form.location);
-      if (changePass && form.password) {
-        data.append('password',              form.password);
-        data.append('password_confirmation', form.password_confirmation);
-      }
-      if (avatar) {
-        data.append('avatar', avatar);
-      }
-
-      const res = await updatePMProfile(data);
-      // Update auth context with new user data
-      login(res.data.user, token, 'Product-Manager');
-      setSuccess('Profile updated successfully!');
-      setChangePass(false);
-      setForm(f => ({ ...f, password: '', password_confirmation: '' }));
-    } catch (err) {
-      const errors = err.response?.data?.errors;
-      if (errors) {
-        setError(Object.values(errors).flat().join(' · '));
-      } else {
-        setError(err.response?.data?.message || 'Failed to update profile.');
-      }
-    } finally {
-      setSubmitting(false);
+    const data = new FormData();
+    data.append('name',     form.name);
+    data.append('phone',    form.phone);
+    data.append('location', form.location);
+    if (changePass && form.password) {
+      data.append('password',              form.password);
+      data.append('password_confirmation', form.password_confirmation);
     }
+    if (avatar) {
+      data.append('avatar', avatar);
+    }
+
+    updateMutation.mutate(data);
   };
+
+  const submitting = updateMutation.isPending;
 
   const avatarUrl = preview;
 

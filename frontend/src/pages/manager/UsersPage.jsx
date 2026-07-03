@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { listUsers, deactivateUser, activateUser } from '../../api/manager';
 import { useToast } from '../../components/Toast';
@@ -18,41 +19,33 @@ function SkeletonRow() {
 }
 
 export default function UsersPage() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [actionLoading, setActionLoading] = useState(null);
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const canActivate = permissions?.includes('user-activate') || false;
   const canDeactivate = permissions?.includes('user-deactivate') || false;
 
-  const fetchUsers = () => {
-    setLoading(true);
-    listUsers()
-      .then(res => setUsers(res.data.users))
-      .finally(() => setLoading(false));
-  };
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['manager-users'],
+    queryFn: () => listUsers().then(res => res.data.users),
+  });
 
-  useEffect(() => {
-    fetchUsers();
-  }, []);
+  const toggleStatusMutation = useMutation({
+    mutationFn: ({ id, currentStatus }) => currentStatus ? deactivateUser(id) : activateUser(id),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['manager-users'] }),
+  });
 
   const handleToggleStatus = async (id, currentStatus, name) => {
     const action = currentStatus ? 'deactivate' : 'activate';
     if (!window.confirm(`Are you sure you want to ${action} ${name}?`)) return;
     setActionLoading(id);
     try {
-      if (currentStatus) {
-        await deactivateUser(id);
-        toast(`${name} has been deactivated`, 'success');
-      } else {
-        await activateUser(id);
-        toast(`${name} has been activated`, 'success');
-      }
-      fetchUsers();
+      await toggleStatusMutation.mutateAsync({ id, currentStatus });
+      toast(`${name} has been ${action}d`, 'success');
     } catch (err) {
       const msg = err.response?.data?.message || `Failed to ${action} user`;
       toast(msg, 'error');

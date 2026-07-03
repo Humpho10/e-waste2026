@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { browseProducts, getCategories } from '../../api/products';
 
@@ -45,34 +46,31 @@ function ProductCard({ product }) {
 }
 
 export default function BrowsePage() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts]   = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading]     = useState(true);
+  const [searchParams] = useSearchParams();
   const [search, setSearch]       = useState(searchParams.get('search') || '');
+  const [appliedSearch, setAppliedSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory]   = useState(searchParams.get('category_id') || '');
   const [condition, setCondition] = useState('');
 
-  const fetchProducts = () => {
-    setLoading(true);
-    const params = {};
-    if (search)    params.search      = search;
-    if (category)  params.category_id = category;
-    if (condition) params.condition   = condition;
-    browseProducts(params)
-      .then(res => setProducts(res.data.data || []))
-      .finally(() => setLoading(false));
-  };
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories().then(res => res.data.categories),
+  });
 
-  useEffect(() => {
-    getCategories().then(res => setCategories(res.data.categories));
-  }, []);
-
-  useEffect(() => { fetchProducts(); }, [category, condition]);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['browse-products', appliedSearch, category, condition],
+    queryFn: () => {
+      const params = {};
+      if (appliedSearch) params.search      = appliedSearch;
+      if (category)      params.category_id = category;
+      if (condition)     params.condition   = condition;
+      return browseProducts(params).then(res => res.data.data || []);
+    },
+  });
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchProducts();
+    setAppliedSearch(search);
   };
 
   return (

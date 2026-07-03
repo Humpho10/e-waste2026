@@ -1,4 +1,5 @@
-import { useEffect, useState, useRef } from 'react';
+import { useState, useRef } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '../context/AuthContext';
 // 👇 Import toast hook
 import { useToast } from '../components/Toast';
@@ -6,6 +7,7 @@ import { useToast } from '../components/Toast';
 export default function ProfileForm({ getProfile, updateProfile, accentColor = 'blue' }) {
   const { user, login, token, role } = useAuth();
   const fileRef = useRef();
+  const queryClient = useQueryClient();
 
   const [form, setForm] = useState({
     name: '', phone: '', location: '',
@@ -13,11 +15,10 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
   });
   const [avatar,     setAvatar]     = useState(null);
   const [preview,    setPreview]    = useState(null);
-  const [loading,    setLoading]    = useState(true);
-  const [submitting, setSubmitting] = useState(false);
   const [success,    setSuccess]    = useState('');
   const [error,      setError]      = useState('');
   const [changePass, setChangePass] = useState(false);
+  const [profileSeeded, setProfileSeeded] = useState(false);
 
   // 👇 Get toast function
   const { toast } = useToast();
@@ -29,15 +30,20 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
   };
   const c = colors[accentColor] || colors.blue;
 
-  useEffect(() => {
-    getProfile()
-      .then(res => {
-        const u = res.data.user;
-        setForm(f => ({ ...f, name: u.name || '', phone: u.phone || '', location: u.location || '' }));
-        if (u.avatar) setPreview(`http://localhost:8000/storage/${u.avatar}`);
-      })
-      .finally(() => setLoading(false));
-  }, []);
+  const { data: profile, isLoading: loading } = useQuery({
+    queryKey: ['profile', role],
+    queryFn: () => getProfile().then(res => res.data.user),
+  });
+
+  // Seed local editable form state once the profile loads. This runs during
+  // render (React's documented "adjusting state" pattern) rather than in a
+  // useEffect, since TanStack Query v5 dropped the onSuccess option on
+  // useQuery and an effect-based setState here would cause an extra render.
+  if (profile && !profileSeeded) {
+    setForm(f => ({ ...f, name: profile.name || '', phone: profile.phone || '', location: profile.location || '' }));
+    if (profile.avatar) setPreview(`http://localhost:8000/storage/${profile.avatar}`);
+    setProfileSeeded(true);
+  }
 
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
@@ -46,43 +52,47 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
     setPreview(URL.createObjectURL(file));
   };
 
-  const handleSubmit = async (e) => {
+  const updateMutation = useMutation({
+    mutationFn: (data) => updateProfile(data),
+    onSuccess: (res) => {
+      login(res.data.user, token, role);
+      queryClient.setQueryData(['profile', role], res.data.user);
+      setSuccess('Profile updated successfully!');
+      // 👇 Success toast
+      toast('Profile updated successfully', 'success');
+      setChangePass(false);
+      setForm(f => ({ ...f, password: '', password_confirmation: '' }));
+    },
+    onError: (err) => {
+      const errors = err.response?.data?.errors;
+      const errorMsg = errors ? Object.values(errors).flat().join(' · ') : err.response?.data?.message || 'Failed to update.';
+      setError(errorMsg);
+      // 👇 Error toast
+      toast(errorMsg || 'Failed to update profile', 'error');
+    },
+  });
+
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError(''); setSuccess('');
     if (changePass && form.password !== form.password_confirmation) {
       setError('Passwords do not match.');
       return;
     }
-    setSubmitting(true);
-    try {
-      const data = new FormData();
-      data.append('name',     form.name);
-      data.append('phone',    form.phone);
-      data.append('location', form.location);
-      if (changePass && form.password) {
-        data.append('password',              form.password);
-        data.append('password_confirmation', form.password_confirmation);
-      }
-      if (avatar) data.append('avatar', avatar);
-
-      const res = await updateProfile(data);
-      login(res.data.user, token, role);
-      setSuccess('Profile updated successfully!');
-      // 👇 Success toast
-      toast('Profile updated successfully', 'success');
-      setChangePass(false);
-      setForm(f => ({ ...f, password: '', password_confirmation: '' }));
-    } catch (err) {
-      const errors = err.response?.data?.errors;
-      const errorMsg = errors ? Object.values(errors).flat().join(' · ') : err.response?.data?.message || 'Failed to update.';
-      setError(errorMsg);
-      // 👇 Error toast
-      toast(errorMsg || 'Failed to update profile', 'error');
-    } finally {
-      setSubmitting(false);
+    const data = new FormData();
+    data.append('name',     form.name);
+    data.append('phone',    form.phone);
+    data.append('location', form.location);
+    if (changePass && form.password) {
+      data.append('password',              form.password);
+      data.append('password_confirmation', form.password_confirmation);
     }
+    if (avatar) data.append('avatar', avatar);
+
+    updateMutation.mutate(data);
   };
 
+  const submitting = updateMutation.isPending;
   if (loading) return (
     <div className="bg-white rounded-2xl border border-gray-100 p-8 animate-pulse space-y-4">
       <div className="flex items-center gap-6">

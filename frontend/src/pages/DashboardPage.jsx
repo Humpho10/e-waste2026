@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { myListings } from '../api/products';
@@ -26,19 +26,20 @@ const statusConfig = {
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [listings, setListings]           = useState([]);
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(true);
 
-  useEffect(() => {
-    Promise.all([
-      myListings(),
-      getNotifications(),
-    ]).then(([listRes, notifRes]) => {
-      setListings(listRes.data.products || []);
-      setNotifications(notifRes.data.notifications || []);
-    }).finally(() => setLoading(false));
-  }, []);
+  // Shared with dashboard/MyListingsPage.jsx and dashboard/ResubmitListingPage.jsx.
+  const { data: listings = [], isLoading: listingsLoading } = useQuery({
+    queryKey: ['my-listings', 'all'],
+    queryFn: () => myListings().then(res => res.data.products || []),
+  });
+
+  // Shared with dashboard/NotificationsPage.jsx — same endpoint.
+  const { data: notifications = [], isLoading: notifsLoading } = useQuery({
+    queryKey: ['notifications'],
+    queryFn: () => getNotifications().then(res => res.data.notifications || []),
+  });
+
+  const loading = listingsLoading || notifsLoading;
 
   const stats = {
     total:    listings.length,
@@ -171,4 +172,4 @@ export default function DashboardPage() {
       )}
     </DashboardLayout>
   );
-}
+}

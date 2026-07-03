@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getProductManagers, createProductManager, getManagerCategories } from '../../api/manager';
 import { useToast } from '../../components/Toast';
@@ -69,19 +70,34 @@ function PMCard({ pm, onRefresh }) {
 
 // ---------- Create PM Modal ----------
 function CreatePMModal({ onClose, onCreated }) {
-  const [categories, setCategories] = useState([]);
   const [form, setForm] = useState({
     name: '', email: '', password: '',
     phone: '', location: '', category_id: [],
   });
   const [error, setError]       = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   const { toast } = useToast();
 
-  useEffect(() => {
-    getManagerCategories().then(res => setCategories(res.data.categories));
-  }, []);
+  // Note: uses the /manager/categories endpoint, a different shape/scope
+  // from the buyer-facing /categories endpoint, so it gets its own key.
+  const { data: categories = [] } = useQuery({
+    queryKey: ['manager-categories'],
+    queryFn: () => getManagerCategories().then(res => res.data.categories),
+  });
+
+  const createMutation = useMutation({
+    mutationFn: (data) => createProductManager(data),
+    onSuccess: () => {
+      toast('Product Manager created successfully', 'success');
+      onCreated();
+      onClose();
+    },
+    onError: (err) => {
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to create';
+      setError(errorMsg);
+      toast(errorMsg, 'error');
+    },
+  });
 
   const toggleCategory = (id) => {
     setForm(prev => ({
@@ -92,27 +108,17 @@ function CreatePMModal({ onClose, onCreated }) {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (form.category_id.length === 0) {
       setError('Please assign at least one category.');
       return;
     }
     setError('');
-    setSubmitting(true);
-    try {
-      await createProductManager(form);
-      toast('Product Manager created successfully', 'success');
-      onCreated();
-      onClose();
-    } catch (err) {
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to create';
-      setError(errorMsg);
-      toast(errorMsg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    createMutation.mutate(form);
   };
+
+  const submitting = createMutation.isPending;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -221,25 +227,22 @@ function CreatePMModal({ onClose, onCreated }) {
 
 // ---------- Main Page ----------
 export default function ProductManagersPage() {
-  const [pms, setPms]           = useState([]);
-  const [loading, setLoading]   = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [search, setSearch]     = useState('');
 
   // 👇 Get permissions from auth context
   const { permissions } = useAuth();
+  const queryClient = useQueryClient();
 
   // 👇 Check if user has permission to create PMs
   const canCreatePM = permissions?.includes('pm-create') || false;
 
-  const fetchPMs = () => {
-    setLoading(true);
-    getProductManagers()
-      .then(res => setPms(res.data.product_managers))
-      .finally(() => setLoading(false));
-  };
+  const { data: pms = [], isLoading: loading } = useQuery({
+    queryKey: ['product-managers'],
+    queryFn: () => getProductManagers().then(res => res.data.product_managers),
+  });
 
-  useEffect(() => { fetchPMs(); }, []);
+  const invalidatePMs = () => queryClient.invalidateQueries({ queryKey: ['product-managers'] });
 
   const filtered = pms.filter(pm =>
     pm.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -307,12 +310,12 @@ export default function ProductManagersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(pm => <PMCard key={pm.id} pm={pm} onRefresh={fetchPMs} />)}
+          {filtered.map(pm => <PMCard key={pm.id} pm={pm} onRefresh={invalidatePMs} />)}
         </div>
       )}
 
       {showModal && (
-        <CreatePMModal onClose={() => setShowModal(false)} onCreated={fetchPMs} />
+        <CreatePMModal onClose={() => setShowModal(false)} onCreated={invalidatePMs} />
       )}
     </ManagerLayout>
   );
