@@ -12,6 +12,9 @@
   "dependencies": {
     "@tanstack/react-query": "^5.101.2",
     "axios": "^1.18.1",
+    "bootstrap-icons": "^1.13.1",
+    "highcharts": "^13.0.0",
+    "highcharts-react-official": "^3.2.3",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-router-dom": "^7.18.0"

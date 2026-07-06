@@ -1,6 +1,6 @@
 import api from './axios';
 
-export const getPMStats        = ()         => api.get('/pm/stats');
+export const getPMStats        = (params)   => api.get('/pm/stats', { params });
 export const getPMProducts     = (params)   => api.get('/pm/products', { params });
 export const getPMProduct      = (id)       => api.get(`/pm/products/${id}`);
 export const approvePMProduct  = (id)       => api.patch(`/pm/products/${id}/approve`);

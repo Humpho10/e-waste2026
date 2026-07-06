@@ -6,11 +6,11 @@ import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
 
 const navItems = [
-  { path: '/workspace',               icon: '📊', label: 'Overview',       group: 'main',  badge: null       },
-  { path: '/workspace/products',      icon: '📦', label: 'Listings',       group: 'main',  badge: null       },
-  { path: '/workspace/messages',      icon: '💬', label: 'Messages',       group: 'comms', badge: 'msg'      },
-  { path: '/workspace/notifications', icon: '🔔', label: 'Notifications',  group: 'comms', badge: 'notif'    },
-  { path: '/workspace/profile',       icon: '👤', label: 'Profile',        group: 'comms', badge: null       },
+  { path: '/workspace',               icon: 'bi-grid-1x2-fill', label: 'Overview',       group: 'main',  badge: null       },
+  { path: '/workspace/products',      icon: 'bi-box-seam',      label: 'Listings',       group: 'main',  badge: null       },
+  { path: '/workspace/messages',      icon: 'bi-chat-dots',     label: 'Messages',       group: 'comms', badge: 'msg'      },
+  { path: '/workspace/notifications', icon: 'bi-bell',          label: 'Notifications',  group: 'comms', badge: 'notif'    },
+  { path: '/workspace/profile',       icon: 'bi-person',        label: 'Profile',        group: 'comms', badge: null       },
 ];
 
 const groups = [
@@ -61,7 +61,7 @@ export default function WorkspaceLayout({ children }) {
         <div className={`flex items-center h-16 border-b border-slate-800 shrink-0 ${collapsed ? 'justify-center px-3' : 'px-5 gap-3'}`}>
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-teal-600 flex items-center justify-center shrink-0">
-              <span className="text-white text-sm">♻️</span>
+              <i className="bi bi-recycle text-white text-sm" />
             </div>
             {!collapsed && (
               <div>
@@ -135,7 +135,7 @@ export default function WorkspaceLayout({ children }) {
                         `}
                       >
                         <span className="text-base shrink-0 relative">
-                          {icon}
+                          <i className={`bi ${icon}`} />
                           {/* Badge on icon when collapsed */}
                           {collapsed && badgeCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
@@ -169,7 +169,7 @@ export default function WorkspaceLayout({ children }) {
             title={collapsed ? 'Back to Site' : ''}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <span>🏠</span>
+            <i className="bi bi-house-door text-base" />
             {!collapsed && <span className="font-medium">Back to Site</span>}
           </Link>
           <button
@@ -177,7 +177,7 @@ export default function WorkspaceLayout({ children }) {
             disabled={loggingOut}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-all w-full ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <span>🚪</span>
+            <i className="bi bi-box-arrow-right text-base" />
             {!collapsed && <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
           </button>
         </div>
@@ -208,7 +208,7 @@ export default function WorkspaceLayout({ children }) {
               to="/workspace/messages"
               className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
             >
-              <span className="text-base">💬</span>
+              <i className="bi bi-chat-dots text-base" />
               {msgCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {msgCount > 9 ? '9+' : msgCount}
@@ -221,7 +221,7 @@ export default function WorkspaceLayout({ children }) {
               to="/workspace/notifications"
               className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
             >
-              <span className="text-base">🔔</span>
+              <i className="bi bi-bell text-base" />
               {notifCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {notifCount > 9 ? '9+' : notifCount}
