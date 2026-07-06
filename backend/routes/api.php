@@ -7,7 +7,6 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductManagerController;
 use App\Http\Controllers\ProductController;
-use App\Http\Controllers\SellerRatingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StatsController;
@@ -32,7 +31,7 @@ Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
 Route::get('/categories', [CategoryController::class, 'index']);
 Route::get('/categories/{categoryId}/subcategories', [CategoryController::class, 'subcategories']);
 Route::get('/products', [ProductController::class, 'browse']);
-Route::get('/products/{slug}-{hashId}', [ProductController::class, 'show']); // CHANGED: Now uses slug-hashId
+Route::get('/products/{id}', [ProductController::class, 'show']);
 
 Route::get('/stats', [StatsController::class, 'index']); // ← new public stats
 
@@ -151,18 +150,14 @@ Route::middleware(['auth:sanctum', 'check.permissions:product-list,product-appro
 Route::middleware('auth:sanctum')->group(function () {
     // ── Products ───────────────────────────────────────────
     Route::post('/products',                  [ProductController::class, 'store'])->middleware('can:product-create');
-    Route::post('/products/{hashId}/update',  [ProductController::class, 'update'])->middleware('can:product-edit'); // CHANGED: Now uses hashId
-    Route::delete('/products/{hashId}',       [ProductController::class, 'destroy'])->middleware('can:product-delete'); // CHANGED: Now uses hashId
+    Route::put('/products/{id}',              [ProductController::class, 'update'])->middleware('can:product-edit');
+    Route::delete('/products/{id}',           [ProductController::class, 'destroy'])->middleware('can:product-delete');
     Route::get('/products/my/listings',       [ProductController::class, 'myListings'])->middleware('can:product-list');
-    Route::post('/products/{hashId}/resubmit',[ProductController::class, 'resubmit'])->middleware('can:product-create'); // CHANGED: Now uses hashId
+    Route::post('/products/{id}/resubmit',    [ProductController::class, 'resubmit'])->middleware('can:product-create');
 
     // ── Messaging ──────────────────────────────────────────
-    Route::post('/products/{hashId}/messages', [ProductController::class, 'sendMessage'])->middleware('can:message-send'); // CHANGED: Now uses hashId
-    Route::get('/products/{hashId}/messages',  [ProductController::class, 'getMessages'])->middleware('can:message-view'); // CHANGED: Now uses hashId
-
-    // ── Seller Ratings ────────────────────────────────────
-    Route::get('/sellers/{sellerId}/rating/me', [SellerRatingController::class, 'myStatus']);
-    Route::post('/sellers/{sellerId}/rating',   [SellerRatingController::class, 'store'])->middleware('can:rating-create');
+    Route::post('/products/{id}/messages',    [ProductController::class, 'sendMessage'])->middleware('can:message-send');
+    Route::get('/products/{id}/messages',     [ProductController::class, 'getMessages'])->middleware('can:message-view');
 
     // ── Notifications ─────────────────────────────────────
     Route::get('/notifications',              [ProductController::class, 'notifications'])->middleware('can:notification-view');
