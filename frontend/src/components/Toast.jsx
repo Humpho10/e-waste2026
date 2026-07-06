@@ -10,10 +10,10 @@ const icons = {
 };
 
 const colors = {
-  success: 'bg-green-50 border-green-200 text-green-800',
-  error:   'bg-red-50 border-red-200 text-red-800',
-  warning: 'bg-yellow-50 border-yellow-200 text-yellow-800',
-  info:    'bg-blue-50 border-blue-200 text-blue-800',
+  success: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50 text-green-800 dark:text-green-400',
+  error:   'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50 text-red-800',
+  warning: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50 text-yellow-800',
+  info:    'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50 text-blue-800 dark:text-blue-300',
 };
 
 export function ToastProvider({ children }) {
@@ -49,7 +49,7 @@ export function ToastProvider({ children }) {
             <p className="text-sm font-medium leading-snug flex-1">{t.message}</p>
             <button
               onClick={() => remove(t.id)}
-              className="text-gray-400 hover:text-gray-600 shrink-0 mt-0.5 transition"
+              className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 shrink-0 mt-0.5 transition"
             >
               ✕
             </button>

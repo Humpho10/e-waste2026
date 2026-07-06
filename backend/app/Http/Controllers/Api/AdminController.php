@@ -5,6 +5,11 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use App\Models\Notification;
+use App\Models\Product;
+use App\Models\Category;
+use App\Models\AuditTrail;
+use App\Models\Message;
+use App\Models\Settings;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -13,6 +18,7 @@ use Spatie\Permission\Models\Permission;
 use Illuminate\Support\Facades\Auth;
 use App\Helpers\AuditLogger;
 use Spatie\Permission\PermissionRegistrar;
+use Carbon\Carbon;
 
 class AdminController extends Controller
 {
@@ -44,16 +50,68 @@ class AdminController extends Controller
         }
 
         try {
+            $now = Carbon::now();
+
+            // Signups per day for the last 14 days — feeds the growth chart.
+            $userGrowth = collect(range(13, 0))->map(function ($daysAgo) use ($now) {
+                $date = $now->copy()->subDays($daysAgo);
+                return [
+                    'date'  => $date->format('M j'),
+                    'users' => User::whereDate('created_at', $date->toDateString())->count(),
+                ];
+            })->values();
+
+            // How the user base splits across roles — feeds the donut chart.
+            $roleDistribution = Role::all()->map(function ($role) {
+                return [
+                    'name'  => $role->name,
+                    'value' => User::role($role->name)->count(),
+                ];
+            })->filter(fn ($r) => $r['value'] > 0)->values();
+
+            // Listing pipeline health — feeds the progress bars.
+            $listingStats = [
+                'total'    => Product::count(),
+                'pending'  => Product::where('status', 'pending')->count(),
+                'approved' => Product::where('status', 'approved')->count(),
+                'rejected' => Product::where('status', 'rejected')->count(),
+            ];
+
+            // Busiest categories — feeds the bar chart.
+            $categoryBreakdown = Category::withCount('products')
+                ->orderByDesc('products_count')
+                ->take(6)
+                ->get()
+                ->map(fn ($c) => ['name' => $c->name, 'count' => $c->products_count])
+                ->values();
+
+            // New users in the last 7 days, for a small trend indicator.
+            $newUsersThisWeek = User::where('created_at', '>=', $now->copy()->subDays(7))->count();
+            $newUsersPrevWeek = User::whereBetween('created_at', [$now->copy()->subDays(14), $now->copy()->subDays(7)])->count();
+
             return response()->json([
-                'total_users'        => User::count(),
-                'total_admins'       => User::role('Admin')->count(),
-                'total_managers'     => User::role('Product-Manager')->count(),
-                'total_roles'        => Role::count(),
-                'total_permissions'  => Permission::count(),
-                'recent_users'       => User::with('roles')
+                'total_users'         => User::count(),
+                'total_admins'        => User::role('Admin')->count(),
+                'total_managers'      => User::role('Product-Manager')->count(),
+                'total_roles'         => Role::count(),
+                'total_permissions'   => Permission::count(),
+                'recent_users'        => User::with('roles')
                                             ->latest()
                                             ->take(5)
                                             ->get(),
+                'user_growth'         => $userGrowth,
+                'role_distribution'   => $roleDistribution,
+                'listing_stats'       => $listingStats,
+                'category_breakdown'  => $categoryBreakdown,
+                'new_users_this_week' => $newUsersThisWeek,
+                'new_users_prev_week' => $newUsersPrevWeek,
+                'recent_activity'     => AuditTrail::with('user:id,name')->latest()->take(6)->get()->map(fn ($a) => [
+                    'id'         => $a->audit_id,
+                    'user'       => $a->user?->name ?? 'System',
+                    'action'     => $a->action,
+                    'table'      => $a->table_name,
+                    'created_at' => $a->created_at,
+                ]),
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -94,11 +152,15 @@ class AdminController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to create users.'], 403);
         }
 
+        $settings = Settings::current();
+
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => $settings->passwordRules(),
             'role'     => 'nullable|string|exists:roles,name',
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         $user = User::create([
@@ -111,11 +173,13 @@ class AdminController extends Controller
             $user->assignRole($validated['role']);
         }
 
-        $this->notifySuperAdmins(
-            'user_created',
-            "New user \"{$user->name}\" ({$user->email}) was created.",
-            $user->id
-        );
+        if ($settings->notify_admins_on_new_user) {
+            $this->notifySuperAdmins(
+                'user_created',
+                "New user \"{$user->name}\" ({$user->email}) was created.",
+                $user->id
+            );
+        }
 
         return response()->json([
             'message' => 'User created successfully',
@@ -216,7 +280,9 @@ class AdminController extends Controller
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users',
-            'password' => 'required|string|min:8',
+            'password' => Settings::current()->passwordRules(),
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         $user = User::create([
@@ -431,39 +497,312 @@ class AdminController extends Controller
     }
 
     // ── Audit Trail ───────────────────────────────────────
+
+    /**
+     * Applies the shared set of audit-trail filters (used by both the
+     * paginated list endpoint and the CSV export) to a query builder.
+     */
+    private function applyAuditFilters($query, Request $request): void
+    {
+        if ($request->filled('action') && $request->action !== 'all') {
+            $query->where('action', $request->action);
+        }
+
+        if ($request->filled('table') && $request->table !== 'all') {
+            $query->where('table_name', $request->table);
+        }
+
+        if ($request->filled('user_id') && $request->user_id !== 'all') {
+            $query->where('user_id', $request->user_id);
+        }
+
+        if ($request->filled('record_id')) {
+            $query->where('record_id', $request->record_id);
+        }
+
+        if ($request->filled('date_from')) {
+            $query->whereDate('created_at', '>=', $request->date_from);
+        }
+
+        if ($request->filled('date_to')) {
+            $query->whereDate('created_at', '<=', $request->date_to);
+        }
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->where('action', 'like', "%{$search}%")
+                  ->orWhere('table_name', 'like', "%{$search}%")
+                  ->orWhere('record_id', 'like', "%{$search}%")
+                  ->orWhereHas('user', function ($uq) use ($search) {
+                      $uq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+    }
+
+    private function mapAuditEntry($entry): array
+    {
+        return [
+            'id'         => $entry->audit_id,
+            'user'       => $entry->user?->name ?? 'System',
+            'email'      => $entry->user?->email ?? '',
+            'user_id'    => $entry->user_id,
+            'action'     => $entry->action,
+            'table'      => $entry->table_name,
+            'record_id'  => $entry->record_id,
+            'old_value'  => $entry->old_value,
+            'new_value'  => $entry->new_value,
+            'created_at' => $entry->created_at,
+        ];
+    }
+
     public function getAuditTrail(Request $request)
     {
         if (!$this->user->can('audit-list')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to view audit trail.'], 403);
         }
 
-        $query = \App\Models\AuditTrail::with('user:id,name,email')
-            ->latest()
-            ->take(100);
+        $query = AuditTrail::with('user:id,name,email');
+        $this->applyAuditFilters($query, $request);
 
-        if ($request->has('action') && $request->action !== 'all') {
-            $query->where('action', $request->action);
+        $sort = $request->get('sort', 'desc') === 'asc' ? 'asc' : 'desc';
+        $query->orderBy('created_at', $sort);
+
+        $perPage   = min(max((int) $request->get('per_page', 25), 5), 100);
+        $paginated = $query->paginate($perPage)->withQueryString();
+
+        return response()->json([
+            'audit' => $paginated->getCollection()->map(fn ($entry) => $this->mapAuditEntry($entry))->values(),
+            'meta'  => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+            ],
+            // Distinct option lists so the frontend filter dropdowns always
+            // reflect what actually exists in the table (no hardcoded lists).
+            'filter_options' => [
+                'actions' => AuditTrail::query()->select('action')->distinct()->orderBy('action')->pluck('action'),
+                'tables'  => AuditTrail::query()->select('table_name')->distinct()->orderBy('table_name')->pluck('table_name'),
+            ],
+        ]);
+    }
+
+    /**
+     * Streams a CSV of every audit entry matching the current filters
+     * (capped at 5,000 rows so a runaway export can't hang the server).
+     */
+    public function exportAuditTrail(Request $request)
+    {
+        if (!$this->user->can('audit-list')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to export the audit trail.'], 403);
         }
 
-        if ($request->has('table') && $request->table !== 'all') {
-            $query->where('table_name', $request->table);
+        $query = AuditTrail::with('user:id,name,email');
+        $this->applyAuditFilters($query, $request);
+
+        $rows = $query->orderByDesc('created_at')->limit(5000)->get();
+
+        $csvLine = function (array $fields) {
+            return implode(',', array_map(function ($field) {
+                $field = (string) ($field ?? '');
+                return '"' . str_replace('"', '""', $field) . '"';
+            }, $fields)) . "\n";
+        };
+
+        $csv  = $csvLine(['ID', 'User', 'Email', 'Action', 'Table', 'Record ID', 'Old Value', 'New Value', 'Date']);
+        foreach ($rows as $r) {
+            $csv .= $csvLine([
+                $r->audit_id,
+                $r->user?->name ?? 'System',
+                $r->user?->email ?? '',
+                $r->action,
+                $r->table_name,
+                $r->record_id,
+                $r->old_value ? json_encode($r->old_value) : '',
+                $r->new_value ? json_encode($r->new_value) : '',
+                optional($r->created_at)->toDateTimeString(),
+            ]);
         }
 
-        $audit = $query->get()->map(function($entry) {
-            return [
-                'id'         => $entry->audit_id,
-                'user'       => $entry->user?->name ?? 'System',
-                'email'      => $entry->user?->email ?? '',
-                'action'     => $entry->action,
-                'table'      => $entry->table_name,
-                'record_id'  => $entry->record_id,
-                'old_value'  => $entry->old_value,
-                'new_value'  => $entry->new_value,
-                'created_at' => $entry->created_at,
-            ];
-        });
+        return response($csv, 200, [
+            'Content-Type'        => 'text/csv',
+            'Content-Disposition' => 'attachment; filename="audit-trail-' . now()->format('Y-m-d_His') . '.csv"',
+        ]);
+    }
 
-        return response()->json(['audit' => $audit]);
+    // ── Messages (platform-wide oversight) ─────────────────
+    // The Super Admin isn't a buyer or seller, so they're never a sender/
+    // recipient on a listing's message thread. Instead of their own inbox
+    // (which would always be empty), this gives them read-only visibility
+    // into every buyer↔seller conversation on the platform — useful for
+    // support and moderation.
+
+    public function getMessages(Request $request)
+    {
+        if (!$this->user->can('message-view')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to view messages.'], 403);
+        }
+
+        $query = Message::with([
+            'sender:id,name,email',
+            'recipient:id,name,email',
+            'product:product_id,title,seller_id',
+        ])->latest();
+
+        if ($request->filled('search')) {
+            $search = $request->search;
+            $query->where(function ($q) use ($search) {
+                $q->whereHas('product', fn ($p) => $p->where('title', 'like', "%{$search}%"))
+                  ->orWhereHas('sender', fn ($s) => $s->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"))
+                  ->orWhereHas('recipient', fn ($r) => $r->where('name', 'like', "%{$search}%")->orWhere('email', 'like', "%{$search}%"));
+            });
+        }
+
+        // Conversations aren't their own table — they're derived by grouping
+        // messages per listing, so pagination happens in-memory after grouping.
+        $conversations = $query->get()
+            ->groupBy('product_id')
+            ->map(function ($group) {
+                $latest = $group->first();
+                $participants = $group
+                    ->flatMap(fn ($m) => [$m->sender, $m->recipient])
+                    ->filter()
+                    ->unique('id')
+                    ->values()
+                    ->map(fn ($p) => ['id' => $p->id, 'name' => $p->name, 'email' => $p->email]);
+
+                return [
+                    'product_id'      => $latest->product_id,
+                    'product_title'   => $latest->product?->title ?? 'Deleted listing',
+                    'seller_id'       => $latest->product?->seller_id,
+                    'last_message'    => $latest->message_text,
+                    'last_message_at' => $latest->created_at,
+                    'message_count'   => $group->count(),
+                    'unread_count'    => $group->where('is_read', false)->count(),
+                    'participants'    => $participants,
+                ];
+            })
+            ->sortByDesc('last_message_at')
+            ->values();
+
+        $total   = $conversations->count();
+        $perPage = min(max((int) $request->get('per_page', 20), 5), 100);
+        $page    = max((int) $request->get('page', 1), 1);
+        $paged   = $conversations->forPage($page, $perPage)->values();
+
+        return response()->json([
+            'conversations' => $paged,
+            'meta' => [
+                'current_page' => $page,
+                'last_page'    => (int) max(ceil($total / $perPage), 1),
+                'per_page'     => $perPage,
+                'total'        => $total,
+            ],
+            'total_unread' => Message::where('is_read', false)->count(),
+        ]);
+    }
+
+    public function getMessageThread($productId)
+    {
+        if (!$this->user->can('message-view')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to view messages.'], 403);
+        }
+
+        $product  = Product::find($productId);
+        $messages = Message::with(['sender:id,name,email', 'recipient:id,name,email'])
+            ->where('product_id', $productId)
+            ->oldest()
+            ->get();
+
+        if ($messages->isEmpty() && !$product) {
+            return response()->json(['message' => 'Conversation not found.'], 404);
+        }
+
+        return response()->json([
+            'product' => $product ? [
+                'id'        => $product->product_id,
+                'title'     => $product->title,
+                'seller_id' => $product->seller_id,
+            ] : null,
+            'messages' => $messages,
+            'count'    => $messages->count(),
+        ]);
+    }
+
+    // ── System Settings ─────────────────────────────────────
+    // Gated on 'dashboard-view' (every Super Admin already has it) rather
+    // than a brand-new permission slug, so this works immediately without
+    // needing a fresh permissions seed.
+
+    public function getSettings()
+    {
+        if (!$this->user->can('dashboard-view')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        return response()->json(['settings' => Settings::current()]);
+    }
+
+    public function updateSettings(Request $request)
+    {
+        if (!$this->user->can('dashboard-view')) {
+            return response()->json(['message' => 'Unauthorized.'], 403);
+        }
+
+        $validated = $request->validate([
+            'platform_name'                 => 'sometimes|string|max:255',
+            'support_email'                 => 'nullable|email|max:255',
+            'support_phone'                 => 'nullable|string|max:30',
+            'contact_address'               => 'nullable|string|max:255',
+            'tagline'                       => 'nullable|string|max:255',
+            'facebook_url'                  => 'nullable|url|max:255',
+            'twitter_url'                   => 'nullable|url|max:255',
+            'instagram_url'                 => 'nullable|url|max:255',
+            'auto_approve_listings'         => 'sometimes|boolean',
+            'max_images_per_listing'        => 'sometimes|integer|min:1|max:10',
+            'max_image_upload_size_kb'      => 'sometimes|integer|min:256|max:10240',
+            'max_listing_price'             => 'nullable|integer|min:1',
+            'min_listing_price'             => 'nullable|integer|min:0',
+            'min_password_length'           => 'sometimes|integer|min:6|max:32',
+            'require_strong_password'       => 'sometimes|boolean',
+            'require_email_verification'    => 'sometimes|boolean',
+            'allow_google_login'            => 'sometimes|boolean',
+            'allow_public_registration'     => 'sometimes|boolean',
+            'max_login_attempts'            => 'sometimes|integer|min:3|max:20',
+            'lockout_duration_minutes'      => 'sometimes|integer|min:1|max:1440',
+            'session_lifetime_minutes'      => 'nullable|integer|min:5',
+            'notify_admins_on_new_user'     => 'sometimes|boolean',
+            'notify_admins_on_new_listing'  => 'sometimes|boolean',
+            'notify_admins_on_new_message'  => 'sometimes|boolean',
+            'maintenance_mode'              => 'sometimes|boolean',
+            'maintenance_message'           => 'nullable|string|max:1000',
+        ]);
+
+        $settings = Settings::current();
+
+        // Cross-field sanity check that a single field rule can't express —
+        // the floor can't sit above the ceiling.
+        $min = $validated['min_listing_price'] ?? $settings->min_listing_price;
+        $max = $validated['max_listing_price'] ?? $settings->max_listing_price;
+        if ($min !== null && $max !== null && $min > $max) {
+            return response()->json([
+                'message' => 'Minimum listing price cannot be greater than the maximum listing price.',
+                'errors'  => ['min_listing_price' => ['Must be less than or equal to the maximum listing price.']],
+            ], 422);
+        }
+
+        $oldValue = $settings->toArray();
+        $settings->update($validated);
+
+        AuditLogger::log('settings', $settings->id, 'updated', $oldValue, $settings->fresh()->toArray());
+
+        return response()->json([
+            'message'  => 'Settings updated successfully.',
+            'settings' => $settings->fresh(),
+        ]);
     }
 
     // ── GET PROFILE ───────────────────────────────────────────
@@ -478,13 +817,20 @@ class AdminController extends Controller
     {
         // No permission check – users always update their own profile
         $user = $request->user();
+        $profileSettings = Settings::current();
+
+        $passwordRule = $request->filled('password')
+            ? array_merge(['sometimes'], $profileSettings->passwordRules(), ['confirmed'])
+            : 'sometimes|string';
 
         $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'phone'    => 'sometimes|string|max:20',
             'location' => 'sometimes|string|max:100',
-            'password' => 'sometimes|string|min:8|confirmed',
-            'avatar'   => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'password' => $passwordRule,
+            'avatar'   => 'sometimes|image|mimes:jpeg,png,jpg|max:' . $profileSettings->max_image_upload_size_kb,
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         if (isset($validated['name']))     $user->name     = $validated['name'];

@@ -26,7 +26,16 @@ export const createPermission  = (data)      => api.post('/admin/permissions', d
 export const deletePermission  = (id)        => api.delete(`/admin/permissions/${id}`);
 
 // Audit
-export const getAuditTrail     = ()          => api.get('/admin/audit');
+export const getAuditTrail     = (params)    => api.get('/admin/audit', { params });
+export const exportAuditTrail  = (params)    => api.get('/admin/audit/export', { params, responseType: 'blob' });
+
+// Messages (platform-wide oversight — read-only for Super Admin)
+export const getAdminMessages       = (params)    => api.get('/admin/messages', { params });
+export const getAdminMessageThread  = (productId) => api.get(`/admin/messages/${productId}`);
+
+// System settings
+export const getSettings    = ()     => api.get('/admin/settings');
+export const updateSettings = (data) => api.put('/admin/settings', data);
 
 export const getAdminProfile    = ()     => api.get('/admin/profile');
 export const updateAdminProfile = (data) => api.post('/admin/profile', data, {

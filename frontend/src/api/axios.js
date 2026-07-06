@@ -18,13 +18,27 @@ api.interceptors.request.use(config => {
   return config;
 });
 
+// Set by the app while an intentional, user-initiated logout is in
+// progress (see AdminLayout's goodbye-screen flow). While true, the 401
+// handler below stays quiet instead of hard-redirecting to /login —
+// otherwise a background poll (badge counts, notifications, etc.) that
+// happens to fire after the server has already revoked the token, but
+// before our own delayed redirect runs, would hijack navigation straight
+// to the login page instead of the intended destination.
+let intentionalLogout = false;
+export function setIntentionalLogout(value) {
+  intentionalLogout = value;
+}
+
 // Automatically handle 401 (token expired or invalid)
 api.interceptors.response.use(
   response => response,
   error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
-      window.location.href = '/login';
+      if (!intentionalLogout) {
+        window.location.href = '/login';
+      }
     }
     return Promise.reject(error);
   }

@@ -9,14 +9,14 @@ function AppPage() {
   // Helper: Get color for widget
   const getColor = (permission) => {
     const colors = [
-      'bg-blue-50 border-blue-200',
-      'bg-green-50 border-green-200',
+      'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50',
+      'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50',
       'bg-purple-50 border-purple-200',
-      'bg-yellow-50 border-yellow-200',
-      'bg-red-50 border-red-200',
+      'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50',
+      'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50',
       'bg-indigo-50 border-indigo-200',
       'bg-pink-50 border-pink-200',
-      'bg-orange-50 border-orange-200',
+      'bg-orange-50 dark:bg-orange-950/40 border-orange-200',
       'bg-teal-50 border-teal-200',
       'bg-cyan-50 border-cyan-200',
     ];
@@ -92,13 +92,13 @@ function AppPage() {
     <div className="max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-800">
+        <h1 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
           Welcome back, {user?.name || 'User'}!
         </h1>
         <div className="flex items-center gap-3 mt-1">
-          <span className="text-sm text-gray-500">Role: {role || 'User'}</span>
+          <span className="text-sm text-gray-500 dark:text-gray-400">Role: {role || 'User'}</span>
           <span className="w-1 h-1 bg-gray-300 rounded-full" />
-          <span className="text-sm text-gray-500">
+          <span className="text-sm text-gray-500 dark:text-gray-400">
             {permissions?.length || 0} permissions
           </span>
         </div>
@@ -106,8 +106,8 @@ function AppPage() {
 
       {/* No permissions */}
       {!hasPermissions && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-6 text-center">
-          <p className="text-yellow-700">
+        <div className="bg-yellow-50 dark:bg-yellow-950/40 border border-yellow-200 dark:border-yellow-800/50 rounded-xl p-6 text-center">
+          <p className="text-yellow-700 dark:text-yellow-400">
             You don't have any permissions assigned yet. Contact your administrator.
           </p>
         </div>
@@ -129,12 +129,12 @@ function AppPage() {
                 className={`${color} border rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:scale-[1.02]`}
               >
                 <div className="text-3xl mb-3">{emoji}</div>
-                <h3 className="font-semibold text-gray-800">{title}</h3>
-                <p className="text-gray-600 text-sm mt-1">
+                <h3 className="font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
+                <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                   Click to {actionLabel.toLowerCase()}
                 </p>
-                <p className="text-xs text-gray-400 font-mono mt-2">{permission}</p>
-                <div className="mt-3 text-xs text-blue-600 font-medium flex items-center gap-1">
+                <p className="text-xs text-gray-400 dark:text-gray-500 font-mono mt-2">{permission}</p>
+                <div className="mt-3 text-xs text-blue-600 dark:text-blue-400 font-medium flex items-center gap-1">
                   Go to {actionLabel} →
                 </div>
               </div>
