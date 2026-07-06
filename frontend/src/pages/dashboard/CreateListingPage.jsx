@@ -1,3 +1,38 @@
+import { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
+import { toast } from 'react-hot-toast';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { getCategories, createProduct } from '../../api/products';
+import { 
+  FiChevronRight, 
+  FiChevronLeft, 
+  FiCheck, 
+  FiX,
+  FiUpload,
+  FiImage,
+  FiTag,
+  FiFileText,
+  FiGrid,
+  FiList,
+  FiArrowRight,
+  FiArrowLeft,
+  FiCamera,
+  FiTrash2,
+  FiEye,
+  FiAlertCircle,
+  FiMonitor,
+  FiSmartphone,
+  FiZap,
+  FiGlobe,
+  FiPrinter,
+  FiPackage,
+  FiStar,
+  FiThumbsUp,
+  FiBarChart2,
+  FiTool
+} from 'react-icons/fi';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery, useMutation } from '@tanstack/react-query';
@@ -8,14 +43,45 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 const steps = [
-  { id: 1, label: 'Category',    icon: '📂' },
-  { id: 2, label: 'Details',     icon: '📝' },
-  { id: 3, label: 'Images',      icon: '🖼️' },
-  { id: 4, label: 'Review',      icon: '✅' },
+  { id: 1, label: 'Category', icon: FiGrid, description: 'Choose where your item belongs' },
+  { id: 2, label: 'Details', icon: FiFileText, description: 'Tell buyers about your item' },
+  { id: 3, label: 'Images', icon: FiImage, description: 'Show what you\'re selling' },
+  { id: 4, label: 'Review', icon: FiEye, description: 'Double-check everything' },
 ];
+
+const conditions = [
+  { value: 'New', label: 'Brand New', icon: FiStar, color: 'bg-green-100 text-green-700' },
+  { value: 'Good', label: 'Very Good', icon: FiThumbsUp, color: 'bg-blue-100 text-blue-700' },
+  { value: 'Fair', label: 'Fair', icon: FiBarChart2, color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'Poor', label: 'Needs Repair', icon: FiTool, color: 'bg-red-100 text-red-700' },
+];
+
+const categoryIcons = {
+  'Electronics': FiMonitor,
+  'Mobile Devices': FiSmartphone,
+  'Accessories': FiZap,
+  'Networking': FiGlobe,
+  'Appliances': FiPrinter,
+  'Other': FiPackage
+};
+
+// Format Ugandan Shillings
+const formatUGX = (amount) => {
+  if (!amount) return '';
+  return `UGX ${Number(amount).toLocaleString()}`;
+};
 
 export default function CreateListingPage() {
   const navigate = useNavigate();
+  const fileInputRef = useRef(null);
+  
+  const [step, setStep] = useState(1);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const [step, setStep]             = useState(1);
   const [error, setError]           = useState('');
   const [images, setImages]         = useState([]);
@@ -36,15 +102,30 @@ export default function CreateListingPage() {
   });
 
   const [form, setForm] = useState({
-    category_id:    '',
+    category_id: '',
     subcategory_id: '',
-    title:          '',
-    description:    '',
-    condition:      '',
-    price:          '',
-    specification:  '',
+    title: '',
+    description: '',
+    condition: '',
+    price: '',
+    specification: '',
   });
 
+  // Load categories
+  useEffect(() => {
+    getCategories()
+      .then(res => setCategories(res.data.categories))
+      .catch(() => toast.error('Failed to load categories'));
+  }, []);
+
+  // Update subcategories when category changes
+  useEffect(() => {
+    if (form.category_id) {
+      const cat = categories.find(c => c.category_id == form.category_id);
+      setSubcategories(cat?.subcategories || []);
+      setForm(prev => ({ ...prev, subcategory_id: '' }));
+    }
+  }, [form.category_id, categories]);
   const { data: categories = [] } = useQuery({
     queryKey: ['categories'],
     queryFn: () => getCategories().then(res => res.data.categories),
@@ -53,20 +134,54 @@ export default function CreateListingPage() {
   // Derived from categories + the selected category_id — no effect needed.
   const subcategories = categories.find(c => c.category_id == form.category_id)?.subcategories || [];
 
-  const handleImageChange = (e) => {
-    const existing = images.length;
-    const remaining = 5 - existing;
-    const newFiles = Array.from(e.target.files).slice(0, remaining);
-    const updated = [...images, ...newFiles].slice(0, 5);
-    setImages(updated);
-    setPreviews(updated.map(f => URL.createObjectURL(f)));
+  // Image handling with react-dropzone
+  const onDrop = (acceptedFiles) => {
+    const remaining = 5 - images.length;
+    const newFiles = acceptedFiles.slice(0, remaining);
+    
+    if (newFiles.length === 0) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+
+    const updatedImages = [...images, ...newFiles];
+    setImages(updatedImages);
+    setImagePreviews(updatedImages.map(f => URL.createObjectURL(f)));
+    toast.success(`${newFiles.length} image(s) added`);
   };
+
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    onDrop,
+    accept: {
+      'image/jpeg': ['.jpeg', '.jpg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp']
+    },
+    maxSize: 2 * 1024 * 1024, // 2MB
+    maxFiles: 5,
+    disabled: images.length >= 5,
+  });
 
   const removeImage = (index) => {
     setImages(prev => prev.filter((_, i) => i !== index));
-    setPreviews(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+    toast.success('Image removed');
   };
 
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    
+    try {
+      const data = new FormData();
+      Object.entries(form).forEach(([key, val]) => {
+        if (val) data.append(key, val);
+      });
+      images.forEach((img, i) => {
+        data.append(`images[${i}]`, img);
+      });
+
+      await createProduct(data);
+      toast.success('Your listing has been submitted for review!');
   const createMutation = useMutation({
     mutationFn: (data) => createProduct(data),
     onSuccess: () => {
@@ -75,6 +190,12 @@ export default function CreateListingPage() {
     },
     onError: (err) => {
       const errors = err.response?.data?.errors;
+      if (errors) {
+        const errorMessages = Object.values(errors).flat().join(' · ');
+        toast.error(errorMessages);
+      } else {
+        toast.error(err.response?.data?.message || 'Failed to submit listing.');
+      }
       const errorMsg = errors
         ? Object.values(errors).flat().join(' · ')
         : err.response?.data?.message || 'Failed to submit listing.';
@@ -105,20 +226,9 @@ export default function CreateListingPage() {
   };
 
   const selectedCategory = categories.find(c => c.category_id == form.category_id);
-  const selectedSub      = subcategories.find(s => s.subcategory_id == form.subcategory_id);
+  const selectedSub = subcategories.find(s => s.subcategory_id == form.subcategory_id);
 
-  // 👇 If user doesn't have permission to create, show an error message
-  if (!canCreate) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-2xl mx-auto text-center py-16">
-          <div className="text-5xl mb-4">🚫</div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-          <p className="text-gray-500">You don't have permission to create listings.</p>
-        </div>
-      </DashboardLayout>
-    );
-  }
+  const progress = ((step - 1) / (steps.length - 1)) * 100;
 
   // 👇 Block listing creation until the user has verified their email
   if (!isVerified) {
@@ -144,40 +254,103 @@ export default function CreateListingPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-2xl mx-auto">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6">
 
-        {/* Header */}
+        {/* Header with progress */}
         <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-800">Post a Listing</h2>
-          <p className="text-gray-500 text-sm mt-1">
-            Fill in the details below. Your listing will be reviewed before going live.
-          </p>
+          <div className="flex items-start justify-between">
+            <div>
+              <h2 className="text-3xl font-bold text-gray-800">Create Listing</h2>
+              <p className="text-gray-500 text-sm mt-1">
+                Fill in the details below. Your listing will be reviewed before going live.
+              </p>
+            </div>
+            <div className="hidden sm:block">
+              <div className="px-4 py-2 bg-blue-50 rounded-xl border border-blue-100">
+                <span className="text-sm font-medium text-blue-700">
+                  Step {step} of {steps.length}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Progress bar */}
+          <div className="mt-6 relative">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+              <motion.div
+                className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
+                initial={{ width: 0 }}
+                animate={{ width: `${progress}%` }}
+                transition={{ duration: 0.5 }}
+              />
+            </div>
+          </div>
         </div>
 
         {/* Step indicator */}
-        <div className="flex items-center mb-8">
+        <div className="flex items-center mb-8 gap-2">
           {steps.map((s, i) => (
             <div key={s.id} className="flex items-center flex-1">
-              <div className="flex flex-col items-center">
+              <motion.button
+                onClick={() => {
+                  if (step > s.id) setStep(s.id);
+                }}
+                className={`flex flex-col items-center group relative ${
+                  step > s.id ? 'cursor-pointer' : 'cursor-default'
+                }`}
+                whileHover={step > s.id ? { scale: 1.05 } : {}}
+              >
                 <div className={`
-                  w-10 h-10 rounded-xl flex items-center justify-center text-lg font-bold transition
-                  ${step === s.id ? 'bg-blue-600 text-white shadow-lg shadow-blue-200'
-                    : step > s.id ? 'bg-green-500 text-white'
-                    : 'bg-gray-100 text-gray-400'}
+                  w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold transition-all duration-300
+                  ${step === s.id 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 ring-4 ring-blue-100' 
+                    : step > s.id 
+                      ? 'bg-green-500 text-white shadow-lg shadow-green-200' 
+                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}
                 `}>
-                  {step > s.id ? '✓' : s.icon}
+                  {step > s.id ? <FiCheck className="w-6 h-6" /> : <s.icon className="w-5 h-5" />}
                 </div>
-                <span className={`text-xs mt-1.5 font-medium ${step >= s.id ? 'text-gray-700' : 'text-gray-400'}`}>
+                <span className={`text-xs mt-2 font-medium transition-colors ${
+                  step >= s.id ? 'text-gray-700' : 'text-gray-400'
+                }`}>
                   {s.label}
                 </span>
-              </div>
+                <span className="text-[10px] text-gray-400 hidden sm:block mt-0.5">
+                  {s.description}
+                </span>
+              </motion.button>
               {i < steps.length - 1 && (
-                <div className={`flex-1 h-0.5 mx-2 mb-4 rounded ${step > s.id ? 'bg-green-400' : 'bg-gray-200'}`} />
+                <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-500 ${
+                  step > s.id ? 'bg-green-400' : 'bg-gray-200'
+                }`} />
               )}
             </div>
           ))}
         </div>
 
+        {/* Animated content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8"
+          >
+            {/* Step content */}
+            {step === 1 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Choose a Category</h3>
+                <p className="text-gray-500 text-sm mb-6">Select the category that best describes your item</p>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {categories.map(cat => {
+                    const isSelected = form.category_id == cat.category_id;
+                    const CatIcon = categoryIcons[cat.name] || FiPackage;
+                    return (
+                      <motion.button
+                        key={cat.category_id}
         {/* Error */}
         {error && (
           <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6 flex gap-2">
@@ -225,228 +398,420 @@ export default function CreateListingPage() {
                       <button
                         key={sub.subcategory_id}
                         type="button"
-                        onClick={() => setForm({ ...form, subcategory_id: sub.subcategory_id })}
-                        className={`px-3 py-1.5 rounded-full text-sm border transition
-                          ${form.subcategory_id == sub.subcategory_id
-                            ? 'bg-blue-600 text-white border-blue-600'
-                            : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400'
+                        onClick={() => setForm({ ...form, category_id: cat.category_id })}
+                        className={`p-4 rounded-2xl border-2 text-left transition-all duration-200
+                          ${isSelected
+                            ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
+                            : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:shadow-blue-50 bg-white'
                           }`}
+                        whileHover={{ scale: 1.02 }}
+                        whileTap={{ scale: 0.98 }}
                       >
-                        {sub.sub_category_name}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Step 2 — Details */}
-          {step === 2 && (
-            <div>
-              <h3 className="font-bold text-gray-800 text-lg mb-1">Listing Details</h3>
-              <p className="text-gray-500 text-sm mb-6">Provide accurate details to help buyers find your item</p>
-
-              <div className="space-y-5">
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title <span className="text-red-400">*</span></label>
-                  <input
-                    type="text" value={form.title} required
-                    placeholder="e.g. Dell Laptop Screen 15.6 inch HD"
-                    onChange={e => setForm({ ...form, title: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Description <span className="text-red-400">*</span></label>
-                  <textarea
-                    value={form.description} required rows={4}
-                    placeholder="Describe the item — what it is, where it came from, any defects..."
-                    onChange={e => setForm({ ...form, description: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Condition <span className="text-red-400">*</span></label>
-                    <select
-                      value={form.condition} required
-                      onChange={e => setForm({ ...form, condition: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                    >
-                      <option value="">Select condition</option>
-                      {['New', 'Good', 'Fair', 'Poor'].map(c => (
-                        <option key={c} value={c}>{c}</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Price (UGX) <span className="text-red-400">*</span></label>
-                    <input
-                      type="number" value={form.price} required min="0"
-                      placeholder="e.g. 45000"
-                      onChange={e => setForm({ ...form, price: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Specifications <span className="text-gray-400 font-normal">(optional)</span></label>
-                  <textarea
-                    value={form.specification} rows={3}
-                    placeholder="Technical details, dimensions, compatibility, part numbers..."
-                    onChange={e => setForm({ ...form, specification: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Step 3 — Images */}
-          {step === 3 && (
-            <div>
-              <h3 className="font-bold text-gray-800 text-lg mb-1">Add Photos</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                Upload up to 5 photos. Clear photos get more buyer interest.
-              </p>
-
-              {/* Upload area */}
-              <label className="block border-2 border-dashed border-gray-200 hover:border-blue-400 rounded-2xl p-8 text-center cursor-pointer transition mb-6">
-                <input
-                  type="file"
-                  multiple
-                  accept="image/jpeg,image/png,image/jpg"
-                  className="hidden"
-                  onChange={handleImageChange}
-                />
-                <span className="text-4xl block mb-3">📸</span>
-                <p className="font-semibold text-gray-700 mb-1">Click to upload photos</p>
-                <p className="text-xs text-gray-400">JPEG, PNG up to 2MB each · Max 5 photos</p>
-              </label>
-
-              {/* Previews */}
-              {previews.length > 0 && (
-                <div className="grid grid-cols-3 gap-3">
-                  {previews.map((src, i) => (
-                    <div key={i} className="relative group rounded-xl overflow-hidden aspect-square">
-                      <img src={src} alt="" className="w-full h-full object-cover" />
-                      <button
-                        type="button"
-                        onClick={() => removeImage(i)}
-                        className="absolute top-2 right-2 w-6 h-6 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                      >
-                        ✕
-                      </button>
-                      {i === 0 && (
-                        <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
-                          Main
+                        <span className="block mb-2">
+                          <CatIcon className="w-7 h-7" />
                         </span>
+                        <span className={`text-sm font-medium ${
+                          isSelected ? 'text-blue-700' : 'text-gray-700'
+                        }`}>
+                          {cat.name}
+                        </span>
+                        {isSelected && (
+                          <motion.div
+                            initial={{ scale: 0 }}
+                            animate={{ scale: 1 }}
+                            className="mt-1"
+                          >
+                            <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                              Selected
+                            </span>
+                          </motion.div>
+                        )}
+                      </motion.button>
+                    );
+                  })}
+                </div>
+
+                {/* Subcategory */}
+                {subcategories.length > 0 && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                      Subcategory <span className="text-red-400">*</span>
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {subcategories.map(sub => {
+                        const isSelected = form.subcategory_id == sub.subcategory_id;
+                        return (
+                          <motion.button
+                            key={sub.subcategory_id}
+                            type="button"
+                            onClick={() => setForm({ ...form, subcategory_id: sub.subcategory_id })}
+                            className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200
+                              ${isSelected
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:shadow-md'
+                              }`}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                          >
+                            {sub.sub_category_name}
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </motion.div>
+                )}
+              </div>
+            )}
+
+            {/* Step 2 — Details */}
+            {step === 2 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Listing Details</h3>
+                <p className="text-gray-500 text-sm mb-6">Provide accurate details to help buyers find your item</p>
+
+                <div className="space-y-5">
+                  {/* Title */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Title <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <FiTag className="absolute left-4 top-3.5 text-gray-400" />
+                      <input
+                        type="text"
+                        value={form.title}
+                        placeholder="e.g. Dell Laptop Screen 15.6 inch HD"
+                        onChange={e => setForm({ ...form, title: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                      />
+                      <span className="absolute right-4 top-3.5 text-xs text-gray-400">
+                        {form.title.length}/100
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Description <span className="text-red-400">*</span>
+                    </label>
+                    <div className="relative">
+                      <FiFileText className="absolute left-4 top-3.5 text-gray-400" />
+                      <textarea
+                        value={form.description}
+                        rows={4}
+                        placeholder="Describe the item — what it is, where it came from, any defects..."
+                        onChange={e => setForm({ ...form, description: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {/* Condition */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Condition <span className="text-red-400">*</span>
+                      </label>
+                      <div className="grid grid-cols-2 gap-2">
+                        {conditions.map(c => {
+                          const isSelected = form.condition === c.value;
+                          const CondIcon = c.icon;
+                          return (
+                            <motion.button
+                              key={c.value}
+                              type="button"
+                              onClick={() => setForm({ ...form, condition: c.value })}
+                              className={`p-3 rounded-xl border-2 text-center transition-all duration-200
+                                ${isSelected
+                                  ? `${c.color} border-current shadow-md`
+                                  : 'border-gray-200 hover:border-gray-400 bg-gray-50'
+                                }`}
+                              whileHover={{ scale: 1.03 }}
+                              whileTap={{ scale: 0.97 }}
+                            >
+                              <span className="flex justify-center mb-1"><CondIcon className="w-6 h-6" /></span>
+                              <span className="text-xs font-medium">{c.label}</span>
+                            </motion.button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Price */}
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Price (UGX) <span className="text-red-400">*</span>
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="number"
+                          value={form.price}
+                          min="0"
+                          placeholder="e.g. 45000"
+                          onChange={e => setForm({ ...form, price: e.target.value })}
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                        />
+                      </div>
+                      {form.price && (
+                        <p className="text-xs text-gray-500 mt-1.5">
+                          {formatUGX(form.price)}
+                        </p>
                       )}
                     </div>
-                  ))}
-                </div>
-              )}
-
-              {previews.length === 0 && (
-                <p className="text-center text-gray-400 text-sm">
-                  No photos added yet — you can skip this step and add photos later
-                </p>
-              )}
-            </div>
-          )}
-
-          {/* Step 4 — Review */}
-          {step === 4 && (
-            <div>
-              <h3 className="font-bold text-gray-800 text-lg mb-1">Review Your Listing</h3>
-              <p className="text-gray-500 text-sm mb-6">
-                Check everything before submitting for approval
-              </p>
-
-              <div className="space-y-4">
-                {[
-                  { label: 'Category',    value: selectedCategory?.name },
-                  { label: 'Subcategory', value: selectedSub?.sub_category_name },
-                  { label: 'Title',       value: form.title },
-                  { label: 'Condition',   value: form.condition },
-                  { label: 'Price',       value: form.price ? `UGX ${Number(form.price).toLocaleString()}` : '' },
-                ].map(({ label, value }) => (
-                  <div key={label} className="flex justify-between py-3 border-b border-gray-50">
-                    <span className="text-sm text-gray-500 font-medium">{label}</span>
-                    <span className="text-sm font-semibold text-gray-800">{value || '—'}</span>
                   </div>
-                ))}
 
-                <div className="py-3 border-b border-gray-50">
-                  <p className="text-sm text-gray-500 font-medium mb-2">Description</p>
-                  <p className="text-sm text-gray-700 leading-relaxed">{form.description}</p>
+                  {/* Specifications */}
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      Specifications <span className="text-gray-400 font-normal">(optional)</span>
+                    </label>
+                    <div className="relative">
+                      <FiList className="absolute left-4 top-3.5 text-gray-400" />
+                      <textarea
+                        value={form.specification}
+                        rows={3}
+                        placeholder="Technical details, dimensions, compatibility, part numbers..."
+                        onChange={e => setForm({ ...form, specification: e.target.value })}
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 3 — Images */}
+            {step === 3 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Add Photos</h3>
+                <p className="text-gray-500 text-sm mb-6">
+                  Upload up to 5 photos. Clear photos get more buyer interest.
+                  <span className="block text-xs text-blue-600 mt-1">
+                    {images.length}/5 images uploaded
+                  </span>
+                </p>
+
+                {/* Dropzone */}
+                <div
+                  {...getRootProps()}
+                  className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200
+                    ${isDragActive 
+                      ? 'border-blue-500 bg-blue-50 shadow-inner' 
+                      : images.length >= 5 
+                        ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
+                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'
+                    }`}
+                >
+                  <input {...getInputProps()} />
+                  <motion.div
+                    initial={{ scale: 1 }}
+                    animate={{ scale: isDragActive ? 1.05 : 1 }}
+                    transition={{ duration: 0.2 }}
+                  >
+                    <div className="flex flex-col items-center">
+                      <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
+                        {isDragActive ? (
+                          <FiUpload className="w-8 h-8 text-blue-500" />
+                        ) : (
+                          <FiCamera className="w-8 h-8 text-gray-400" />
+                        )}
+                      </div>
+                      <p className="font-semibold text-gray-700 mb-1">
+                        {isDragActive ? 'Drop your images here' : 'Click or drag to upload'}
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        JPEG, PNG, WebP · Up to 2MB each
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {images.length}/5 images used
+                      </p>
+                    </div>
+                  </motion.div>
                 </div>
 
-                <div className="py-3">
-                  <p className="text-sm text-gray-500 font-medium mb-2">Photos</p>
-                  {previews.length > 0 ? (
-                    <div className="flex gap-2">
-                      {previews.map((src, i) => (
-                        <img key={i} src={src} alt="" className="w-14 h-14 rounded-xl object-cover border border-gray-200" />
-                      ))}
+                {/* Image previews */}
+                {imagePreviews.length > 0 && (
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+                    {imagePreviews.map((src, i) => (
+                      <motion.div
+                        key={i}
+                        initial={{ scale: 0.8, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        className="relative group rounded-2xl overflow-hidden aspect-square bg-gray-100"
+                      >
+                        <img 
+                          src={src} 
+                          alt={`Preview ${i + 1}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                          <button
+                            type="button"
+                            onClick={() => removeImage(i)}
+                            className="w-10 h-10 rounded-full bg-red-500 text-white flex items-center justify-center hover:bg-red-600 transition transform hover:scale-110"
+                          >
+                            <FiTrash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                        {i === 0 && (
+                          <span className="absolute bottom-2 left-2 bg-blue-600 text-white text-xs px-2 py-0.5 rounded-full">
+                            Main
+                          </span>
+                        )}
+                      </motion.div>
+                    ))}
+                  </div>
+                )}
+
+                {images.length === 0 && (
+                  <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center">
+                    <p className="text-sm text-gray-500">
+                      No photos added yet — you can skip this step and add photos later
+                    </p>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Step 4 — Review */}
+            {step === 4 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Review Your Listing</h3>
+                <p className="text-gray-500 text-sm mb-6">
+                  Check everything before submitting for approval
+                </p>
+
+                <div className="space-y-4 bg-gray-50 rounded-2xl p-4 sm:p-6">
+                  {[
+                    { label: 'Category', value: selectedCategory?.name, icon: FiGrid },
+                    { label: 'Subcategory', value: selectedSub?.sub_category_name, icon: FiTag },
+                    { label: 'Title', value: form.title, icon: FiFileText },
+                    { label: 'Condition', value: form.condition, icon: FiTag },
+                    { label: 'Price', value: form.price ? formatUGX(form.price) : '', icon: FiTag },
+                  ].map(({ label, value, icon: Icon }) => (
+                    <div key={label} className="flex items-start justify-between py-3 border-b border-gray-200/60 last:border-0">
+                      <span className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                        <Icon className="w-4 h-4" />
+                        {label}
+                      </span>
+                      <span className="text-sm font-semibold text-gray-800 text-right max-w-[60%]">
+                        {value || '—'}
+                      </span>
                     </div>
-                  ) : (
-                    <p className="text-sm text-gray-400 italic">No photos added</p>
+                  ))}
+
+                  {form.description && (
+                    <div className="py-3 border-b border-gray-200/60">
+                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2">
+                        <FiFileText className="w-4 h-4" /> Description
+                      </p>
+                      <p className="text-sm text-gray-700 leading-relaxed">
+                        {form.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {imagePreviews.length > 0 && (
+                    <div className="py-3">
+                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2">
+                        <FiImage className="w-4 h-4" /> Photos ({imagePreviews.length})
+                      </p>
+                      <div className="flex gap-2">
+                        {imagePreviews.slice(0, 5).map((src, i) => (
+                          <img 
+                            key={i} 
+                            src={src} 
+                            alt={`Preview ${i + 1}`}
+                            className="w-16 h-16 rounded-xl object-cover border-2 border-white shadow-sm"
+                          />
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
-              </div>
 
-              {/* Approval notice */}
-              <div className="mt-6 bg-blue-50 border border-blue-200 rounded-xl px-4 py-3 flex gap-3">
-                <span className="text-blue-500 shrink-0">ℹ️</span>
-                <p className="text-xs text-blue-700">
-                  Your listing will be reviewed by our team before going live on the marketplace. You'll receive a notification once it's approved or if changes are needed.
-                </p>
+                {/* Approval notice */}
+                <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl px-4 py-4 flex gap-3">
+                  <FiAlertCircle className="text-blue-500 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium text-blue-800">
+                      Review Process
+                    </p>
+                    <p className="text-xs text-blue-700">
+                      Your listing will be reviewed by our team before going live. 
+                      You'll receive a notification once it's approved or if changes are needed.
+                    </p>
+                  </div>
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </motion.div>
+        </AnimatePresence>
 
         {/* Navigation buttons */}
-        <div className="flex gap-3 mt-6">
+        <div className="flex flex-col sm:flex-row gap-3 mt-6">
           {step > 1 && (
-            <button
+            <motion.button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3.5 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 group"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              ← Back
-            </button>
+              <FiArrowLeft className="group-hover:-translate-x-1 transition-transform" />
+              Back
+            </motion.button>
           )}
+          
           {step < 4 ? (
-            <button
+            <motion.button
               type="button"
               disabled={!canNext()}
               onClick={() => setStep(step + 1)}
-              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed"
+              className="flex-1 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-3.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:from-blue-600 disabled:hover:to-blue-700"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
-              Continue →
-            </button>
+              Continue
+              <FiArrowRight className="group-hover:translate-x-1 transition-transform" />
+            </motion.button>
           ) : (
-            <button
+            <motion.button
               type="button"
               disabled={submitting}
               onClick={handleSubmit}
-              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+              className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-3.5 rounded-xl text-sm font-semibold transition flex items-center justify-center gap-2 disabled:opacity-50"
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
             >
               {submitting ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <>
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                  </svg>
                   Submitting...
-                </span>
-              ) : '🚀 Submit for Approval'}
-            </button>
+                </>
+              ) : (
+                <>
+                  <FiCheck className="w-5 h-5" />
+                  Submit for Approval
+                </>
+              )}
+            </motion.button>
           )}
+        </div>
+
+        {/* Mobile step indicator */}
+        <div className="mt-4 sm:hidden text-center">
+          <p className="text-xs text-gray-400">
+            Step {step} of {steps.length} · {steps[step - 1].label}
+          </p>
         </div>
       </div>
     </DashboardLayout>

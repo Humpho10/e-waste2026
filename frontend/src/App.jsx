@@ -228,9 +228,12 @@ function App() {
             <CreateListingPage />
           </PermissionRoute>
         } />
-        <Route path="/dashboard/product/:id" element={
+        
+        {/* CHANGED: single param "slug-hashId"; ProductDetailPage splits it */}
+        <Route path="/dashboard/product/:slugId" element={
           <ProtectedRoute><ProductDetailPage /></ProtectedRoute>
         } />
+        
         <Route path="/dashboard/messages" element={
           <PermissionRoute requiredPermissions={['message-view']}>
             <MessagesPage />
@@ -244,7 +247,9 @@ function App() {
         <Route path="/dashboard/profile" element={
           <ProtectedRoute><UserProfilePage /></ProtectedRoute>
         } />
-        <Route path="/dashboard/resubmit/:id" element={
+        
+        {/* CHANGED: Resubmit now uses hashId instead of id */}
+        <Route path="/dashboard/resubmit/:hashId" element={
           <PermissionRoute requiredPermissions={['product-create']}>
             <ResubmitListingPage />
           </PermissionRoute>
@@ -323,8 +328,6 @@ function App() {
           {/* ── Dashboard ── */}
           <Route path="dashboard-view"   element={<AppPage />} />
 
-          
-
           {/* ── Fallback for any unmapped permission ── */}
           <Route path=":permission" element={
             <div className="text-center py-20">
@@ -346,7 +349,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
-  );
+  ); 
 }
 
 export default App;
