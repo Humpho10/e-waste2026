@@ -1,33 +1,20 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import {
-  FiGrid,
-  FiSearch,
-  FiPackage,
-  FiPlusCircle,
-  FiMessageCircle,
-  FiBell,
-  FiUser,
-  FiHome,
-  FiLogOut,
-  FiPlus,
-  FiChevronRight,
-  FiChevronLeft,
-} from 'react-icons/fi';
-import { FaRecycle } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext'; // 👈 For badge counts
 import { logoutUser } from '../api/auth';
+import ThemeToggle from '../components/ThemeToggle';
+import QuickSearch from '../components/QuickSearch';
 
 const navItems = [
-  { path: '/dashboard',               icon: FiGrid,          label: 'Overview',       group: 'main',  badge: null    },
-  { path: '/dashboard/browse',        icon: FiSearch,        label: 'Browse',         group: 'main',  badge: null    },
-  { path: '/dashboard/listings',      icon: FiPackage,       label: 'My Listings',    group: 'sell',  badge: null    },
-  { path: '/dashboard/create',        icon: FiPlusCircle,    label: 'Post a Listing', group: 'sell',  badge: null    },
-  { path: '/dashboard/messages',      icon: FiMessageCircle, label: 'Messages',       group: 'comms', badge: 'msg'   }, // 👈 Added
-  { path: '/dashboard/notifications', icon: FiBell,          label: 'Notifications',  group: 'comms', badge: 'notif' }, // 👈 Added
-  { path: '/dashboard/profile',       icon: FiUser,          label: 'Profile',        group: 'comms', badge: null    },
+  { path: '/dashboard',               icon: '📊', label: 'Overview',       group: 'main',  badge: null   },
+  { path: '/dashboard/browse',        icon: '🔍', label: 'Browse',         group: 'main',  badge: null   },
+  { path: '/dashboard/listings',      icon: '📦', label: 'My Listings',    group: 'sell',  badge: null   },
+  { path: '/dashboard/create',        icon: '➕', label: 'Post a Listing', group: 'sell',  badge: null   },
+  { path: '/dashboard/messages',      icon: '💬', label: 'Messages',       group: 'comms', badge: 'msg'  }, // 👈 Added
+  { path: '/dashboard/notifications', icon: '🔔', label: 'Notifications',  group: 'comms', badge: 'notif' }, // 👈 Added
+  { path: '/dashboard/profile',       icon: '👤', label: 'Profile',        group: 'comms', badge: null   },
 ];
 
 const groups = [
@@ -68,7 +55,7 @@ export default function DashboardLayout({ children }) {
   };
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
 
       {/* Sidebar */}
       <aside className={`
@@ -81,7 +68,7 @@ export default function DashboardLayout({ children }) {
         <div className={`flex items-center h-16 border-b border-slate-800 shrink-0 ${collapsed ? 'justify-center px-3' : 'px-5 gap-3'}`}>
           <Link to="/" className="flex items-center gap-3">
             <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0">
-              <FaRecycle className="text-white w-4 h-4" />
+              <span className="text-white text-sm">♻️</span>
             </div>
             {!collapsed && (
               <div>
@@ -136,7 +123,7 @@ export default function DashboardLayout({ children }) {
                   </p>
                 )}
                 <div className="space-y-0.5">
-                  {items.map(({ path, icon: Icon, label, badge }) => {
+                  {items.map(({ path, icon, label, badge }) => {
                     const active = location.pathname === path;
                     const badgeCount = getBadgeCount(badge);
                     return (
@@ -154,7 +141,7 @@ export default function DashboardLayout({ children }) {
                         `}
                       >
                         <span className="text-base shrink-0 relative">
-                          <Icon className="w-[18px] h-[18px]" />
+                          {icon}
                           {/* Badge on icon when collapsed */}
                           {collapsed && badgeCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
@@ -188,7 +175,7 @@ export default function DashboardLayout({ children }) {
             title={collapsed ? 'Back to Site' : ''}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <FiHome className="w-[18px] h-[18px] shrink-0" />
+            <span>🏠</span>
             {!collapsed && <span className="font-medium">Back to Site</span>}
           </Link>
           <button
@@ -196,7 +183,7 @@ export default function DashboardLayout({ children }) {
             disabled={loggingOut}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-all w-full ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <FiLogOut className="w-[18px] h-[18px] shrink-0" />
+            <span>🚪</span>
             {!collapsed && <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
           </button>
         </div>
@@ -205,9 +192,8 @@ export default function DashboardLayout({ children }) {
         <button
           onClick={() => setCollapsed(!collapsed)}
           className="absolute -right-3 top-20 w-6 h-6 bg-slate-700 hover:bg-blue-600 border border-slate-600 rounded-full flex items-center justify-center text-white transition-colors shadow-lg"
-          title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
-          {collapsed ? <FiChevronRight className="w-3.5 h-3.5" /> : <FiChevronLeft className="w-3.5 h-3.5" />}
+          <span className="text-xs">{collapsed ? '›' : '‹'}</span>
         </button>
       </aside>
 
@@ -215,27 +201,30 @@ export default function DashboardLayout({ children }) {
       <div className={`flex-1 flex flex-col min-h-screen ${collapsed ? 'ml-[70px]' : 'ml-[240px]'} transition-all duration-200`}>
 
         {/* Top bar */}
-        <header className="h-16 bg-white border-b border-gray-100 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400">Dashboard</span>
-            <span className="text-gray-300">/</span>
-            <span className="font-semibold text-gray-700">{currentLabel}</span>
+            <span className="text-gray-400 dark:text-gray-500">Dashboard</span>
+            <span className="text-gray-300 dark:text-gray-600">/</span>
+            <span className="font-semibold text-gray-700 dark:text-gray-200">{currentLabel}</span>
           </div>
           <div className="flex items-center gap-3">
+            <QuickSearch items={navItems} placeholder="Quick search..." />
+
+            <ThemeToggle />
+
             <Link
               to="/dashboard/create"
               className="hidden md:flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-semibold transition"
             >
-              <FiPlus className="w-4 h-4" /> Post Listing
+              <span>+</span> Post Listing
             </Link>
 
             {/* 👇 Messages icon with badge */}
             <Link
               to="/dashboard/messages"
-              className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
-              title="Messages"
+              className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
-              <FiMessageCircle className="w-[18px] h-[18px]" />
+              <span className="text-base">💬</span>
               {msgCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {msgCount > 9 ? '9+' : msgCount}
@@ -246,10 +235,9 @@ export default function DashboardLayout({ children }) {
             {/* 👇 Notification bell with badge */}
             <Link
               to="/dashboard/notifications"
-              className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
-              title="Notifications"
+              className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
-              <FiBell className="w-[18px] h-[18px]" />
+              <span className="text-base">🔔</span>
               {notifCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {notifCount > 9 ? '9+' : notifCount}
@@ -257,12 +245,12 @@ export default function DashboardLayout({ children }) {
               )}
             </Link>
 
-            <div className="w-px h-6 bg-gray-200" />
+            <div className="w-px h-6 bg-gray-200 dark:bg-slate-700" />
 
             {/* 👇 User pill – links to profile with avatar */}
             <Link
               to="/dashboard/profile"
-              className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 hover:bg-gray-100 transition"
+              className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
               <div className="w-6 h-6 rounded-lg overflow-hidden shrink-0">
                 {avatarUrl ? (
@@ -274,8 +262,8 @@ export default function DashboardLayout({ children }) {
                 )}
               </div>
               <div className="hidden md:block">
-                <p className="text-xs font-semibold text-gray-700 leading-none">{user?.name?.split(' ')[0]}</p>
-                <p className="text-xs text-blue-500">Buyer / Seller</p>
+                <p className="text-xs font-semibold text-gray-700 dark:text-gray-200 leading-none">{user?.name?.split(' ')[0]}</p>
+                <p className="text-xs text-blue-500 dark:text-blue-400">Buyer / Seller</p>
               </div>
             </Link>
           </div>
@@ -283,9 +271,9 @@ export default function DashboardLayout({ children }) {
 
         <main className="flex-1 p-6">{children}</main>
 
-        <footer className="border-t border-gray-100 bg-white px-6 py-3 flex items-center justify-between">
-          <p className="text-xs text-gray-400">© 2026 E-Waste Mart</p>
-          <p className="text-xs text-gray-400">Buy · Sell · Recycle</p>
+        <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex items-center justify-between">
+          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Buy · Sell · Recycle</p>
         </footer>
       </div>
     </div>

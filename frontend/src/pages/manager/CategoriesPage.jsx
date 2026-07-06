@@ -336,7 +336,7 @@ export default function CategoriesPage() {
               placeholder="Search categories..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+              className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900"
             />
           </div>
         </div>
@@ -375,7 +375,7 @@ export default function CategoriesPage() {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 text-gray-400">
           <p className="mb-1">No categories match "{search}"</p>
-          <button onClick={() => setSearch('')} className="text-orange-500 text-sm hover:underline">
+          <button onClick={() => setSearch('')} className="text-orange-500 dark:text-orange-400 text-sm hover:underline">
             Clear
           </button>
         </div>
@@ -423,7 +423,7 @@ export default function CategoriesPage() {
               )}
               <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                     Category Name
                   </label>
                   <input
@@ -432,7 +432,7 @@ export default function CategoriesPage() {
                     required
                     placeholder="e.g. Computer Components"
                     onChange={(e) => setForm({ name: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50"
+                    className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-gray-50 dark:bg-slate-800/60"
                   />
                 </div>
 
@@ -451,23 +451,23 @@ export default function CategoriesPage() {
                         key={i}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border ${
                           sub.isNew
-                            ? 'bg-blue-50 border-blue-300 text-blue-700'
-                            : 'bg-gray-50 border-gray-200 text-gray-700'
+                            ? 'bg-blue-50 dark:bg-blue-950/40 border-blue-300 text-blue-700 dark:text-blue-400'
+                            : 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700 text-gray-700 dark:text-gray-200'
                         }`}
                       >
                         <span>{sub.name}</span>
-                        {sub.isNew && <span className="text-blue-400 text-xs">new</span>}
+                        {sub.isNew && <span className="text-blue-700 dark:text-blue-400 text-xs">new</span>}
                         <button
                           type="button"
                           onClick={() => removeSubcat(i)}
-                          className="text-gray-400 hover:text-red-500 transition ml-1"
+                          className="text-gray-400 dark:text-gray-500 hover:text-red-500 transition ml-1"
                         >
                           <BiX size={12} />
                         </button>
                       </div>
                     ))}
                     {editingSubcats.length === 0 && (
-                      <p className="text-xs text-gray-300 italic">No subcategories yet</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 italic">No subcategories yet</p>
                     )}
                   </div>
 
@@ -483,7 +483,7 @@ export default function CategoriesPage() {
                         }
                       }}
                       placeholder="Add subcategory name..."
-                      className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                      className="flex-1 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                     />
                     <button
                       type="button"
@@ -493,7 +493,7 @@ export default function CategoriesPage() {
                       <BiPlus size={14} /> Add
                     </button>
                   </div>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     Press Enter or click Add. Click × to remove.
                   </p>
                 </div>
@@ -513,7 +513,7 @@ export default function CategoriesPage() {
                   <button
                     type="button"
                     onClick={() => setShowModal(false)}
-                    className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm transition"
+                    className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2.5 rounded-xl text-sm transition"
                   >
                     Cancel
                   </button>

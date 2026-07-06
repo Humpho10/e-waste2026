@@ -5,6 +5,7 @@ import PermissionRoute from './components/PermissionRoute';
 
 // ─── Public Pages ──────────────────────────────────────────────
 import HomePage from './pages/HomePage';
+import MaintenanceGate from './components/MaintenanceGate';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AboutPage from './pages/AboutPage';
@@ -29,6 +30,7 @@ import UsersPage from './pages/admin/UsersPage';
 import RolesPage from './pages/admin/RolesPage';
 import PermissionsPage from './pages/admin/PermissionsPage';
 import AuditPage from './pages/admin/AuditPage';
+import AdminMessagesPage from './pages/admin/MessagesPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminProfilePage from './pages/admin/ProfilePage';
 import AdminNotificationsPage from './pages/admin/NotificationsPage';
@@ -74,13 +76,13 @@ import VerifyEmailPage from './pages/VerifyEmailPage';
 // ─── Route Guards ────────────────────────────────────────────
 function ProtectedRoute({ children }) {
   const { token, loading } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 dark:text-gray-500">Loading...</div>;
   return token ? children : <Navigate to="/login" />;
 }
 
 function GuestRoute({ children }) {
   const { token, loading, redirectPath } = useAuth();
-  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400">Loading...</div>;
+  if (loading) return <div className="min-h-screen flex items-center justify-center text-gray-400 dark:text-gray-500">Loading...</div>;
   if (!token) return children;
   return <Navigate to={redirectPath()} />;
 }
@@ -91,7 +93,7 @@ function App() {
     <BrowserRouter>
       <Routes>
         {/* ─── Public ────────────────────────────────────────── */}
-        <Route path="/" element={<HomePage />} />
+        <Route path="/" element={<MaintenanceGate><HomePage /></MaintenanceGate>} />
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/about" element={<AboutPage />} />
@@ -128,6 +130,11 @@ function App() {
         <Route path="/admin/audit" element={
           <PermissionRoute requiredPermissions={['audit-list']}>
             <AuditPage />
+          </PermissionRoute>
+        } />
+        <Route path="/admin/messages" element={
+          <PermissionRoute requiredPermissions={['message-view']}>
+            <AdminMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/admin/settings" element={
@@ -228,12 +235,9 @@ function App() {
             <CreateListingPage />
           </PermissionRoute>
         } />
-        
-        {/* CHANGED: single param "slug-hashId"; ProductDetailPage splits it */}
-        <Route path="/dashboard/product/:slugId" element={
+        <Route path="/dashboard/product/:id" element={
           <ProtectedRoute><ProductDetailPage /></ProtectedRoute>
         } />
-        
         <Route path="/dashboard/messages" element={
           <PermissionRoute requiredPermissions={['message-view']}>
             <MessagesPage />
@@ -247,9 +251,7 @@ function App() {
         <Route path="/dashboard/profile" element={
           <ProtectedRoute><UserProfilePage /></ProtectedRoute>
         } />
-        
-        {/* CHANGED: Resubmit now uses hashId instead of id */}
-        <Route path="/dashboard/resubmit/:hashId" element={
+        <Route path="/dashboard/resubmit/:id" element={
           <PermissionRoute requiredPermissions={['product-create']}>
             <ResubmitListingPage />
           </PermissionRoute>
@@ -328,12 +330,14 @@ function App() {
           {/* ── Dashboard ── */}
           <Route path="dashboard-view"   element={<AppPage />} />
 
+          
+
           {/* ── Fallback for any unmapped permission ── */}
           <Route path=":permission" element={
             <div className="text-center py-20">
               <div className="text-6xl mb-4">🚫</div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-              <p className="text-gray-500 text-sm">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">
                 You don't have permission to view this page.
                 <br />
                 Please contact your administrator if you believe this is an error.
@@ -349,7 +353,7 @@ function App() {
         </Route>
       </Routes>
     </BrowserRouter>
-  ); 
+  );
 }
 
 export default App;

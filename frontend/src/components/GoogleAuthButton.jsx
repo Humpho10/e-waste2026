@@ -41,6 +41,19 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
   const [width, setWidth]   = useState(360);
   const configured = Boolean(CLIENT_ID);
 
+  // Keep the latest callback props in refs so the GSI init effect below only
+  // ever needs to run once per mount — passing inline arrow functions as
+  // props (as the login/register pages do) would otherwise give this effect
+  // a new dependency on every parent re-render, causing
+  // `google.accounts.id.initialize()` to fire repeatedly (Google logs a
+  // warning about this, and it can make the button flaky).
+  const onSuccessRef = useRef(onSuccess);
+  const onErrorRef   = useRef(onError);
+  const onStartRef   = useRef(onStart);
+  useEffect(() => { onSuccessRef.current = onSuccess; }, [onSuccess]);
+  useEffect(() => { onErrorRef.current = onError; }, [onError]);
+  useEffect(() => { onStartRef.current = onStart; }, [onStart]);
+
   // Track container width so the rendered Google button spans full width.
   useEffect(() => {
     if (!targetRef.current) return;
@@ -62,11 +75,11 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
           client_id: CLIENT_ID,
           callback: async ({ credential }) => {
             try {
-              onStart?.();
+              onStartRef.current?.();
               const res = await googleAuth(credential);
-              onSuccess?.(res.data);
+              onSuccessRef.current?.(res.data);
             } catch (err) {
-              onError?.(
+              onErrorRef.current?.(
                 err.response?.data?.message ||
                 'Google sign-in failed. The server may not support it yet.'
               );
@@ -75,10 +88,10 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
         });
         setReady(true);
       })
-      .catch(() => onError?.('Could not reach Google. Check your connection.'));
+      .catch(() => onErrorRef.current?.('Could not reach Google. Check your connection.'));
 
     return () => { cancelled = true; };
-  }, [configured, onSuccess, onError, onStart]);
+  }, [configured]);
 
   // Render / re-render the official button when ready or width changes.
   useEffect(() => {
@@ -103,7 +116,7 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
         onClick={() =>
           onError?.('Google sign-in isn’t configured yet — add VITE_GOOGLE_CLIENT_ID to enable it.')
         }
-        className="btn-lift w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:border-gray-300"
+        className="btn-lift w-full flex items-center justify-center gap-2.5 border border-gray-200 dark:border-slate-700 rounded-xl py-3 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 hover:border-gray-300"
         title="Set VITE_GOOGLE_CLIENT_ID in frontend/.env to enable"
       >
         <Google />
@@ -117,7 +130,7 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
       {/* Google renders its own button into this node */}
       <div ref={targetRef} className="flex justify-center [&>div]:w-full" />
       {!ready && (
-        <div className="w-full flex items-center justify-center gap-2.5 border border-gray-200 rounded-xl py-3 text-sm font-medium text-gray-400">
+        <div className="w-full flex items-center justify-center gap-2.5 border border-gray-200 dark:border-slate-700 rounded-xl py-3 text-sm font-medium text-gray-400 dark:text-gray-500">
           <Google /> Loading Google…
         </div>
       )}

@@ -2,16 +2,16 @@
 // Dependency-free. Every icon inherits `currentColor` and accepts a
 // className so it can be sized/colored with Tailwind utilities.
 
-const base = (props) => ({
-  width: 20,
-  height: 20,
+const base = ({ size, width, height, ...rest } = {}) => ({
+  width: width ?? size ?? 20,
+  height: height ?? size ?? 20,
   viewBox: '0 0 24 24',
   fill: 'none',
   stroke: 'currentColor',
   strokeWidth: 2,
   strokeLinecap: 'round',
   strokeLinejoin: 'round',
-  ...props,
+  ...rest,
 });
 
 export const Recycle = (p) => (
@@ -162,6 +162,95 @@ export const Google = (p) => (
     <path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88l3.66-2.84Z" />
     <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.3 9.14 5.38 12 5.38Z" />
   </svg>
+);
+
+// ── Admin dashboard icon set (dependency-free, matches the rest) ──
+export const Grid = (p) => (
+  <svg {...base(p)}><rect x="3" y="3" width="7" height="7" rx="1" /><rect x="14" y="3" width="7" height="7" rx="1" /><rect x="14" y="14" width="7" height="7" rx="1" /><rect x="3" y="14" width="7" height="7" rx="1" /></svg>
+);
+
+export const UserCheck = (p) => (
+  <svg {...base(p)}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><polyline points="16 11 18 13 22 9" /></svg>
+);
+
+export const Briefcase = (p) => (
+  <svg {...base(p)}><rect x="2" y="7" width="20" height="14" rx="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></svg>
+);
+
+export const Key = (p) => (
+  <svg {...base(p)}><circle cx="7.5" cy="15.5" r="5.5" /><path d="m21 2-9.6 9.6M15.5 7.5 18 5M17 9l2 2" /></svg>
+);
+
+export const FileText = (p) => (
+  <svg {...base(p)}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8Z" /><polyline points="14 2 14 8 20 8" /><line x1="8" y1="13" x2="16" y2="13" /><line x1="8" y1="17" x2="16" y2="17" /><line x1="8" y1="9" x2="10" y2="9" /></svg>
+);
+
+export const Settings = (p) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="3" /><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1Z" /></svg>
+);
+
+export const UserIcon = (p) => (
+  <svg {...base(p)}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+);
+
+export const MessageSquare = (p) => (
+  <svg {...base(p)}><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-4a8.4 8.4 0 0 1-.9-4 8.4 8.4 0 0 1 8.4-8.4A8.4 8.4 0 0 1 21 11.5Z" /></svg>
+);
+
+export const Bell = (p) => (
+  <svg {...base(p)}><path d="M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.7 21a2 2 0 0 1-3.4 0" /></svg>
+);
+
+export const Home = (p) => (
+  <svg {...base(p)}><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2Z" /><polyline points="9 22 9 12 15 12 15 22" /></svg>
+);
+
+export const LogOut = (p) => (
+  <svg {...base(p)}><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></svg>
+);
+
+export const ChevronLeft = (p) => (
+  <svg {...base(p)}><polyline points="15 18 9 12 15 6" /></svg>
+);
+
+export const TrendingUp = (p) => (
+  <svg {...base(p)}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18" /><polyline points="17 6 23 6 23 12" /></svg>
+);
+
+export const TrendingDown = (p) => (
+  <svg {...base(p)}><polyline points="23 18 13.5 8.5 8.5 13.5 1 6" /><polyline points="17 18 23 18 23 12" /></svg>
+);
+
+export const Activity = (p) => (
+  <svg {...base(p)}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
+);
+
+export const XCircle = (p) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
+);
+
+export const PlusCircle = (p) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="10" /><line x1="12" y1="8" x2="12" y2="16" /><line x1="8" y1="12" x2="16" y2="12" /></svg>
+);
+
+export const Zap = (p) => (
+  <svg {...base({ ...p, fill: p?.fill ?? 'currentColor', stroke: p?.stroke ?? 'none' })}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" /></svg>
+);
+
+export const BarChart2 = (p) => (
+  <svg {...base(p)}><line x1="18" y1="20" x2="18" y2="10" /><line x1="12" y1="20" x2="12" y2="4" /><line x1="6" y1="20" x2="6" y2="14" /></svg>
+);
+
+export const PieChart = (p) => (
+  <svg {...base(p)}><path d="M21.2 15a9 9 0 1 1-9.2-13" /><path d="M22 12A10 10 0 0 0 12 2v10Z" /></svg>
+);
+
+export const Filter = (p) => (
+  <svg {...base(p)}><polygon points="22 3 2 3 10 12.5 10 19 14 21 14 12.5 22 3" /></svg>
+);
+
+export const Download = (p) => (
+  <svg {...base(p)}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></svg>
 );
 
 // Pick a category icon by fuzzy-matching the category name.

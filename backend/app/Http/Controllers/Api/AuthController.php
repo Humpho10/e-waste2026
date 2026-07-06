@@ -14,19 +14,30 @@ use App\Mail\PasswordResetOtpMail;
 use App\Models\EmailVerification;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use App\Models\Settings;
+use Illuminate\Support\Facades\RateLimiter;
 
 class AuthController extends Controller
 {
     // Register a new user
     public function register(Request $request)
     {
+        if (!Settings::current()->allow_public_registration) {
+            return response()->json([
+                'message' => 'New account registration is currently disabled. Please contact support.',
+            ], 403);
+        }
+
         $validated = $request->validate([
             'name'     => 'required|string|max:255',
             'phone'    => 'required|string|max:20',
             'location' => 'required|string|max:100',
             'email'    => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
+            'password' => array_merge(Settings::current()->passwordRules(), ['confirmed']),
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         $user = User::create([
@@ -58,14 +69,133 @@ class AuthController extends Controller
             'password' => 'required',
         ]);
 
+        $settings = Settings::current();
+
+        // Brute-force protection — lock out after too many failed attempts
+        // from this email+IP combination, for a configurable cooldown.
+        $throttleKey = 'login:' . Str::lower($request->email) . '|' . $request->ip();
+
+        if (RateLimiter::tooManyAttempts($throttleKey, $settings->max_login_attempts)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            throw ValidationException::withMessages([
+                'email' => ["Too many login attempts. Please try again in " . ceil($seconds / 60) . " minute(s)."],
+            ]);
+        }
+
         if (!Auth::attempt($request->only('email', 'password'))) {
+            RateLimiter::hit($throttleKey, $settings->lockout_duration_minutes * 60);
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);
         }
 
+        RateLimiter::clear($throttleKey);
+
         /** @var \App\Models\User $user */
         $user = Auth::user();
+
+        if (!$user->is_active) {
+            return response()->json([
+                'message' => 'Your account has been deactivated. Please contact support.',
+            ], 403);
+        }
+
+        if ($settings->require_email_verification && !$user->email_verified_at) {
+            return response()->json([
+                'message' => 'Please verify your email address before signing in. Check your inbox for the verification link.',
+                'email_unverified' => true,
+            ], 403);
+        }
+
+        $user->load('roles');
+        $token = $user->createToken('auth_token')->plainTextToken;
+
+        $permissions = $user->getAllPermissions()->pluck('name');
+        $role = $user->roles->first()?->name ?? 'user';
+
+        return response()->json([
+            'message'     => 'Login successful',
+            'user'        => $user,
+            'token'       => $token,
+            'role'        => $role,
+            'permissions' => $permissions,
+        ]);
+    }
+
+    // Sign in / sign up with a Google ID token from Google Identity Services (GSI).
+    public function google(Request $request)
+    {
+        if (!Settings::current()->allow_google_login) {
+            return response()->json([
+                'message' => 'Google sign-in is currently disabled for this platform.',
+            ], 503);
+        }
+
+        $request->validate([
+            'credential' => 'required|string',
+        ]);
+
+        $clientId = config('services.google.client_id');
+
+        if (!$clientId) {
+            return response()->json([
+                'message' => 'Google sign-in is not configured on the server.',
+            ], 503);
+        }
+
+        // Verify the ID token with Google's tokeninfo endpoint — avoids needing
+        // a full OAuth library just to validate a signed JWT.
+        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
+            'id_token' => $request->credential,
+        ]);
+
+        if (!$response->ok()) {
+            return response()->json([
+                'message' => 'Invalid or expired Google credential.',
+            ], 401);
+        }
+
+        $payload = $response->json();
+
+        if (($payload['aud'] ?? null) !== $clientId) {
+            return response()->json([
+                'message' => 'Google credential was not issued for this application.',
+            ], 401);
+        }
+
+        if (($payload['email_verified'] ?? 'false') !== 'true') {
+            return response()->json([
+                'message' => 'Your Google email address is not verified.',
+            ], 422);
+        }
+
+        $email = $payload['email'] ?? null;
+        $name  = $payload['name'] ?? explode('@', $email)[0];
+
+        if (!$email) {
+            return response()->json([
+                'message' => 'Could not read an email address from your Google account.',
+            ], 422);
+        }
+
+        $user = User::where('email', $email)->first();
+
+        if (!$user && !Settings::current()->allow_public_registration) {
+            return response()->json([
+                'message' => 'New account registration is currently disabled. Please contact support.',
+            ], 403);
+        }
+
+        if (!$user) {
+            $user = User::create([
+                'name'              => $name,
+                'email'             => $email,
+                'password'          => Hash::make(Str::random(32)),
+                'email_verified_at' => now(),
+                'is_active'         => true,
+            ]);
+            $user->assignRole('User');
+        }
 
         if (!$user->is_active) {
             return response()->json([
@@ -142,7 +272,9 @@ class AuthController extends Controller
         $request->validate([
             'email'    => 'required|email',
             'otp'      => 'required|digits:6',
-            'password' => 'required|min:8|confirmed', // expects password_confirmation
+            'password' => array_merge(Settings::current()->passwordRules(), ['confirmed']), // expects password_confirmation
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         $record = PasswordResetOtp::where('email', $request->email)

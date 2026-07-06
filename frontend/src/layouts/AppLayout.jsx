@@ -1,6 +1,8 @@
 // src/layouts/AppLayout.jsx
 import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import ThemeToggle from '../components/ThemeToggle';
+import QuickSearch from '../components/QuickSearch';
 
 function AppLayout() {
   const { user, role, permissions, logout } = useAuth();
@@ -68,8 +70,8 @@ function AppLayout() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 flex">
+      {/* Sidebar — background never changes between themes, so its own text stays fixed. */}
       <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0">
         <div className="p-4 border-b border-gray-800">
           <Link to="/app" className="text-xl font-bold text-white flex items-center gap-2">
@@ -117,12 +119,16 @@ function AppLayout() {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-800">
+        <header className="bg-white dark:bg-slate-900 border-b border-gray-200 dark:border-slate-700 px-6 py-4 flex items-center justify-between gap-4">
+          <h1 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
             {getPageTitle()}
           </h1>
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-gray-600">{user?.name}</span>
+          <div className="flex items-center gap-3">
+            <QuickSearch
+              items={menuItems.map(item => ({ path: item.path, icon: item.icon, label: item.name }))}
+            />
+            <ThemeToggle />
+            <span className="text-sm text-gray-600 dark:text-gray-300 hidden sm:inline">{user?.name}</span>
           </div>
         </header>
 
