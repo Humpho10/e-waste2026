@@ -22,8 +22,8 @@ export function CountUp({ value, className }) {
 
 // Loading shimmer → animated real value (→ static fallback only on error).
 export default function StatNumber({ value, error, fallback, className }) {
-  const cls = className || 'font-bold text-gray-800 text-sm leading-none';
+  const cls = className || 'font-bold text-gray-800 dark:text-gray-100 text-sm leading-none';
   if (value != null) return <CountUp value={value} className={cls} />;
   if (error) return <p className={cls}>{fallback}</p>;
-  return <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-pulse" />;
+  return <span className="inline-block h-4 w-12 bg-gray-200 dark:bg-slate-700 rounded animate-pulse" />;
 }

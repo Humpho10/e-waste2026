@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage, getPublicSettings } from '../api/products';
 import { logoutUser } from '../api/auth';
 import ThemeToggle from '../components/ThemeToggle';
-import { browseProducts, getCategories, getStats, searchByImage } from '../api/products';
 import PublicNavbar from '../components/PublicNavbar';
 import PublicFooter from '../components/PublicFooter';
 import BackToTopButton from '../components/BackToTopButton';
@@ -175,6 +174,7 @@ export default function HomePage() {
   const { token } = useAuth();
   const navigate     = useNavigate();
   const listingsRef  = useRef(null);
+  const howRef       = useRef(null);
   const fileInputRef = useRef(null);
 
   // Categories + featured products are fetched together, matching the
@@ -204,6 +204,15 @@ export default function HomePage() {
   const { data: stats, isError: statsError } = useQuery({
     queryKey: ['home-stats'],
     queryFn: () => getStats().then(res => res.data),
+  });
+
+  // Same query key MaintenanceGate uses, so this is a cache hit (no extra
+  // network round-trip) once that component has already fetched it — powers
+  // the footer's tagline, contact details, and social links.
+  const { data: siteSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => getPublicSettings().then(res => res.data),
+    staleTime: 30_000,
   });
 
   // Rotate the hero background photo on a timer — pure crossfade via opacity,
@@ -308,7 +317,7 @@ export default function HomePage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-950 font-sans text-gray-800 dark:text-gray-100">
       <PublicNavbar
         onHome={scrollToTop}
         onBrowse={goBrowse}
@@ -401,9 +410,9 @@ export default function HomePage() {
                 key={cat.category_id}
                 onClick={() => handleCategoryClick(cat)}
                 className={`shrink-0 flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full border text-xs font-medium whitespace-nowrap transition
-                  ${active ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'}`}
+                  ${active ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white dark:bg-slate-900 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-blue-300 dark:hover:border-blue-700'}`}
               >
-                <span className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50'}`}>
+                <span className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
                   {thumb ? (
                     <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
                   ) : (
@@ -575,8 +584,8 @@ export default function HomePage() {
             {[
               { Icon: Shield, color: 'text-blue-600 dark:text-blue-400', title: 'Verified Listings', desc: 'All reviewed for quality' },
               { Icon: Tag,    color: 'text-green-600 dark:text-green-400', title: 'Fair Pricing',     desc: 'Transparent & competitive' },
-              { Icon: Recycle,color: 'text-emerald-600', title: 'Circular Economy', desc: 'Reduce e-waste together' },
-              { Icon: Chat,   color: 'text-sky-600',  title: 'Direct Contact',    desc: 'Message sellers instantly' },
+              { Icon: Recycle,color: 'text-emerald-600 dark:text-emerald-400', title: 'Circular Economy', desc: 'Reduce e-waste together' },
+              { Icon: Chat,   color: 'text-sky-600 dark:text-sky-400',  title: 'Direct Contact',    desc: 'Message sellers instantly' },
             ].map(({ Icon, color, title, desc }) => (
               <div key={title} className="flex items-start gap-3">
                 <Icon width={20} height={20} className={`shrink-0 mt-0.5 ${color}`} />
@@ -618,27 +627,27 @@ export default function HomePage() {
           The right trust-signals sidebar only shows on xl+, so give
           phones/tablets a condensed version instead of losing it entirely. */}
       <div className="xl:hidden max-w-7xl mx-auto px-4 -mt-3 mb-8">
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
           {[
-            { Icon: Shield,  color: 'text-blue-600',    label: 'Verified Listings' },
-            { Icon: Tag,     color: 'text-green-600',   label: 'Fair Pricing' },
-            { Icon: Recycle, color: 'text-emerald-600', label: 'Circular Economy' },
-            { Icon: Chat,    color: 'text-sky-600',     label: 'Direct Contact' },
+            { Icon: Shield,  color: 'text-blue-600 dark:text-blue-400',    label: 'Verified Listings' },
+            { Icon: Tag,     color: 'text-green-600 dark:text-green-400',   label: 'Fair Pricing' },
+            { Icon: Recycle, color: 'text-emerald-600 dark:text-emerald-400', label: 'Circular Economy' },
+            { Icon: Chat,    color: 'text-sky-600 dark:text-sky-400',     label: 'Direct Contact' },
           ].map(({ Icon, color, label }) => (
             <div key={label} className="flex flex-col items-center text-center gap-1.5">
               <Icon width={18} height={18} className={color} />
-              <span className="text-[11px] text-gray-500 font-medium leading-tight">{label}</span>
+              <span className="text-[11px] text-gray-500 dark:text-gray-400 font-medium leading-tight">{label}</span>
             </div>
           ))}
         </div>
       </div>
 
       {/* ── How It Works ────────────────────────────────────── */}
-      <section className="bg-white border-t border-gray-100 py-14 px-4 mt-4 scroll-mt-16">
+      <section ref={howRef} className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 py-14 px-4 mt-4 scroll-mt-16">
         <div className="max-w-4xl mx-auto text-center">
           <Reveal>
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
-            <p className="text-gray-500 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">How It Works</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
@@ -647,12 +656,12 @@ export default function HomePage() {
               { step: '3', Icon: Chat,   title: 'Connect & Trade', desc: 'Message sellers directly and arrange a pickup or delivery.' },
             ].map(({ step, Icon, title, desc }, i) => (
               <Reveal key={step} delay={i * 120} className="text-center">
-                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4">
+                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 mx-auto mb-4">
                   <Icon width={24} height={24} />
                 </div>
-                <div className="text-xs font-bold text-blue-600 mb-1">STEP {step}</div>
-                <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm">{desc}</p>
+                <div className="text-xs font-bold text-blue-600 dark:text-blue-400 mb-1">STEP {step}</div>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 mb-2">{title}</h3>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">{desc}</p>
               </Reveal>
             ))}
           </div>
@@ -660,25 +669,25 @@ export default function HomePage() {
       </section>
 
       {/* ── Testimonials ────────────────────────────────────── */}
-      <section className="bg-gray-50 border-t border-gray-100 py-14 px-4">
+      <section className="bg-gray-50 dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800 py-14 px-4">
         <div className="max-w-5xl mx-auto">
           <Reveal className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">What people are saying</h2>
-            <p className="text-gray-500 text-sm">Real experiences from buyers and sellers on E-Waste Mart</p>
+            <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">What people are saying</h2>
+            <p className="text-gray-500 dark:text-gray-400 text-sm">Real experiences from buyers and sellers on E-Waste Mart</p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {TESTIMONIALS.map((t, i) => (
               <Reveal key={t.name} delay={i * 120} className="h-full">
-                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-full flex flex-col">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6 h-full flex flex-col">
                   <div className="flex gap-0.5 mb-3">
                     {Array(5).fill(0).map((_, j) => (
-                      <Star key={j} width={14} height={14} className={j < t.rating ? 'text-amber-400' : 'text-gray-200'} />
+                      <Star key={j} width={14} height={14} className={j < t.rating ? 'text-amber-400' : 'text-gray-200 dark:text-slate-700'} />
                     ))}
                   </div>
-                  <p className="text-gray-600 text-sm leading-relaxed flex-1">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="mt-4 pt-4 border-t border-gray-50">
-                    <p className="font-semibold text-gray-800 text-sm">{t.name}</p>
-                    <p className="text-gray-400 text-xs">{t.role}</p>
+                  <p className="text-gray-600 dark:text-gray-300 text-sm leading-relaxed flex-1">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="mt-4 pt-4 border-t border-gray-50 dark:border-slate-800">
+                    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm">{t.name}</p>
+                    <p className="text-gray-400 dark:text-gray-500 text-xs">{t.role}</p>
                   </div>
                 </div>
               </Reveal>
@@ -773,6 +782,8 @@ export default function HomePage() {
           © 2026 {siteSettings?.platform_name || 'E-Waste Mart'} — {siteSettings?.tagline || 'Empowering circular economy in Uganda'}
         </div>
       </footer>
+
+      <BackToTopButton />
     </div>
   );
 }
