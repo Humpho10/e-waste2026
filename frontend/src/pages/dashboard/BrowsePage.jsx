@@ -11,7 +11,8 @@ import {
   FiTag,
   FiPackage,
   FiChevronDown,
-  FiRefreshCw
+  FiRefreshCw,
+  FiStar
 } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { browseProducts, getCategories } from '../../api/products';
@@ -46,8 +47,8 @@ function ProductCard({ product, index }) {
             <div className="absolute inset-0 bg-gradient-to-t from-black/20 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
           </>
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-5xl opacity-30">
-            📦
+          <div className="w-full h-full flex items-center justify-center opacity-30">
+            <FiPackage className="w-12 h-12" />
           </div>
         )}
         
@@ -88,8 +89,18 @@ function ProductCard({ product, index }) {
             <span>{product.seller?.location || 'Uganda'}</span>
           </div>
           <div className="flex items-center gap-1">
-            <FiPackage className="w-3 h-3" />
-            <span>Available</span>
+            {product.seller?.rating_count > 0 ? (
+              <>
+                <FiStar className="w-3 h-3 text-amber-400" fill="currentColor" />
+                <span className="text-slate-500 font-medium">{Number(product.seller.rating_average).toFixed(1)}</span>
+                <span className="text-slate-300">({product.seller.rating_count})</span>
+              </>
+            ) : (
+              <>
+                <FiPackage className="w-3 h-3" />
+                <span>Available</span>
+              </>
+            )}
           </div>
         </div>
       </div>
@@ -343,7 +354,7 @@ export default function BrowsePage() {
               exit={{ opacity: 0 }}
               className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center"
             >
-              <div className="text-6xl mb-4">🔍</div>
+              <FiSearch className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <h3 className="font-bold text-slate-700 text-xl mb-2">No listings found</h3>
               <p className="text-slate-400 text-sm mb-6">Try adjusting your search or filters to find what you're looking for</p>
               {hasActiveFilters && (

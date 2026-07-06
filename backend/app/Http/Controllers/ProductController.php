@@ -77,10 +77,23 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(12);
 
+        // Seller rating summaries for this page (avoids N+1)
+        $ratingMap = SellerRatingController::summariesFor(
+            $products->getCollection()->pluck('seller_id')
+        );
+
         // FIX: Transform the response to include slug and hash_id
-        $products->getCollection()->transform(function ($product) {
+        $products->getCollection()->transform(function ($product) use ($ratingMap) {
+            $seller = $product->seller ? $product->seller->toArray() : null;
+            if ($seller) {
+                $summary = $ratingMap[(int) $product->seller_id] ?? ['average' => 0, 'count' => 0];
+                $seller['rating_average'] = $summary['average'];
+                $seller['rating_count']   = $summary['count'];
+            }
+
             return [
                 'product_id' => $product->product_id,
+                'seller_id' => $product->seller_id,
                 'slug' => $product->slug,
                 'hash_id' => $product->hash_id,
                 'title' => $product->title,
@@ -90,7 +103,7 @@ class ProductController extends Controller
                 'specification' => $product->specification,
                 'status' => $product->status,
                 'created_at' => $product->created_at,
-                'seller' => $product->seller,
+                'seller' => $seller,
                 'category' => $product->category,
                 'subCategory' => $product->subCategory,
                 'images' => $product->images,
@@ -123,10 +136,19 @@ class ProductController extends Controller
             ], 301);
         }
 
+        // Attach the seller's rating summary
+        $seller = $product->seller ? $product->seller->toArray() : null;
+        if ($seller) {
+            $summary = SellerRatingController::summaryFor($product->seller_id);
+            $seller['rating_average'] = $summary['average'];
+            $seller['rating_count']   = $summary['count'];
+        }
+
         // FIX: Include slug and hash_id in the response
         return response()->json([
             'product' => [
                 'product_id' => $product->product_id,
+                'seller_id' => $product->seller_id,
                 'slug' => $product->slug,
                 'hash_id' => $product->hash_id,
                 'title' => $product->title,
@@ -136,7 +158,7 @@ class ProductController extends Controller
                 'specification' => $product->specification,
                 'status' => $product->status,
                 'created_at' => $product->created_at,
-                'seller' => $product->seller,
+                'seller' => $seller,
                 'category' => $product->category,
                 'subCategory' => $product->subCategory,
                 'images' => $product->images,

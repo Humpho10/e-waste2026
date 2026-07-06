@@ -16,7 +16,10 @@ import {
   FiTrendingUp,
   FiActivity,
   FiBarChart2,
-  FiZap
+  FiZap,
+  FiRefreshCw,
+  FiInbox,
+  FiSmile
 } from 'react-icons/fi';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { myListings } from '../api/products';
@@ -91,7 +94,7 @@ function StatCard({ icon, label, value, color, to, trend }) {
         className={`block bg-white rounded-2xl p-6 border ${config.border} shadow-sm ${config.hover} transition-all duration-300 group`}
       >
         <div className="flex items-start justify-between">
-          <div className={`w-12 h-12 rounded-2xl ${config.iconBg} flex items-center justify-center text-4xl ${config.iconText} shadow-sm group-hover:scale-110 transition-transform duration-300`}>
+          <div className={`w-12 h-12 rounded-2xl ${config.iconBg} flex items-center justify-center ${config.iconText} shadow-sm group-hover:scale-110 transition-transform duration-300`}>
             {icon}
           </div>
           {trend && (
@@ -126,25 +129,25 @@ function StatCard({ icon, label, value, color, to, trend }) {
 
 // ── Status Config ──────────────────────────────────────────────
 const statusConfig = {
-  pending: { 
-    label: 'Pending Review', 
+  pending: {
+    label: 'Pending Review',
     color: 'bg-amber-50 text-amber-700 border-amber-200',
-    icon: '⏳'
+    icon: FiClock
   },
-  approved: { 
-    label: 'Approved', 
+  approved: {
+    label: 'Approved',
     color: 'bg-emerald-50 text-emerald-700 border-emerald-200',
-    icon: '✅'
+    icon: FiCheckCircle
   },
-  rejected: { 
-    label: 'Rejected', 
+  rejected: {
+    label: 'Rejected',
     color: 'bg-rose-50 text-rose-700 border-rose-200',
-    icon: '❌'
+    icon: FiXCircle
   },
-  resubmitted: { 
-    label: 'Resubmitted', 
+  resubmitted: {
+    label: 'Resubmitted',
     color: 'bg-slate-100 text-slate-700 border-slate-200',
-    icon: '🔄'
+    icon: FiRefreshCw
   },
 };
 
@@ -229,12 +232,12 @@ export default function DashboardPage() {
               <div>
                 <h2 className="text-3xl font-bold text-slate-800 flex items-center gap-3">
                   {greeting}, {user?.name?.split(' ')[0] || 'User'} 
-                  <motion.span 
-                    className="text-3xl"
+                  <motion.span
+                    className="text-amber-400"
                     animate={{ rotate: [0, 15, -15, 0] }}
                     transition={{ delay: 0.5, duration: 0.5 }}
                   >
-                    👋
+                    <FiSmile className="w-7 h-7" />
                   </motion.span>
                 </h2>
                 <p className="text-slate-500 text-sm mt-1 flex items-center gap-2">
@@ -267,32 +270,32 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
-          <StatCard 
-            icon="📦" 
-            label="Total Listings" 
-            value={stats.total} 
-            color="slate" 
+          <StatCard
+            icon={<FiPackage className="w-6 h-6" />}
+            label="Total Listings"
+            value={stats.total}
+            color="slate"
             to="/dashboard/listings"
           />
-          <StatCard 
-            icon="⏳" 
-            label="Pending Approval" 
-            value={stats.pending} 
-            color="amber" 
+          <StatCard
+            icon={<FiClock className="w-6 h-6" />}
+            label="Pending Approval"
+            value={stats.pending}
+            color="amber"
             to="/dashboard/listings?status=pending"
           />
-          <StatCard 
-            icon="✅" 
-            label="Approved" 
-            value={stats.approved} 
-            color="emerald" 
+          <StatCard
+            icon={<FiCheckCircle className="w-6 h-6" />}
+            label="Approved"
+            value={stats.approved}
+            color="emerald"
             to="/dashboard/listings?status=approved"
           />
-          <StatCard 
-            icon="❌" 
-            label="Rejected" 
-            value={stats.rejected} 
-            color="rose" 
+          <StatCard
+            icon={<FiXCircle className="w-6 h-6" />}
+            label="Rejected"
+            value={stats.rejected}
+            color="rose"
             to="/dashboard/listings?status=rejected"
           />
         </motion.div>
@@ -310,7 +313,7 @@ export default function DashboardPage() {
                 <span className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
                 Quick Actions
               </h3>
-              <span className="text-xs text-gray-400 font-medium">⚡</span>
+              <FiZap className="w-4 h-4 text-gray-400" />
             </div>
             
             <div className="space-y-2.5">
@@ -339,7 +342,7 @@ export default function DashboardPage() {
 
             {/* Quick Tip */}
             <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border border-blue-100">
-              <p className="text-xs font-medium text-blue-700">💡 Pro Tip</p>
+              <p className="text-xs font-medium text-blue-700 flex items-center gap-1"><FiZap className="w-3.5 h-3.5" /> Pro Tip</p>
               <p className="text-xs text-blue-600 mt-1">List items with clear photos to get approved faster!</p>
             </div>
           </motion.div>
@@ -388,7 +391,7 @@ export default function DashboardPage() {
                 </div>
               ) : listings.length === 0 ? (
                 <div className="p-16 text-center">
-                  <div className="text-5xl mb-4 animate-bounce">📭</div>
+                  <FiInbox className="w-14 h-14 text-slate-300 mx-auto mb-4 animate-bounce" />
                   <p className="font-bold text-slate-700 text-lg mb-1">No listings yet</p>
                   <p className="text-slate-400 text-sm mb-6">Start selling by posting your first e-waste component</p>
                   <Link
@@ -403,6 +406,7 @@ export default function DashboardPage() {
                 <div className="divide-y divide-slate-100">
                   {listings.slice(0, 5).map((listing, index) => {
                     const cfg = statusConfig[listing.status] || statusConfig.pending;
+                    const StatusIcon = cfg.icon;
                     return (
                       <motion.div 
                         key={listing.product_id} 
@@ -412,8 +416,8 @@ export default function DashboardPage() {
                         transition={{ delay: index * 0.05 }}
                         whileHover={{ x: 4 }}
                       >
-                        <div className={`w-12 h-12 rounded-2xl ${cfg.color.split(' ')[0]} flex items-center justify-center text-2xl shrink-0 border ${cfg.color.split(' ')[2]} group-hover:scale-110 transition-transform`}>
-                          📦
+                        <div className={`w-12 h-12 rounded-2xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0 border ${cfg.color.split(' ')[2]} group-hover:scale-110 transition-transform`}>
+                          <FiPackage className="w-6 h-6 text-slate-500" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-800 truncate text-sm group-hover:text-blue-600 transition-colors">
@@ -428,7 +432,7 @@ export default function DashboardPage() {
                           </p>
                         </div>
                         <span className={`text-xs font-medium px-3 py-1 rounded-full border shrink-0 flex items-center gap-1 ${cfg.color}`}>
-                          <span>{cfg.icon}</span>
+                          <StatusIcon className="w-3.5 h-3.5" />
                           {cfg.label}
                         </span>
                       </motion.div>
@@ -453,7 +457,7 @@ export default function DashboardPage() {
               <div className="px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
                   <div className="relative">
-                    <span className="text-3xl animate-pulse">🔔</span>
+                    <FiBell className="w-7 h-7 text-blue-500 animate-pulse" />
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
                       {unread}
                     </span>
@@ -504,8 +508,8 @@ export default function DashboardPage() {
                 const cfg = statusConfig[listing.status] || statusConfig.pending;
                 return (
                   <div key={listing.product_id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50/80 transition-colors">
-                    <div className={`w-10 h-10 rounded-xl ${cfg.color.split(' ')[0]} flex items-center justify-center text-xl shrink-0`}>
-                      📦
+                    <div className={`w-10 h-10 rounded-xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0`}>
+                      <FiPackage className="w-5 h-5 text-slate-500" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate">{listing.title}</p>
@@ -519,8 +523,8 @@ export default function DashboardPage() {
               })}
               {unread > 0 && (
                 <div className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50/80 transition-colors">
-                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center text-xl shrink-0">
-                    🔔
+                  <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+                    <FiBell className="w-5 h-5 text-blue-500" />
                   </div>
                   <div className="flex-1">
                     <p className="text-sm font-medium text-slate-800">

@@ -205,7 +205,7 @@ export default function NotificationsPage() {
               exit={{ opacity: 0 }}
               className="bg-white rounded-3xl border-2 border-dashed border-slate-200 p-16 text-center"
             >
-              <div className="text-6xl mb-4">🔔</div>
+              <FiBell className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <h3 className="font-bold text-slate-700 text-xl mb-2">No notifications yet</h3>
               <p className="text-slate-400 text-sm max-w-sm mx-auto">
                 You'll be notified about your listings, messages and account activity

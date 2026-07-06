@@ -94,6 +94,9 @@ class RolesAndPermissionsSeeder extends Seeder
             'message-view',
             'message-send',
 
+            // Seller ratings
+            'rating-create',
+
             // Notifications
             'notification-view',
             'notification-mark-read',
@@ -171,6 +174,9 @@ class RolesAndPermissionsSeeder extends Seeder
             // Messaging
             'message-view',
             'message-send',
+
+            // Seller ratings
+            'rating-create',
 
             // Notifications
             'notification-view',

@@ -17,9 +17,11 @@ import {
   FiShare2,
   FiEye,
   FiCalendar,
-  FiDollarSign
+  FiDollarSign,
+  FiSearch
 } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
+import SellerRating from '../../components/SellerRating';
 import { getProduct } from '../../api/products';
 import { sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
@@ -104,7 +106,7 @@ export default function ProductDetailPage() {
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
         >
-          <div className="text-6xl mb-4">🔍</div>
+          <FiSearch className="w-14 h-14 text-slate-300 mx-auto mb-4" />
           <h3 className="font-bold text-slate-700 text-xl mb-2">Listing not found</h3>
           <p className="text-slate-400 text-sm mb-6">The product you're looking for doesn't exist or has been removed</p>
           <button 
@@ -202,8 +204,8 @@ export default function ProductDetailPage() {
                   )}
                 </>
               ) : (
-                <div className="w-full h-full flex items-center justify-center text-6xl opacity-30">
-                  📦
+                <div className="w-full h-full flex items-center justify-center opacity-30">
+                  <FiPackage className="w-16 h-16" />
                 </div>
               )}
             </div>
@@ -343,6 +345,13 @@ export default function ProductDetailPage() {
                   </div>
                 </div>
               </div>
+
+              <SellerRating
+                sellerId={product.seller_id}
+                isSeller={isSeller}
+                initialAverage={product.seller?.rating_average}
+                initialCount={product.seller?.rating_count}
+              />
             </div>
           </motion.div>
         </div>

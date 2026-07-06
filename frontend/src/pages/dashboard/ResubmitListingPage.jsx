@@ -16,7 +16,9 @@ import {
   FiFileText,
   FiDollarSign,
   FiImage,
-  FiList
+  FiList,
+  FiSlash,
+  FiRotateCcw
 } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, resubmitProduct } from '../../api/products';
@@ -153,7 +155,7 @@ export default function ResubmitListingPage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
           >
-            <div className="text-6xl mb-4">🚫</div>
+            <FiSlash className="w-14 h-14 text-slate-300 mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-slate-800 mb-2">Access Denied</h2>
             <p className="text-slate-500">You don't have permission to resubmit listings.</p>
           </motion.div>
@@ -377,7 +379,9 @@ export default function ResubmitListingPage() {
                               ? 'bg-white text-rose-600'
                               : 'bg-white text-slate-600'
                           }`}>
-                            {isRemoved ? '↩️ Undo' : '🗑️ Remove'}
+                            {isRemoved
+                              ? <><FiRotateCcw className="inline w-3 h-3 mr-1" />Undo</>
+                              : <><FiTrash2 className="inline w-3 h-3 mr-1" />Remove</>}
                           </span>
                         </button>
                         {isRemoved && (

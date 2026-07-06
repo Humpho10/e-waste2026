@@ -17,7 +17,8 @@ import {
   FiXCircle,
   FiList,
   FiGrid,
-  FiSearch
+  FiSearch,
+  FiInbox
 } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, deleteProduct } from '../../api/products';
@@ -253,7 +254,7 @@ export default function MyListingsPage() {
               exit={{ opacity: 0 }}
               className="bg-white rounded-2xl border-2 border-dashed border-slate-200 p-16 text-center"
             >
-              <div className="text-6xl mb-4">📭</div>
+              <FiInbox className="w-14 h-14 text-slate-300 mx-auto mb-4" />
               <h3 className="font-bold text-slate-700 text-xl mb-2">
                 {searchTerm ? 'No matching listings found' : 'No listings yet'}
               </h3>
@@ -325,7 +326,7 @@ export default function MyListingsPage() {
                               e.target.parentElement.innerHTML = '📦';
                             }}
                           />
-                        ) : '📦'}
+                        ) : <FiPackage className="w-7 h-7 text-slate-400" />}
                       </div>
 
                       {/* Info */}

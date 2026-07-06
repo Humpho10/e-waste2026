@@ -7,6 +7,7 @@ use App\Http\Controllers\ManagerController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ProductManagerController;
 use App\Http\Controllers\ProductController;
+use App\Http\Controllers\SellerRatingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StatsController;
@@ -149,6 +150,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── Messaging ──────────────────────────────────────────
     Route::post('/products/{hashId}/messages', [ProductController::class, 'sendMessage'])->middleware('can:message-send'); // CHANGED: Now uses hashId
     Route::get('/products/{hashId}/messages',  [ProductController::class, 'getMessages'])->middleware('can:message-view'); // CHANGED: Now uses hashId
+
+    // ── Seller Ratings ────────────────────────────────────
+    Route::get('/sellers/{sellerId}/rating/me', [SellerRatingController::class, 'myStatus']);
+    Route::post('/sellers/{sellerId}/rating',   [SellerRatingController::class, 'store'])->middleware('can:rating-create');
 
     // ── Notifications ─────────────────────────────────────
     Route::get('/notifications',              [ProductController::class, 'notifications'])->middleware('can:notification-view');

@@ -21,7 +21,17 @@ import {
   FiCamera,
   FiTrash2,
   FiEye,
-  FiAlertCircle
+  FiAlertCircle,
+  FiMonitor,
+  FiSmartphone,
+  FiZap,
+  FiGlobe,
+  FiPrinter,
+  FiPackage,
+  FiStar,
+  FiThumbsUp,
+  FiBarChart2,
+  FiTool
 } from 'react-icons/fi';
 
 const steps = [
@@ -32,19 +42,19 @@ const steps = [
 ];
 
 const conditions = [
-  { value: 'New', label: 'Brand New', icon: '✨', color: 'bg-green-100 text-green-700' },
-  { value: 'Good', label: 'Very Good', icon: '👍', color: 'bg-blue-100 text-blue-700' },
-  { value: 'Fair', label: 'Fair', icon: '📊', color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'Poor', label: 'Needs Repair', icon: '🔧', color: 'bg-red-100 text-red-700' },
+  { value: 'New', label: 'Brand New', icon: FiStar, color: 'bg-green-100 text-green-700' },
+  { value: 'Good', label: 'Very Good', icon: FiThumbsUp, color: 'bg-blue-100 text-blue-700' },
+  { value: 'Fair', label: 'Fair', icon: FiBarChart2, color: 'bg-yellow-100 text-yellow-700' },
+  { value: 'Poor', label: 'Needs Repair', icon: FiTool, color: 'bg-red-100 text-red-700' },
 ];
 
 const categoryIcons = {
-  'Electronics': '💻',
-  'Mobile Devices': '📱',
-  'Accessories': '🔌',
-  'Networking': '🌐',
-  'Appliances': '🖨️',
-  'Other': '📦'
+  'Electronics': FiMonitor,
+  'Mobile Devices': FiSmartphone,
+  'Accessories': FiZap,
+  'Networking': FiGlobe,
+  'Appliances': FiPrinter,
+  'Other': FiPackage
 };
 
 // Format Ugandan Shillings
@@ -138,7 +148,7 @@ export default function CreateListingPage() {
       });
 
       await createProduct(data);
-      toast.success('🎉 Your listing has been submitted for review!');
+      toast.success('Your listing has been submitted for review!');
       navigate('/dashboard/listings');
     } catch (err) {
       const errors = err.response?.data?.errors;
@@ -260,6 +270,7 @@ export default function CreateListingPage() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                   {categories.map(cat => {
                     const isSelected = form.category_id == cat.category_id;
+                    const CatIcon = categoryIcons[cat.name] || FiPackage;
                     return (
                       <motion.button
                         key={cat.category_id}
@@ -273,8 +284,8 @@ export default function CreateListingPage() {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <span className="text-3xl block mb-2">
-                          {categoryIcons[cat.name] || '📦'}
+                        <span className="block mb-2">
+                          <CatIcon className="w-7 h-7" />
                         </span>
                         <span className={`text-sm font-medium ${
                           isSelected ? 'text-blue-700' : 'text-gray-700'
@@ -386,6 +397,7 @@ export default function CreateListingPage() {
                       <div className="grid grid-cols-2 gap-2">
                         {conditions.map(c => {
                           const isSelected = form.condition === c.value;
+                          const CondIcon = c.icon;
                           return (
                             <motion.button
                               key={c.value}
@@ -399,7 +411,7 @@ export default function CreateListingPage() {
                               whileHover={{ scale: 1.03 }}
                               whileTap={{ scale: 0.97 }}
                             >
-                              <span className="text-2xl block">{c.icon}</span>
+                              <span className="flex justify-center mb-1"><CondIcon className="w-6 h-6" /></span>
                               <span className="text-xs font-medium">{c.label}</span>
                             </motion.button>
                           );
