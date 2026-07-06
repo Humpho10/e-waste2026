@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMProducts, approvePMProduct, rejectPMProduct } from '../../api/productManager';
 import { useToast } from '../../components/Toast';
@@ -247,8 +248,6 @@ function RejectModal({ product, onClose, onRejected, toast }) {
 // ── Main Products Page ─────────────────────────────────────
 export default function WorkspaceProductsPage() {
   const [searchParams]              = useSearchParams();
-  const [products, setProducts]     = useState([]);
-  const [loading, setLoading]       = useState(true);
   const [status, setStatus]         = useState(searchParams.get('status') || 'all');
   const [search, setSearch]         = useState('');
   const [viewProduct, setViewProduct]   = useState(null);
@@ -258,28 +257,33 @@ export default function WorkspaceProductsPage() {
   // 👇 Get permissions and toast
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // 👇 Permission checks
   const canApprove = permissions?.includes('product-approve') || false;
   const canReject = permissions?.includes('product-reject') || false;
 
-  const fetchProducts = () => {
-    setLoading(true);
-    getPMProducts(status !== 'all' ? { status } : {})
-      .then(res => setProducts(res.data.products || []))
-      .finally(() => setLoading(false));
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['pm-products', status],
+    queryFn: () => getPMProducts(status !== 'all' ? { status } : {}).then(res => res.data.products || []),
+  });
+
+  const setProductStatus = (productId, newStatus) => {
+    queryClient.setQueryData(['pm-products', status], (old = []) =>
+      old.map(p => p.product_id === productId ? { ...p, status: newStatus } : p)
+    );
   };
 
-  useEffect(() => { fetchProducts(); }, [status]);
+  const approveMutation = useMutation({
+    mutationFn: (productId) => approvePMProduct(productId),
+    onSuccess: (_res, productId) => setProductStatus(productId, 'approved'),
+  });
 
   const handleApprove = async (product) => {
     if (!window.confirm(`Approve "${product.title}"?`)) return;
     setApproving(product.product_id);
     try {
-      await approvePMProduct(product.product_id);
-      setProducts(prev =>
-        prev.map(p => p.product_id === product.product_id ? { ...p, status: 'approved' } : p)
-      );
+      await approveMutation.mutateAsync(product.product_id);
       toast(`"${product.title}" has been approved and is now live`, 'success');
     } catch (err) {
       toast(err.response?.data?.message || 'Failed to approve', 'error');
@@ -461,11 +465,7 @@ export default function WorkspaceProductsPage() {
         <RejectModal
           product={rejectTarget}
           onClose={() => setRejectTarget(null)}
-          onRejected={(productId) => {
-            setProducts(prev =>
-              prev.map(p => p.product_id === productId ? { ...p, status: 'rejected' } : p)
-            );
-          }}
+          onRejected={(productId) => setProductStatus(productId, 'rejected')}
           toast={toast}
         />
       )}

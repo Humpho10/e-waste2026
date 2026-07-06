@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMNotifications, markPMNotifRead, markAllPMNotifsRead } from '../../api/productManager';
 import { useBadge } from '../../context/BadgeContext';
@@ -15,57 +15,57 @@ const typeConfig = {
 };
 
 export default function WorkspaceNotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(true);
-
   // 👇 Get permissions
   const { permissions } = useAuth();
 
   const { refresh } = useBadge();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // 👇 Check if user has permission to mark notifications as read
   const canMarkRead = permissions?.includes('notification-mark-read') || false;
 
-  const fetchNotifs = () => {
-    getPMNotifications()
-      .then(res => setNotifications(res.data.notifications || []))
-      .finally(() => setLoading(false));
-  };
+  const { data: notifications = [], isLoading: loading } = useQuery({
+    queryKey: ['pm-notifications'],
+    queryFn: () => getPMNotifications().then(res => res.data.notifications || []),
+  });
 
-  useEffect(() => {
-    fetchNotifs();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  const invalidateNotifs = () => queryClient.invalidateQueries({ queryKey: ['pm-notifications'] });
 
-  const handleMarkRead = async (id) => {
-    if (!canMarkRead) {
-      toast('You do not have permission to mark notifications as read', 'error');
-      return;
-    }
-    try {
-      await markPMNotifRead(id);
-      fetchNotifs();
+  const markReadMutation = useMutation({
+    mutationFn: markPMNotifRead,
+    onSuccess: () => {
+      invalidateNotifs();
       refresh();
       toast('Notification marked as read', 'info');
-    } catch (err) {
-      toast(err.response?.data?.message || 'Failed to mark as read', 'error');
-    }
-  };
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to mark as read', 'error'),
+  });
 
-  const handleMarkAllRead = async () => {
+  const markAllReadMutation = useMutation({
+    mutationFn: markAllPMNotifsRead,
+    onSuccess: () => {
+      invalidateNotifs();
+      refresh();
+      toast('All notifications marked as read', 'info');
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to mark all as read', 'error'),
+  });
+
+  const handleMarkRead = (id) => {
     if (!canMarkRead) {
       toast('You do not have permission to mark notifications as read', 'error');
       return;
     }
-    try {
-      await markAllPMNotifsRead();
-      fetchNotifs();
-      refresh();
-      toast('All notifications marked as read', 'info');
-    } catch (err) {
-      toast(err.response?.data?.message || 'Failed to mark all as read', 'error');
+    markReadMutation.mutate(id);
+  };
+
+  const handleMarkAllRead = () => {
+    if (!canMarkRead) {
+      toast('You do not have permission to mark notifications as read', 'error');
+      return;
     }
+    markAllReadMutation.mutate();
   };
 
   const unread = notifications.filter(n => !n.is_read).length;

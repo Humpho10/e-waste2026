@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   FiGrid,
@@ -39,6 +40,7 @@ export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
   const location         = useLocation();
   const navigate         = useNavigate();
+  const queryClient      = useQueryClient();
   const [collapsed, setCollapsed]   = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -49,6 +51,7 @@ export default function DashboardLayout({ children }) {
     setLoggingOut(true);
     try { await logoutUser(); } catch {}
     logout();
+    queryClient.clear(); // wipe cached data so it doesn't leak into the next session
     navigate('/');
   };
 

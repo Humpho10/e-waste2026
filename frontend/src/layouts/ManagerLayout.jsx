@@ -1,18 +1,24 @@
 import { useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  BiGrid, BiBriefcase, BiFolder, BiBox, BiUsers, BiUser,
+  BiMessageSquare, BiBell, BiHome, BiLogOut, BiChevronLeft, BiChevronRight,
+} from '../components/bi';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext'; // 👈 For badge counts
 import { logoutUser } from '../api/auth';
+import { Recycle } from '../components/icons';
 
 const navItems = [
-  { path: '/manager',                   icon: '📊', label: 'Overview',          group: 'main',  badge: null   },
-  { path: '/manager/product-managers',  icon: '🧑‍💼', label: 'Product Managers',  group: 'main',  badge: null   },
-  { path: '/manager/categories',        icon: '📂', label: 'Categories',         group: 'main',  badge: null   },
-  { path: '/manager/products',          icon: '📦', label: 'Listings',           group: 'main',  badge: null   },
-  { path: '/manager/users',             icon: '👥', label: 'Users',              group: 'main',  badge: null   },
-  { path: '/manager/profile',           icon: '👤', label: 'Profile',            group: 'main',  badge: null   },
-  { path: '/manager/messages',          icon: '💬', label: 'Messages',           group: 'comms', badge: 'msg'  }, // 👈 Added
-  { path: '/manager/notifications',     icon: '🔔', label: 'Notifications',      group: 'comms', badge: 'notif' }, // 👈 Added
+  { path: '/manager',                   icon: BiGrid,          label: 'Overview',          group: 'main',  badge: null   },
+  { path: '/manager/product-managers',  icon: BiBriefcase,     label: 'Product Managers',  group: 'main',  badge: null   },
+  { path: '/manager/categories',        icon: BiFolder,        label: 'Categories',         group: 'main',  badge: null   },
+  { path: '/manager/products',          icon: BiBox,           label: 'Listings',           group: 'main',  badge: null   },
+  { path: '/manager/users',             icon: BiUsers,         label: 'Users',              group: 'main',  badge: null   },
+  { path: '/manager/profile',           icon: BiUser,          label: 'Profile',            group: 'main',  badge: null   },
+  { path: '/manager/messages',          icon: BiMessageSquare, label: 'Messages',           group: 'comms', badge: 'msg'  }, // 👈 Added
+  { path: '/manager/notifications',     icon: BiBell,          label: 'Notifications',      group: 'comms', badge: 'notif' }, // 👈 Added
 ];
 
 const groups = [
@@ -24,6 +30,7 @@ export default function ManagerLayout({ children }) {
   const { user, logout } = useAuth();
   const location         = useLocation();
   const navigate         = useNavigate();
+  const queryClient      = useQueryClient();
   const [collapsed, setCollapsed]   = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -34,6 +41,7 @@ export default function ManagerLayout({ children }) {
     setLoggingOut(true);
     try { await logoutUser(); } catch {}
     logout();
+    queryClient.clear(); // wipe cached data so it doesn't leak into the next session
     navigate('/');
   };
 
@@ -63,7 +71,7 @@ export default function ManagerLayout({ children }) {
         {/* Logo */}
         <div className={`flex items-center h-16 border-b border-slate-800 shrink-0 ${collapsed ? 'justify-center px-3' : 'px-5 gap-3'}`}>
           <div className="w-8 h-8 rounded-xl bg-orange-500 flex items-center justify-center shrink-0">
-            <span className="text-white text-sm">♻️</span>
+            <Recycle width={16} height={16} className="text-white" />
           </div>
           {!collapsed && (
             <div className="overflow-hidden">
@@ -117,7 +125,7 @@ export default function ManagerLayout({ children }) {
                   </p>
                 )}
                 <div className="space-y-0.5">
-                  {items.map(({ path, icon, label, badge }) => {
+                  {items.map(({ path, icon: Icon, label, badge }) => {
                     const active = location.pathname === path;
                     const badgeCount = getBadgeCount(badge);
                     return (
@@ -134,8 +142,8 @@ export default function ManagerLayout({ children }) {
                           }
                         `}
                       >
-                        <span className="text-base shrink-0 relative">
-                          {icon}
+                        <span className="shrink-0 relative flex items-center">
+                          <Icon size={18} />
                           {/* Badge on icon when collapsed */}
                           {collapsed && badgeCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
@@ -169,7 +177,7 @@ export default function ManagerLayout({ children }) {
             title={collapsed ? 'Back to Site' : ''}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all duration-150 ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <span>🏠</span>
+            <BiHome size={18} />
             {!collapsed && <span className="font-medium">Back to Site</span>}
           </Link>
           <button
@@ -178,7 +186,7 @@ export default function ManagerLayout({ children }) {
             title={collapsed ? 'Logout' : ''}
             className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-red-900/40 hover:text-red-400 transition-all duration-150 w-full ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
           >
-            <span>🚪</span>
+            <BiLogOut size={18} />
             {!collapsed && <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
           </button>
         </div>
@@ -188,7 +196,7 @@ export default function ManagerLayout({ children }) {
           onClick={() => setCollapsed(!collapsed)}
           className="absolute -right-3 top-20 w-6 h-6 bg-slate-700 hover:bg-orange-500 border border-slate-600 rounded-full flex items-center justify-center text-white transition-colors duration-150 shadow-lg"
         >
-          <span className="text-xs">{collapsed ? '›' : '‹'}</span>
+          {collapsed ? <BiChevronRight size={14} /> : <BiChevronLeft size={14} />}
         </button>
       </aside>
 
@@ -209,7 +217,7 @@ export default function ManagerLayout({ children }) {
               to="/manager/messages"
               className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
             >
-              <span className="text-base">💬</span>
+              <BiMessageSquare size={17} />
               {msgCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {msgCount > 9 ? '9+' : msgCount}
@@ -222,7 +230,7 @@ export default function ManagerLayout({ children }) {
               to="/manager/notifications"
               className="relative w-9 h-9 rounded-xl bg-gray-50 border border-gray-200 flex items-center justify-center text-gray-500 hover:bg-gray-100 transition"
             >
-              <span className="text-base">🔔</span>
+              <BiBell size={17} />
               {notifCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {notifCount > 9 ? '9+' : notifCount}

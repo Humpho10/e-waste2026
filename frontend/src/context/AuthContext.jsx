@@ -1,5 +1,6 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getMe } from '../api/auth';
 
 const AuthContext = createContext();
@@ -9,10 +10,18 @@ export function AuthProvider({ children }) {
   const [token, setToken]     = useState(localStorage.getItem('token'));
   const [role, setRole]       = useState(localStorage.getItem('role'));
   const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    if (token) {
+  // Session check on boot / whenever token changes. Kept as a self-contained
+  // fetch + inline state sync (mirroring the original's .then()/.catch()
+  // shape) rather than a useEffect, so this stays a query the rest of the
+  // app can invalidate (e.g. queryClient.invalidateQueries(['me'])) to force
+  // a fresh permissions/role check without threading a refetch callback
+  // through context.
+  const { isLoading: loading } = useQuery({
+    queryKey: ['me', token],
+    enabled: !!token,
+    retry: false,
+    queryFn: () =>
       getMe()
         .then(res => {
           const u = res.data.user;
@@ -23,20 +32,18 @@ export function AuthProvider({ children }) {
           const r = u.roles?.[0]?.name ?? 'User';
           setRole(r);
           localStorage.setItem('role', r);
+          return u;
         })
-        .catch(() => {
+        .catch(err => {
           localStorage.removeItem('token');
           localStorage.removeItem('role');
           localStorage.removeItem('permissions');
           setToken(null);
           setRole(null);
           setPermissions([]);
-        })
-        .finally(() => setLoading(false));
-    } else {
-      setLoading(false);
-    }
-  }, [token]);
+          throw err;
+        }),
+  });
 
   const login = (userData, userToken, userRole, userPermissions) => {
     setUser(userData);

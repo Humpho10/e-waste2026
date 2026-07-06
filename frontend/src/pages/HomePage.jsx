@@ -1,13 +1,30 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage } from '../api/products';
-import { logoutUser } from '../api/auth';
+import PublicNavbar from '../components/PublicNavbar';
+import PublicFooter from '../components/PublicFooter';
+import BackToTopButton from '../components/BackToTopButton';
+import Reveal from '../components/Reveal';
+import StatNumber from '../components/StatNumber';
 import {
-  Recycle, Search, Menu, X, ChevronRight, ChevronDown, ArrowRight, Plus,
+  Recycle, Search, X, ChevronRight, ChevronDown, ArrowRight, Plus,
   MapPin, Star, Shield, Tag, Chat, Users, CheckCircle, List, Camera,
   categoryIcon,
 } from '../components/icons';
+
+// ── Rotating hero background images ──
+// Files live directly in frontend/public/ (hero-1.webp ... hero-6.webp).
+const HERO_IMAGES = [
+  '/hero-1.webp',
+  '/hero-2.webp',
+  '/hero-3.webp',
+  '/hero-4.webp',
+  '/hero-5.webp',
+  '/hero-6.webp',
+];
+const HERO_ROTATE_MS = 3000;
 
 // ── Fallback data — keeps the page looking great even if the API is down ──
 const SAMPLE_CATEGORIES = [
@@ -44,109 +61,6 @@ const conditionStyle = (c = '') => {
   if (k.includes('fair'))      return 'bg-amber-50 text-amber-700';
   return 'bg-gray-100 text-gray-500'; // parts only / unknown
 };
-
-// ── Navbar ────────────────────────────────────────────────────
-function Navbar({ onAbout, onHome, onBrowse }) {
-  const { user, token, role, logout } = useAuth();
-  const navigate = useNavigate();
-  const [menuOpen, setMenuOpen] = useState(false);
-
-  const handleLogout = async () => {
-    try { await logoutUser(); } catch {}
-    logout();
-    setMenuOpen(false);
-    navigate('/');
-  };
-
-  const dashboardPath = () => ({
-    'Super-Admin': '/admin', 'Admin': '/manager', 'Product-Manager': '/workspace',
-  }[role] || '/dashboard');
-
-  const sellTo = token ? '/dashboard/create' : '/login';
-
-  const NavLinks = ({ onClick }) => (
-    <>
-      <button onClick={() => { onClick?.(); onHome(); }}   className="nav-pill text-left">Home</button>
-      <button onClick={() => { onClick?.(); onBrowse(); }} className="nav-pill text-left">Browse</button>
-      <Link to={sellTo} onClick={onClick} className="nav-pill">Sell</Link>
-      <button onClick={() => { onClick?.(); onAbout(); }} className="nav-pill text-left">About</button>
-    </>
-  );
-
-  return (
-    <nav className="bg-[#0b2545] text-blue-100 sticky top-0 z-50 shadow-md">
-      <div className="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between gap-4">
-        {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 shrink-0">
-          <span className="grid place-items-center w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300">
-            <Recycle width={18} height={18} />
-          </span>
-          <span className="text-lg font-bold text-white tracking-tight">E-Waste Mart</span>
-        </Link>
-
-        {/* Desktop links */}
-        <div className="hidden md:flex items-center gap-7 text-sm font-medium">
-          <NavLinks />
-        </div>
-
-        {/* Desktop auth */}
-        <div className="hidden md:flex items-center gap-3">
-          {token ? (
-            <>
-              <Link to={dashboardPath()} className="text-sm text-blue-200 font-medium hover:text-white transition">
-                {user?.name?.split(' ')[0] || 'My'}'s Dashboard
-              </Link>
-              <button onClick={handleLogout}
-                className="btn-lift text-sm border border-blue-300/40 text-blue-100 hover:bg-white/10 hover:border-blue-200 px-4 py-2 rounded-lg">
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
-              <Link to="/login"
-                className="btn-lift text-sm border border-blue-300/50 text-white hover:bg-white/10 hover:border-white px-4 py-2 rounded-lg font-medium">
-                Login
-              </Link>
-              <Link to="/register"
-                className="btn-lift text-sm bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg font-medium shadow-sm">
-                Sign Up
-              </Link>
-            </>
-          )}
-        </div>
-
-        {/* Mobile toggle */}
-        <button className="md:hidden text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-          {menuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-
-      {/* Mobile menu */}
-      {menuOpen && (
-        <div className="md:hidden border-t border-white/10 px-4 py-4 flex flex-col gap-4 text-sm font-medium bg-[#0b2545]">
-          <NavLinks onClick={() => setMenuOpen(false)} />
-          <div className="border-t border-white/10 pt-4 flex flex-col gap-2">
-            {token ? (
-              <>
-                <Link to={dashboardPath()} onClick={() => setMenuOpen(false)}
-                  className="btn-lift bg-blue-600 hover:bg-blue-500 text-white text-center py-2.5 rounded-lg">Go to Dashboard</Link>
-                <button onClick={handleLogout}
-                  className="btn-lift border border-blue-300/40 text-blue-100 hover:bg-white/10 py-2.5 rounded-lg">Logout</button>
-              </>
-            ) : (
-              <>
-                <Link to="/login" onClick={() => setMenuOpen(false)}
-                  className="btn-lift border border-blue-300/50 text-white hover:bg-white/10 text-center py-2.5 rounded-lg">Login</Link>
-                <Link to="/register" onClick={() => setMenuOpen(false)}
-                  className="btn-lift bg-blue-600 hover:bg-blue-500 text-white text-center py-2.5 rounded-lg">Sign Up</Link>
-              </>
-            )}
-          </div>
-        </div>
-      )}
-    </nav>
-  );
-}
 
 // ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
@@ -214,81 +128,88 @@ function ProductSkeleton() {
   );
 }
 
-// Animated count-up for the live counters.
-function CountUp({ value, className }) {
-  const [display, setDisplay] = useState(0);
-  useEffect(() => {
-    let raf;
-    const start = performance.now();
-    const duration = 1100;
-    const tick = (now) => {
-      const t = Math.min(1, (now - start) / duration);
-      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic
-      setDisplay(Math.round(value * eased));
-      if (t < 1) raf = requestAnimationFrame(tick);
-    };
-    raf = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(raf);
-  }, [value]);
-  const fmt = (n) => (n >= 1000 ? `${n.toLocaleString()}+` : n.toLocaleString());
-  return <span className={className}>{fmt(display)}</span>;
+// Finds a real listing photo belonging to a category, so the sidebar can
+// show an actual product thumbnail instead of a generic icon when one's
+// available — falls back to the icon otherwise (new categories, API down).
+function categoryThumb(categoryName, products) {
+  const key = (categoryName || '').toLowerCase().split(' ')[0];
+  if (!key) return null;
+  const match = products.find(p => {
+    const img = p.images?.[0]?.image_path;
+    if (!img) return false;
+    const pName = (p.category?.name || '').toLowerCase();
+    return pName.includes(key) || (categoryName || '').toLowerCase().includes(pName);
+  });
+  return match?.images?.[0]?.image_path || null;
 }
 
-// Loading shimmer → animated real value (→ static fallback only on error).
-function StatNumber({ value, error, fallback }) {
-  const cls = 'font-bold text-gray-800 text-sm leading-none';
-  if (value != null) return <CountUp value={value} className={cls} />;
-  if (error) return <p className={cls}>{fallback}</p>;
-  return <span className="inline-block h-4 w-12 bg-gray-200 rounded animate-pulse" />;
-}
+// ── Testimonials — fictional, representative sample content ──
+const TESTIMONIALS = [
+  {
+    name: 'Grace N.', role: 'Buyer · Kampala', rating: 5,
+    quote: 'Found a replacement laptop screen in minutes for way less than the repair shop wanted. The seller replied fast and the part worked first try.',
+  },
+  {
+    name: 'Moses K.', role: 'Seller · Ntinda', rating: 5,
+    quote: 'Had old motherboards sitting in a drawer for months. Listed them here and had buyers messaging within a day.',
+  },
+  {
+    name: 'Aisha B.', role: 'Buyer · Wandegeya', rating: 4,
+    quote: 'The photo search actually works — snapped a picture of a broken power supply and found a close match nearby.',
+  },
+];
 
 // ── HomePage ──────────────────────────────────────────────────
 export default function HomePage() {
-  const [categories, setCategories]   = useState([]);
-  const [products, setProducts]       = useState([]);
-  const [loading, setLoading]         = useState(true);
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery]             = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
   const [expandedCats, setExpandedCats]     = useState({ c1: true });
-  const [stats, setStats]                   = useState(null);
-  const [statsError, setStatsError]         = useState(false);
   const [imageSearch, setImageSearch]       = useState(null); // { labels: [] }
-  const [imageBusy, setImageBusy]           = useState(false);
+  const [imageSearchProducts, setImageSearchProducts] = useState([]);
   const [imageError, setImageError]         = useState('');
+  const [heroIndex, setHeroIndex]           = useState(0);
   const { token } = useAuth();
   const navigate     = useNavigate();
   const listingsRef  = useRef(null);
-  const howRef       = useRef(null);
-  const featuredRef  = useRef([]);   // original featured listings, for restore
   const fileInputRef = useRef(null);
 
-  useEffect(() => {
-    let alive = true;
-    Promise.all([getCategories(), browseProducts({ per_page: 8 })])
-      .then(([catRes, prodRes]) => {
-        if (!alive) return;
+  // Categories + featured products are fetched together, matching the
+  // original's Promise.all — either one failing falls back to sample data
+  // for both, rather than mixing real + sample results.
+  const { data: homeData, isLoading: loading } = useQuery({
+    queryKey: ['home-featured'],
+    queryFn: async () => {
+      try {
+        const [catRes, prodRes] = await Promise.all([getCategories(), browseProducts({ per_page: 8 })]);
         const cats = catRes.data.categories;
         const prods = prodRes.data.data;
-        const list = prods?.length ? prods : SAMPLE_PRODUCTS;
-        setCategories(cats?.length ? cats : SAMPLE_CATEGORIES);
-        setProducts(list);
-        featuredRef.current = list;
-      })
-      .catch(() => {
-        if (!alive) return;
-        setCategories(SAMPLE_CATEGORIES);
-        setProducts(SAMPLE_PRODUCTS);
-        featuredRef.current = SAMPLE_PRODUCTS;
-      })
-      .finally(() => alive && setLoading(false));
+        return {
+          categories: cats?.length ? cats : SAMPLE_CATEGORIES,
+          products: prods?.length ? prods : SAMPLE_PRODUCTS,
+        };
+      } catch {
+        return { categories: SAMPLE_CATEGORIES, products: SAMPLE_PRODUCTS };
+      }
+    },
+  });
 
-    // Live counters — independent so a failure never blocks the listings.
-    getStats()
-      .then(res => { if (alive) setStats(res.data); })
-      .catch(() => { if (alive) setStatsError(true); });
+  const categories = homeData?.categories || [];
+  const baseProducts = homeData?.products || [];
 
-    return () => { alive = false; };
+  // Live counters — independent query so a failure never blocks the listings.
+  const { data: stats, isError: statsError } = useQuery({
+    queryKey: ['home-stats'],
+    queryFn: () => getStats().then(res => res.data),
+  });
+
+  // Rotate the hero background photo on a timer — pure crossfade via opacity,
+  // no image ever unmounts so there's no flash/reload between transitions.
+  useEffect(() => {
+    const id = setInterval(() => {
+      setHeroIndex(i => (i + 1) % HERO_IMAGES.length);
+    }, HERO_ROTATE_MS);
+    return () => clearInterval(id);
   }, []);
 
   const scrollToListings = () =>
@@ -320,35 +241,40 @@ export default function HomePage() {
   // ── Search by photo (Google Vision) ───────────────────────
   const pickImage = () => { setImageError(''); fileInputRef.current?.click(); };
 
-  const handleImageChange = async (e) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';            // let the user re-pick the same file later
-    if (!file) return;
-    setImageBusy(true);
-    setImageError('');
-    setQuery(''); setSearchInput(''); setActiveCategory(null);
-    scrollToListings();
-    try {
-      const res = await searchByImage(file);
-      setProducts(res.data.products || []);
+  const imageSearchMutation = useMutation({
+    mutationFn: (file) => searchByImage(file),
+    onSuccess: (res) => {
+      setImageSearchProducts(res.data.products || []);
       setImageSearch({ labels: res.data.labels || [] });
-    } catch (err) {
+    },
+    onError: (err) => {
       setImageError(
         err.response?.data?.message ||
         (err.response?.status === 503
           ? 'Photo search isn’t enabled on the server yet.'
           : 'Couldn’t search by that photo. Please try again.')
       );
-      setImageSearch(null);
-      setProducts(featuredRef.current);
-    } finally {
-      setImageBusy(false);
-    }
+      setImageSearch(null); // reverting imageSearch to null falls back to baseProducts
+    },
+  });
+
+  const imageBusy = imageSearchMutation.isPending;
+
+  const handleImageChange = (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = '';            // let the user re-pick the same file later
+    if (!file) return;
+    setImageError('');
+    setQuery(''); setSearchInput(''); setActiveCategory(null);
+    scrollToListings();
+    imageSearchMutation.mutate(file);
   };
 
   const toggleExpand = (id) => setExpandedCats(p => ({ ...p, [id]: !p[id] }));
 
   const activeCatName = categories.find(c => c.category_id === activeCategory)?.name;
+
+  const products = imageSearch ? imageSearchProducts : baseProducts;
 
   // In-place filtering for instant, working interactivity.
   const displayedProducts = useMemo(() => {
@@ -375,21 +301,28 @@ export default function HomePage() {
   const clearFilters = () => {
     setQuery(''); setSearchInput(''); setActiveCategory(null);
     setImageError('');
-    if (imageSearch) { setProducts(featuredRef.current); setImageSearch(null); }
+    if (imageSearch) { setImageSearch(null); } // reverts products to baseProducts
   };
 
   return (
     <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
-      <Navbar
+      <PublicNavbar
         onHome={scrollToTop}
         onBrowse={goBrowse}
-        onAbout={() => howRef.current?.scrollIntoView({ behavior: 'smooth' })}
       />
 
       {/* ── Hero ────────────────────────────────────────────── */}
       <section className="relative px-4 pt-16 pb-20 overflow-hidden bg-[#0b2545]">
-        {/* E-waste photo background (frontend/public/hero.webp) */}
-        <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: "url('/hero.webp')" }} aria-hidden="true" />
+        {/* Rotating e-waste photo background — crossfades between frontend/public/hero/hero-1..6.webp */}
+        <div className="absolute inset-0" aria-hidden="true">
+          {HERO_IMAGES.map((src, i) => (
+            <div
+              key={src}
+              className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1800ms] ease-in-out"
+              style={{ backgroundImage: `url('${src}')`, opacity: i === heroIndex ? 1 : 0 }}
+            />
+          ))}
+        </div>
         {/* Navy overlay keeps the text readable over the busy photo */}
         <div className="absolute inset-0 bg-gradient-to-b from-[#0b2545]/92 via-[#0b2545]/88 to-[#0b2545]/96" aria-hidden="true" />
         {/* Extra darkening focused behind the text for legibility */}
@@ -432,8 +365,54 @@ export default function HomePage() {
   <Camera width={13} height={13} /> Tip: tap the camera to search using a photo of the part
 </span>
           </div>
+
+          {/* Carousel dots — click to jump to a photo, active one glows */}
+          <div className="mt-6 flex justify-center gap-1.5">
+            {HERO_IMAGES.map((src, i) => (
+              <button
+                key={src}
+                type="button"
+                onClick={() => setHeroIndex(i)}
+                aria-label={`Show hero photo ${i + 1}`}
+                className={`h-1.5 rounded-full transition-all duration-300 ${
+                  i === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/35 hover:bg-white/60'
+                }`}
+              />
+            ))}
+          </div>
         </div>
       </section>
+
+      {/* ── Mobile category strip ──────────────────────────────
+          The left categories sidebar is desktop-only (hidden below lg),
+          so phones/tablets would otherwise never see categories at all —
+          this horizontal-scroll chip row surfaces them there instead. */}
+      <div className="lg:hidden max-w-7xl mx-auto px-4 pt-6">
+        <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
+          {categories.map(cat => {
+            const Icon = categoryIcon(cat.name);
+            const active = activeCategory === cat.category_id;
+            const thumb = categoryThumb(cat.name, baseProducts);
+            return (
+              <button
+                key={cat.category_id}
+                onClick={() => handleCategoryClick(cat)}
+                className={`shrink-0 flex items-center gap-2 pl-1.5 pr-3.5 py-1.5 rounded-full border text-xs font-medium whitespace-nowrap transition
+                  ${active ? 'bg-blue-600 border-blue-600 text-white' : 'bg-white border-gray-200 text-gray-600 hover:border-blue-300'}`}
+              >
+                <span className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50'}`}>
+                  {thumb ? (
+                    <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Icon width={13} height={13} className={active ? 'text-white' : 'text-blue-500'} />
+                  )}
+                </span>
+                {cat.name}
+              </button>
+            );
+          })}
+        </div>
+      </div>
 
       {/* ── Main 3-column content ───────────────────────────── */}
       <div className="max-w-7xl mx-auto px-4 py-8 flex gap-6">
@@ -448,6 +427,7 @@ export default function HomePage() {
               {categories.map(cat => {
                 const Icon = categoryIcon(cat.name);
                 const active = activeCategory === cat.category_id;
+                const thumb = categoryThumb(cat.name, baseProducts);
                 return (
                   <li key={cat.category_id}>
                     <div
@@ -457,7 +437,13 @@ export default function HomePage() {
                       onClick={() => handleCategoryClick(cat)}
                     >
                       <span className="flex items-center gap-2.5">
-                        <Icon width={17} height={17} className={active ? 'text-white' : 'text-blue-500'} />
+                        <span className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50'}`}>
+                          {thumb ? (
+                            <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
+                          ) : (
+                            <Icon width={16} height={16} className={active ? 'text-white' : 'text-blue-500'} />
+                          )}
+                        </span>
                         {cat.name}
                       </span>
                       {cat.subcategories?.length > 0 && (
@@ -625,25 +611,74 @@ export default function HomePage() {
         </aside>
       </div>
 
+      {/* ── Mobile trust strip ─────────────────────────────────
+          The right trust-signals sidebar only shows on xl+, so give
+          phones/tablets a condensed version instead of losing it entirely. */}
+      <div className="xl:hidden max-w-7xl mx-auto px-4 -mt-3 mb-8">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[
+            { Icon: Shield,  color: 'text-blue-600',    label: 'Verified Listings' },
+            { Icon: Tag,     color: 'text-green-600',   label: 'Fair Pricing' },
+            { Icon: Recycle, color: 'text-emerald-600', label: 'Circular Economy' },
+            { Icon: Chat,    color: 'text-sky-600',     label: 'Direct Contact' },
+          ].map(({ Icon, color, label }) => (
+            <div key={label} className="flex flex-col items-center text-center gap-1.5">
+              <Icon width={18} height={18} className={color} />
+              <span className="text-[11px] text-gray-500 font-medium leading-tight">{label}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       {/* ── How It Works ────────────────────────────────────── */}
-      <section ref={howRef} className="bg-white border-t border-gray-100 py-14 px-4 mt-4 scroll-mt-16">
+      <section className="bg-white border-t border-gray-100 py-14 px-4 mt-4 scroll-mt-16">
         <div className="max-w-4xl mx-auto text-center">
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
-          <p className="text-gray-500 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
+          <Reveal>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
+            <p className="text-gray-500 text-sm mb-10">Three simple steps to buy or sell e-waste</p>
+          </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
               { step: '1', Icon: Tag,    title: 'List Your Parts', desc: 'Post your e-waste components with photos, condition, and price.' },
               { step: '2', Icon: Search, title: 'Browse & Search', desc: 'Find exactly what you need by category, condition, or location.' },
               { step: '3', Icon: Chat,   title: 'Connect & Trade', desc: 'Message sellers directly and arrange a pickup or delivery.' },
-            ].map(({ step, Icon, title, desc }) => (
-              <div key={step} className="text-center">
+            ].map(({ step, Icon, title, desc }, i) => (
+              <Reveal key={step} delay={i * 120} className="text-center">
                 <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4">
                   <Icon width={24} height={24} />
                 </div>
                 <div className="text-xs font-bold text-blue-600 mb-1">STEP {step}</div>
                 <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
                 <p className="text-gray-500 text-sm">{desc}</p>
-              </div>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Testimonials ────────────────────────────────────── */}
+      <section className="bg-gray-50 border-t border-gray-100 py-14 px-4">
+        <div className="max-w-5xl mx-auto">
+          <Reveal className="text-center mb-10">
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">What people are saying</h2>
+            <p className="text-gray-500 text-sm">Real experiences from buyers and sellers on E-Waste Mart</p>
+          </Reveal>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {TESTIMONIALS.map((t, i) => (
+              <Reveal key={t.name} delay={i * 120} className="h-full">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-full flex flex-col">
+                  <div className="flex gap-0.5 mb-3">
+                    {Array(5).fill(0).map((_, j) => (
+                      <Star key={j} width={14} height={14} className={j < t.rating ? 'text-amber-400' : 'text-gray-200'} />
+                    ))}
+                  </div>
+                  <p className="text-gray-600 text-sm leading-relaxed flex-1">&ldquo;{t.quote}&rdquo;</p>
+                  <div className="mt-4 pt-4 border-t border-gray-50">
+                    <p className="font-semibold text-gray-800 text-sm">{t.name}</p>
+                    <p className="text-gray-400 text-xs">{t.role}</p>
+                  </div>
+                </div>
+              </Reveal>
             ))}
           </div>
         </div>
@@ -652,57 +687,27 @@ export default function HomePage() {
       {/* ── CTA ─────────────────────────────────────────────── */}
       {!token && (
         <section className="bg-gradient-to-r from-[#0b2545] to-blue-600 py-14 px-4 text-center text-white">
-          <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to get started?</h2>
-          <p className="text-blue-100 mb-8 text-sm">
-            Join thousands of Ugandans buying and selling e-waste components
-          </p>
-          <div className="flex justify-center gap-4 flex-wrap">
-            <Link to="/register"
-              className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
-              Create Free Account
-            </Link>
-            <Link to="/login"
-              className="btn-lift border border-white/70 text-white hover:bg-white/10 hover:border-white px-8 py-3 rounded-xl font-semibold text-sm">
-              Sign In
-            </Link>
-          </div>
+          <Reveal>
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">Ready to get started?</h2>
+            <p className="text-blue-100 mb-8 text-sm">
+              Join thousands of Ugandans buying and selling e-waste components
+            </p>
+            <div className="flex justify-center gap-4 flex-wrap">
+              <Link to="/register"
+                className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
+                Create Free Account
+              </Link>
+              <Link to="/login"
+                className="btn-lift border border-white/70 text-white hover:bg-white/10 hover:border-white px-8 py-3 rounded-xl font-semibold text-sm">
+                Sign In
+              </Link>
+            </div>
+          </Reveal>
         </section>
       )}
 
-      {/* ── Footer ──────────────────────────────────────────── */}
-      <footer className="bg-[#0b2545] text-blue-200/70 py-10 px-4 text-sm">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between gap-8">
-          <div className="max-w-xs">
-            <div className="flex items-center gap-2 mb-3 text-white">
-              <Recycle width={20} height={20} className="text-blue-300" />
-              <span className="font-bold">E-Waste Mart</span>
-            </div>
-            <p className="text-xs leading-relaxed">
-              Empowering circular economy in Uganda through responsible e-waste trading.
-            </p>
-          </div>
-          <div className="flex gap-12">
-            <div>
-              <p className="font-semibold text-white mb-3 text-xs">Platform</p>
-              <ul className="space-y-2 text-xs">
-                <li><button onClick={goBrowse} className="hover:text-white transition">Browse</button></li>
-                <li><Link to="/login" className="hover:text-white transition">Login</Link></li>
-                <li><Link to="/register" className="hover:text-white transition">Register</Link></li>
-              </ul>
-            </div>
-            <div>
-              <p className="font-semibold text-white mb-3 text-xs">Company</p>
-              <ul className="space-y-2 text-xs">
-                <li><button onClick={() => howRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition">About</button></li>
-                <li><a href="mailto:hello@ewastemart.ug" className="hover:text-white transition">Contact</a></li>
-              </ul>
-            </div>
-          </div>
-        </div>
-        <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/10 text-center text-xs">
-          © 2026 E-Waste Mart — Empowering circular economy in Uganda
-        </div>
-      </footer>
+      <PublicFooter />
+      <BackToTopButton />
     </div>
   );
 }

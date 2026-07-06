@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -14,6 +14,7 @@ import {
   FiRefreshCw,
   FiStar
 } from 'react-icons/fi';
+import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { browseProducts, getCategories } from '../../api/products';
 
@@ -120,26 +121,25 @@ export default function BrowsePage() {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
-  const fetchProducts = () => {
-    setLoading(true);
-    const params = {};
-    if (search)    params.search      = search;
-    if (category)  params.category_id = category;
-    if (condition) params.condition   = condition;
-    browseProducts(params)
-      .then(res => setProducts(res.data.data || []))
-      .finally(() => setLoading(false));
-  };
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories().then(res => res.data.categories),
+  });
 
-  useEffect(() => {
-    getCategories().then(res => setCategories(res.data.categories));
-  }, []);
-
-  useEffect(() => { fetchProducts(); }, [category, condition]);
+  const { data: products = [], isLoading: loading } = useQuery({
+    queryKey: ['browse-products', appliedSearch, category, condition],
+    queryFn: () => {
+      const params = {};
+      if (appliedSearch) params.search      = appliedSearch;
+      if (category)      params.category_id = category;
+      if (condition)     params.condition   = condition;
+      return browseProducts(params).then(res => res.data.data || []);
+    },
+  });
 
   const handleSearch = (e) => {
     e.preventDefault();
-    fetchProducts();
+    setAppliedSearch(search);
   };
 
   const clearFilters = () => {

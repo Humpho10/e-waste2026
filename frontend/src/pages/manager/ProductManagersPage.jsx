@@ -1,8 +1,16 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  BiBriefcase, BiSearch, BiPhone, BiMapPin, BiEdit2, BiTrash2,
+  BiX, BiAlertCircle, BiPlus, BiMail,
+} from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
-import { getProductManagers, createProductManager, getManagerCategories } from '../../api/manager';
+import {
+  getProductManagers, createProductManager, updateProductManager,
+  deleteProductManager, getManagerCategories,
+} from '../../api/manager';
 import { useToast } from '../../components/Toast';
-import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
+import { useAuth } from '../../context/AuthContext';
 
 function SkeletonCard() {
   return (
@@ -22,7 +30,7 @@ function SkeletonCard() {
   );
 }
 
-function PMCard({ pm, onRefresh }) {
+function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
   const initials = pm.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
@@ -33,9 +41,19 @@ function PMCard({ pm, onRefresh }) {
         </div>
         <div className="flex-1 overflow-hidden">
           <h3 className="font-bold text-gray-800 truncate">{pm.name}</h3>
-          <p className="text-xs text-gray-400 truncate mt-0.5">{pm.email}</p>
-          {pm.phone && <p className="text-xs text-gray-400 mt-0.5">📞 {pm.phone}</p>}
-          {pm.location && <p className="text-xs text-gray-400 mt-0.5">📍 {pm.location}</p>}
+          <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1.5">
+            <BiMail size={12} /> {pm.email}
+          </p>
+          {pm.phone && (
+            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+              <BiPhone size={12} /> {pm.phone}
+            </p>
+          )}
+          {pm.location && (
+            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+              <BiMapPin size={12} /> {pm.location}
+            </p>
+          )}
         </div>
         <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${pm.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
       </div>
@@ -63,25 +81,65 @@ function PMCard({ pm, onRefresh }) {
           {pm.is_active ? 'Active' : 'Inactive'}
         </span>
       </div>
+
+      {(canEdit || canDelete) && (
+        <div className="flex gap-2 mt-4">
+          {canEdit && (
+            <button
+              onClick={() => onEdit(pm)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 py-2 rounded-lg transition"
+            >
+              <BiEdit2 size={13} /> Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              onClick={() => onDelete(pm)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 hover:bg-red-50 py-2 rounded-lg transition"
+            >
+              <BiTrash2 size={13} /> Remove
+            </button>
+          )}
+        </div>
+      )}
     </div>
   );
 }
 
-// ---------- Create PM Modal ----------
-function CreatePMModal({ onClose, onCreated }) {
-  const [categories, setCategories] = useState([]);
+// ---------- Shared Create/Edit Form Modal ----------
+function PMFormModal({ mode, initial, onClose, onSaved }) {
+  const isEdit = mode === 'edit';
   const [form, setForm] = useState({
-    name: '', email: '', password: '',
-    phone: '', location: '', category_id: [],
+    name: initial?.name || '',
+    email: initial?.email || '',
+    password: '',
+    phone: initial?.phone || '',
+    location: initial?.location || '',
+    category_id: initial?.assignments?.map(a => a.category?.category_id).filter(Boolean) || [],
   });
-  const [error, setError]       = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
+  const [error, setError] = useState('');
   const { toast } = useToast();
 
-  useEffect(() => {
-    getManagerCategories().then(res => setCategories(res.data.categories));
-  }, []);
+  // Note: uses the /manager/categories endpoint, a different shape/scope
+  // from the buyer-facing /categories endpoint, so it gets its own key.
+  const { data: categories = [] } = useQuery({
+    queryKey: ['manager-categories'],
+    queryFn: () => getManagerCategories().then(res => res.data.categories),
+  });
+
+  const saveMutation = useMutation({
+    mutationFn: (data) => isEdit ? updateProductManager(initial.id, data) : createProductManager(data),
+    onSuccess: () => {
+      toast(isEdit ? 'Product Manager updated successfully' : 'Product Manager created successfully', 'success');
+      onSaved();
+      onClose();
+    },
+    onError: (err) => {
+      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to save';
+      setError(errorMsg);
+      toast(errorMsg, 'error');
+    },
+  });
 
   const toggleCategory = (id) => {
     setForm(prev => ({
@@ -92,27 +150,21 @@ function CreatePMModal({ onClose, onCreated }) {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (form.category_id.length === 0) {
       setError('Please assign at least one category.');
       return;
     }
     setError('');
-    setSubmitting(true);
-    try {
-      await createProductManager(form);
-      toast('Product Manager created successfully', 'success');
-      onCreated();
-      onClose();
-    } catch (err) {
-      const errorMsg = err.response?.data?.error || err.response?.data?.message || 'Failed to create';
-      setError(errorMsg);
-      toast(errorMsg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+
+    const payload = { ...form };
+    if (isEdit && !payload.password) delete payload.password; // keep existing password if left blank
+
+    saveMutation.mutate(payload);
   };
+
+  const submitting = saveMutation.isPending;
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -122,18 +174,24 @@ function CreatePMModal({ onClose, onCreated }) {
         <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 shrink-0">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-white font-bold text-lg">Create Product Manager</h3>
-              <p className="text-orange-200 text-xs mt-0.5">They will receive a notification with login details</p>
+              <h3 className="text-white font-bold text-lg flex items-center gap-2">
+                <BiBriefcase size={18} /> {isEdit ? 'Edit Product Manager' : 'Create Product Manager'}
+              </h3>
+              <p className="text-orange-200 text-xs mt-0.5">
+                {isEdit ? 'Update their details, password, or category assignments' : 'They will receive a notification with login details'}
+              </p>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">✕</button>
+            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+              <BiX size={16} />
+            </button>
           </div>
         </div>
 
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-5 flex gap-2">
-              <span>⚠️</span><span>{error}</span>
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-5 flex gap-2 items-start">
+              <BiAlertCircle size={16} className="shrink-0 mt-0.5" /><span>{error}</span>
             </div>
           )}
 
@@ -143,7 +201,7 @@ function CreatePMModal({ onClose, onCreated }) {
               {[
                 { label: 'Full Name', name: 'name',     type: 'text',     placeholder: 'e.g. David Omondi',   required: true  },
                 { label: 'Email',     name: 'email',    type: 'email',    placeholder: 'pm@ewaste.org',        required: true  },
-                { label: 'Password',  name: 'password', type: 'password', placeholder: 'Min. 8 characters',   required: true  },
+                { label: isEdit ? 'New Password' : 'Password', name: 'password', type: 'password', placeholder: isEdit ? 'Leave blank to keep current' : 'Min. 8 characters', required: !isEdit },
                 { label: 'Phone',     name: 'phone',    type: 'tel',      placeholder: '0700 000 000',         required: false },
               ].map(({ label, name, type, placeholder, required }) => (
                 <div key={name}>
@@ -204,9 +262,9 @@ function CreatePMModal({ onClose, onCreated }) {
                 {submitting ? (
                   <span className="flex items-center justify-center gap-2">
                     <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Creating...
+                    {isEdit ? 'Saving...' : 'Creating...'}
                   </span>
-                ) : 'Create Product Manager'}
+                ) : (isEdit ? 'Save Changes' : 'Create Product Manager')}
               </button>
               <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition">
                 Cancel
@@ -219,27 +277,75 @@ function CreatePMModal({ onClose, onCreated }) {
   );
 }
 
+// ---------- Delete Confirmation Modal ----------
+function DeleteConfirmModal({ pm, onClose, onConfirmed }) {
+  const { toast } = useToast();
+
+  const deleteMutation = useMutation({
+    mutationFn: () => deleteProductManager(pm.id),
+    onSuccess: (res) => {
+      toast(res.data?.message || 'Product Manager removed', 'success');
+      onConfirmed();
+      onClose();
+    },
+    onError: (err) => {
+      toast(err.response?.data?.message || err.response?.data?.error || 'Failed to remove', 'error');
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div className="p-6">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-4">
+            <BiTrash2 size={20} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">Remove {pm.name}?</h3>
+          <p className="text-sm text-gray-500 mb-6">
+            This permanently deletes their account, login access, and category assignments. This can't be undone.
+          </p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => deleteMutation.mutate()}
+              disabled={deleteMutation.isPending}
+              className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition"
+            >
+              {deleteMutation.isPending ? 'Removing...' : 'Yes, remove'}
+            </button>
+            <button
+              onClick={onClose}
+              disabled={deleteMutation.isPending}
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Main Page ----------
 export default function ProductManagersPage() {
-  const [pms, setPms]           = useState([]);
-  const [loading, setLoading]   = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const [search, setSearch]     = useState('');
+  const [editingPM, setEditingPM] = useState(null);
+  const [deletingPM, setDeletingPM] = useState(null);
+  const [search, setSearch] = useState('');
 
-  // 👇 Get permissions from auth context
   const { permissions } = useAuth();
+  const queryClient = useQueryClient();
 
-  // 👇 Check if user has permission to create PMs
   const canCreatePM = permissions?.includes('pm-create') || false;
+  const canEditPM = permissions?.includes('pm-edit') || false;
+  const canDeletePM = permissions?.includes('pm-delete') || false;
 
-  const fetchPMs = () => {
-    setLoading(true);
-    getProductManagers()
-      .then(res => setPms(res.data.product_managers))
-      .finally(() => setLoading(false));
-  };
+  const { data: pms = [], isLoading: loading } = useQuery({
+    queryKey: ['product-managers'],
+    queryFn: () => getProductManagers().then(res => res.data.product_managers),
+  });
 
-  useEffect(() => { fetchPMs(); }, []);
+  const invalidatePMs = () => queryClient.invalidateQueries({ queryKey: ['product-managers'] });
 
   const filtered = pms.filter(pm =>
     pm.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -250,18 +356,19 @@ export default function ProductManagersPage() {
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Product Managers</h2>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <BiBriefcase className="text-orange-500" size={22} /> Product Managers
+          </h2>
           <p className="text-gray-500 text-sm mt-1">
             {pms.length} product manager{pms.length !== 1 ? 's' : ''} on the platform
           </p>
         </div>
-        {/* 👇 "Create Product Manager" button only appears if user has pm-create permission */}
         {canCreatePM && (
           <button
             onClick={() => setShowModal(true)}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
           >
-            <span>+</span> Create Product Manager
+            <BiPlus size={16} /> Create Product Manager
           </button>
         )}
       </div>
@@ -269,7 +376,7 @@ export default function ProductManagersPage() {
       {pms.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+            <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
             <input
               type="text" placeholder="Search product managers..."
               value={search} onChange={e => setSearch(e.target.value)}
@@ -285,12 +392,13 @@ export default function ProductManagersPage() {
         </div>
       ) : pms.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center text-3xl mx-auto mb-4">🧑‍💼</div>
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+            <BiBriefcase size={28} className="text-orange-400" />
+          </div>
           <h3 className="text-lg font-bold text-gray-700 mb-2">No product managers yet</h3>
           <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
             Create product managers and assign them to categories to help review listings.
           </p>
-          {/* 👇 "Create First Product Manager" button only appears if user has pm-create permission */}
           {canCreatePM && (
             <button
               onClick={() => setShowModal(true)}
@@ -307,12 +415,29 @@ export default function ProductManagersPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-          {filtered.map(pm => <PMCard key={pm.id} pm={pm} onRefresh={fetchPMs} />)}
+          {filtered.map(pm => (
+            <PMCard
+              key={pm.id}
+              pm={pm}
+              canEdit={canEditPM}
+              canDelete={canDeletePM}
+              onEdit={setEditingPM}
+              onDelete={setDeletingPM}
+            />
+          ))}
         </div>
       )}
 
       {showModal && (
-        <CreatePMModal onClose={() => setShowModal(false)} onCreated={fetchPMs} />
+        <PMFormModal mode="create" onClose={() => setShowModal(false)} onSaved={invalidatePMs} />
+      )}
+
+      {editingPM && (
+        <PMFormModal mode="edit" initial={editingPM} onClose={() => setEditingPM(null)} onSaved={invalidatePMs} />
+      )}
+
+      {deletingPM && (
+        <DeleteConfirmModal pm={deletingPM} onClose={() => setDeletingPM(null)} onConfirmed={invalidatePMs} />
       )}
     </ManagerLayout>
   );

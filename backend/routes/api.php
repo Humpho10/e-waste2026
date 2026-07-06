@@ -11,6 +11,7 @@ use App\Http\Controllers\SellerRatingController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StatsController;
+use App\Http\Controllers\ContactController;
 
 // ── Auth ──────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
@@ -18,11 +19,13 @@ Route::prefix('auth')->group(function () {
     Route::post('/login',    [AuthController::class, 'login']);
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
     Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
+    Route::post('/verify-email',    [AuthController::class, 'verifyEmail']);    // ← new
 });
 
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me',      [AuthController::class, 'me']);
+    Route::post('/resend-verification', [AuthController::class, 'resendVerification']); // ← new
 });
 
 // ── Public Routes (No Auth Required) ─────────────────────────
@@ -32,6 +35,9 @@ Route::get('/products', [ProductController::class, 'browse']);
 Route::get('/products/{slug}-{hashId}', [ProductController::class, 'show']); // CHANGED: Now uses slug-hashId
 
 Route::get('/stats', [StatsController::class, 'index']); // ← new public stats
+
+// Contact page — rate-limited (5/min per IP) since it's unauthenticated.
+Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:5,1');
 
 // ── SUPER ADMIN ROUTES ───────────────────────────────────────
 // These require permissions that only Super Admin has (or anyone with these specific permissions)
@@ -77,6 +83,7 @@ Route::middleware(['auth:sanctum', 'check.permissions:user-list,role-list,permis
 Route::middleware(['auth:sanctum', 'check.permissions:category-list,product-list,user-list'])->prefix('manager')->group(function () {
     // Dashboard
     Route::get('/stats', [ManagerController::class, 'stats']);
+    Route::get('/stats/trends', [ManagerController::class, 'trends']); // ← new
 
     // ── Users ──────────────────────────────────────────────
     Route::get('/users',                       [ManagerController::class, 'listUsers'])->middleware('can:user-list');
@@ -86,6 +93,8 @@ Route::middleware(['auth:sanctum', 'check.permissions:category-list,product-list
     // ── Product Managers ──────────────────────────────────
     Route::get('/product-managers',            [ManagerController::class, 'listProductManagers'])->middleware('can:pm-list');
     Route::post('/product-managers',           [ManagerController::class, 'createProductManager'])->middleware('can:pm-create');
+    Route::put('/product-managers/{id}',       [ManagerController::class, 'updateProductManager'])->middleware('can:pm-edit'); // ← new
+    Route::delete('/product-managers/{id}',    [ManagerController::class, 'deleteProductManager'])->middleware('can:pm-delete'); // ← new
 
     // ── Category Assignments ──────────────────────────────
     Route::post('/assignments',                [ManagerController::class, 'assignCategory'])->middleware('can:pm-assign-category');

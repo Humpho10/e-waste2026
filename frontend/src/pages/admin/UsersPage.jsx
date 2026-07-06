@@ -1,13 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/admin';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function UsersPage() {
-  const [users, setUsers]       = useState([]);
-  const [roles, setRoles]       = useState([]);
-  const [loading, setLoading]   = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editing, setEditing]   = useState(null);
   const [form, setForm]         = useState({ name: '', email: '', password: '', role: '' });
@@ -18,20 +16,23 @@ function UsersPage() {
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
   const canCreateUser = permissions?.includes('user-create') || false;
   const canEditUser = permissions?.includes('user-edit') || false;
   const canDeleteUser = permissions?.includes('user-delete') || false;
 
-  const fetchUsers = () => {
-    getUsers().then(res => setUsers(res.data.users)).finally(() => setLoading(false));
-  };
+  const { data: users = [], isLoading: loading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: () => getUsers().then(res => res.data.users),
+  });
 
-  useEffect(() => {
-    fetchUsers();
-    getRoles().then(res => setRoles(res.data.roles));
-  }, []);
+  // Shared with RolesPage.jsx — same /admin/roles endpoint.
+  const { data: roles = [] } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: () => getRoles().then(res => res.data.roles),
+  });
 
   const openCreate = () => {
     setEditing(null);
@@ -47,37 +48,42 @@ function UsersPage() {
     setShowModal(true);
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    try {
-      if (editing) {
-        await updateUser(editing.id, form);
-        toast('User updated successfully', 'success');
-      } else {
-        await createUser(form);
-        toast('User created successfully', 'success');
-      }
+  const saveMutation = useMutation({
+    mutationFn: ({ editing, form }) => editing ? updateUser(editing.id, form) : createUser(form),
+    onSuccess: (_res, { editing }) => {
+      toast(editing ? 'User updated successfully' : 'User created successfully', 'success');
       setShowModal(false);
-      fetchUsers();
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Something went wrong.';
       setError(msg);
       toast(msg, 'error');
-    }
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    setError('');
+    saveMutation.mutate({ editing, form });
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
-    try {
-      await deleteUser(id);
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteUser(id),
+    onSuccess: () => {
       toast('User deleted successfully', 'success');
-      fetchUsers();
-    } catch (err) {
+      queryClient.invalidateQueries({ queryKey: ['admin-users'] });
+    },
+    onError: (err) => {
       const msg = err.response?.data?.message || 'Could not delete user.';
       toast(msg, 'error');
       alert(msg);
-    }
+    },
+  });
+
+  const handleDelete = (id) => {
+    if (!window.confirm('Are you sure you want to delete this user?')) return;
+    deleteMutation.mutate(id);
   };
 
   return (

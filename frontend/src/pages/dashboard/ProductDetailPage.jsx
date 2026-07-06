@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -20,6 +20,7 @@ import {
   FiDollarSign,
   FiSearch
 } from 'react-icons/fi';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import SellerRating from '../../components/SellerRating';
 import { getProduct } from '../../api/products';
@@ -42,11 +43,8 @@ export default function ProductDetailPage() {
   const hashId = lastDash > -1 ? slugId.slice(lastDash + 1) : '';
   const { user, permissions } = useAuth();
   const navigate   = useNavigate();
-  const [product, setProduct]     = useState(null);
-  const [loading, setLoading]     = useState(true);
   const [activeImg, setActiveImg] = useState(0);
   const [message, setMessage]     = useState('');
-  const [sending, setSending]     = useState(false);
   const [sent, setSent]           = useState(false);
   const [msgError, setMsgError]   = useState('');
 
@@ -59,28 +57,33 @@ export default function ProductDetailPage() {
       .then(res => setProduct(res.data.product))
       .finally(() => setLoading(false));
   }, [slug, hashId]);
+  const { data: product, isLoading: loading } = useQuery({
+    queryKey: ['product', id],
+    queryFn: () => getProduct(id).then(res => res.data.product),
+  });
 
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    if (!message.trim() || !canSendMessage) return;
-    setSending(true);
-    setMsgError('');
-    try {
-      await sendMessage({
-        product_id:   product.product_id,
-        message_text: message,
-      });
+  const sendMutation = useMutation({
+    mutationFn: (text) => sendMessage({ product_id: product.product_id, message_text: text }),
+    onSuccess: () => {
       setSent(true);
       toast('Message sent to seller', 'success');
       setMessage('');
-    } catch (err) {
+    },
+    onError: (err) => {
       const errorMsg = err.response?.data?.message || 'Failed to send message.';
       setMsgError(errorMsg);
       toast(errorMsg, 'error');
-    } finally {
-      setSending(false);
-    }
+    },
+  });
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (!message.trim() || !canSendMessage) return;
+    setMsgError('');
+    sendMutation.mutate(message);
   };
+
+  const sending = sendMutation.isPending;
 
   if (loading) return (
     <DashboardLayout>

@@ -12,6 +12,9 @@ use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\ProductApprovedMail;
+use App\Mail\ProductRejectedMail;
 
 class ProductManagerController extends Controller
 {
@@ -167,6 +170,10 @@ class ProductManagerController extends Controller
             'is_read'      => false,
         ]);
 
+        if ($product->seller?->email) {
+            Mail::to($product->seller->email)->send(new ProductApprovedMail($product));
+        }
+
         return response()->json([
             'message' => 'Product approved successfully.',
             'product' => $product,
@@ -228,6 +235,10 @@ class ProductManagerController extends Controller
             'message_text' => "Your listing \"{$product->title}\" was rejected for the following reason: {$validated['rejection_reason']}",
             'is_read'      => false,
         ]);
+
+        if ($product->seller?->email) {
+            Mail::to($product->seller->email)->send(new ProductRejectedMail($product));
+        }
 
         return response()->json([
             'message' => 'Product rejected and seller has been notified.',

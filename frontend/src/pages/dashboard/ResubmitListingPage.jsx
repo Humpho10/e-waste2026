@@ -20,6 +20,7 @@ import {
   FiSlash,
   FiRotateCcw
 } from 'react-icons/fi';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, resubmitProduct } from '../../api/products';
 import { useToast } from '../../components/Toast';
@@ -35,13 +36,12 @@ export default function ResubmitListingPage() {
   const { hashId } = useParams();
   const navigate   = useNavigate();
   const { toast }  = useToast();
-  const { permissions } = useAuth();
+  const { permissions } = useAuth(); // 👈 Get permissions
+  const queryClient = useQueryClient();
 
   const canResubmit = permissions?.includes('product-create') || false;
 
-  const [product, setProduct]       = useState(null);
-  const [loading, setLoading]       = useState(true);
-  const [submitting, setSubmitting] = useState(false);
+  const [formSeeded, setFormSeeded] = useState(false);
   const [form, setForm] = useState({
     title: '', description: '', condition: '', price: '', specification: '',
   });
@@ -51,8 +51,34 @@ export default function ResubmitListingPage() {
   const [newImages, setNewImages] = useState([]);
   const [newPreviews, setNewPreviews] = useState([]);
 
+  // Shares a cache entry with MyListingsPage's status="all" view.
+  const { data: listings, isLoading: loading } = useQuery({
+    queryKey: ['my-listings', 'all'],
+    queryFn: () => myListings().then(res => res.data.products || []),
+    enabled: canResubmit,
+  });
+
+  const product = listings?.find(p => p.product_id == id);
+
+  // Seed the editable form once the listing is found — render-time pattern
+  // (not a useEffect) for the same reason as ProfileForm.jsx: TanStack
+  // Query v5 has no onSuccess on useQuery, and setState-in-effect trips the
+  // project's react-hooks/set-state-in-effect lint rule.
+  if (product && !formSeeded) {
+    setForm({
+      title:         product.title         || '',
+      description:   product.description   || '',
+      condition:     product.condition      || '',
+      price:         product.price          || '',
+      specification: product.specification  || '',
+    });
+    setExistingImages(product.images || []);
+    setFormSeeded(true);
+  }
+
+  // Redirect / toast side effects only — no local setState here, so this
+  // stays safe inside a useEffect.
   useEffect(() => {
-    // 👈 If user doesn't have permission, redirect immediately
     if (!canResubmit) {
       toast('You do not have permission to resubmit listings.', 'error');
       navigate('/dashboard/listings');
@@ -122,15 +148,32 @@ export default function ResubmitListingPage() {
 
       await resubmitProduct(hashId, data);
       toast('Listing resubmitted successfully — no additional fee required', 'success');
+      queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       navigate('/dashboard/listings');
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = err.response?.data?.errors;
       toast(errors ? Object.values(errors).flat().join(' · ') : err.response?.data?.message || 'Failed to resubmit', 'error');
-    } finally {
-      setSubmitting(false);
+    },
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!canResubmit) {
+      toast('You do not have permission to resubmit.', 'error');
+      return;
     }
+    const data = new FormData();
+    Object.entries(form).forEach(([key, val]) => {
+      if (val !== '' && val !== null) data.append(key, val);
+    });
+    newImages.forEach((img, i) => data.append(`images[${i}]`, img));
+    removedImageIds.forEach((id, i) => data.append(`remove_images[${i}]`, id));
+
+    resubmitMutation.mutate(data);
   };
 
+  const submitting = resubmitMutation.isPending;
   if (loading) return (
     <DashboardLayout>
       <div className="max-w-3xl mx-auto px-4 sm:px-6 animate-pulse">

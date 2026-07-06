@@ -1,24 +1,22 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getRoles, createRole, updateRole, deleteRole, getPermissions } from '../../api/admin';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function RolesPage() {
-  const [roles, setRoles]           = useState([]);
-  const [permissions, setPermissions] = useState([]);
-  const [loading, setLoading]       = useState(true);
   const [showModal, setShowModal]   = useState(false);
   const [editing, setEditing]       = useState(null);
   const [form, setForm]             = useState({ name: '', permissions: [] });
   const [error, setError]           = useState('');
-  const [submitting, setSubmitting] = useState(false);
 
   // 👇 Get permissions from auth context
   const { permissions: userPermissions } = useAuth();
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
   const canCreateRole = userPermissions?.includes('role-create') || false;
@@ -27,16 +25,47 @@ function RolesPage() {
 
   const systemRoles = ['Super-Admin', 'Admin', 'Product-Manager'];
 
-  const fetchData = () => {
-    Promise.all([getRoles(), getPermissions()])
-      .then(([rolesRes, permsRes]) => {
-        setRoles(rolesRes.data.roles);
-        setPermissions(permsRes.data.permissions);
-      })
-      .finally(() => setLoading(false));
-  };
+  // Shared with UsersPage.jsx — same /admin/roles endpoint.
+  const { data: roles = [], isLoading: rolesLoading } = useQuery({
+    queryKey: ['admin-roles'],
+    queryFn: () => getRoles().then(res => res.data.roles),
+  });
 
-  useEffect(() => { fetchData(); }, []);
+  // Shared with PermissionsPage.jsx — same /admin/permissions endpoint.
+  const { data: permissions = [], isLoading: permissionsLoading } = useQuery({
+    queryKey: ['admin-permissions'],
+    queryFn: () => getPermissions().then(res => res.data.permissions),
+  });
+
+  const loading = rolesLoading || permissionsLoading;
+
+  const saveMutation = useMutation({
+    mutationFn: ({ editing, form }) => editing ? updateRole(editing.id, form) : createRole(form),
+    onSuccess: (_res, { editing }) => {
+      toast(editing ? 'Role updated successfully' : 'Role created successfully', 'success');
+      setShowModal(false);
+      queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.message || 'Something went wrong.';
+      setError(msg);
+      toast(msg, 'error');
+    },
+  });
+
+  const submitting = saveMutation.isPending;
+
+  const deleteMutation = useMutation({
+    mutationFn: (id) => deleteRole(id),
+    onSuccess: () => {
+      toast('Role deleted successfully', 'success');
+      queryClient.invalidateQueries({ queryKey: ['admin-roles'] });
+    },
+    onError: (err) => {
+      const msg = err.response?.data?.message || 'Could not delete.';
+      toast(msg, 'error');
+    },
+  });
 
   const openCreate = () => {
     setEditing(null);
@@ -64,39 +93,15 @@ function RolesPage() {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     setError('');
-    setSubmitting(true);
-    try {
-      if (editing) {
-        await updateRole(editing.id, form);
-        toast('Role updated successfully', 'success');
-      } else {
-        await createRole(form);
-        toast('Role created successfully', 'success');
-      }
-      setShowModal(false);
-      fetchData();
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Something went wrong.';
-      setError(msg);
-      toast(msg, 'error');
-    } finally {
-      setSubmitting(false);
-    }
+    saveMutation.mutate({ editing, form });
   };
 
-  const handleDelete = async (id, name) => {
+  const handleDelete = (id, name) => {
     if (!window.confirm(`Delete role "${name}"?`)) return;
-    try {
-      await deleteRole(id);
-      toast('Role deleted successfully', 'success');
-      fetchData();
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Could not delete.';
-      toast(msg, 'error');
-    }
+    deleteMutation.mutate(id);
   };
 
   // Group permissions by prefix for easier reading
@@ -308,4 +313,4 @@ function RolesPage() {
   );
 }
 
-export default RolesPage;
+export default RolesPage;

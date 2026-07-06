@@ -33,6 +33,14 @@ import {
   FiBarChart2,
   FiTool
 } from 'react-icons/fi';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import DashboardLayout from '../../layouts/DashboardLayout';
+import { getCategories, createProduct } from '../../api/products';
+import { resendVerification } from '../../api/auth';
+import { useToast } from '../../components/Toast';
+import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 const steps = [
   { id: 1, label: 'Category', icon: FiGrid, description: 'Choose where your item belongs' },
@@ -74,6 +82,24 @@ export default function CreateListingPage() {
   const [images, setImages] = useState([]);
   const [imagePreviews, setImagePreviews] = useState([]);
   const [isDragging, setIsDragging] = useState(false);
+  const [step, setStep]             = useState(1);
+  const [error, setError]           = useState('');
+  const [images, setImages]         = useState([]);
+  const [previews, setPreviews]     = useState([]);
+
+  // 👇 Get permissions and toast
+  const { permissions, user } = useAuth();
+  const { toast } = useToast();
+
+  // 👇 Check if user has permission to create listings
+  const canCreate = permissions?.includes('product-create') || false;
+  const isVerified = !!user?.email_verified_at;
+
+  const resendMutation = useMutation({
+    mutationFn: resendVerification,
+    onSuccess: () => toast('Verification email sent. Check your inbox.', 'success'),
+    onError: (err) => toast(err.response?.data?.message || 'Could not send verification email.', 'error'),
+  });
 
   const [form, setForm] = useState({
     category_id: '',
@@ -100,6 +126,13 @@ export default function CreateListingPage() {
       setForm(prev => ({ ...prev, subcategory_id: '' }));
     }
   }, [form.category_id, categories]);
+  const { data: categories = [] } = useQuery({
+    queryKey: ['categories'],
+    queryFn: () => getCategories().then(res => res.data.categories),
+  });
+
+  // Derived from categories + the selected category_id — no effect needed.
+  const subcategories = categories.find(c => c.category_id == form.category_id)?.subcategories || [];
 
   // Image handling with react-dropzone
   const onDrop = (acceptedFiles) => {
@@ -149,8 +182,13 @@ export default function CreateListingPage() {
 
       await createProduct(data);
       toast.success('Your listing has been submitted for review!');
+  const createMutation = useMutation({
+    mutationFn: (data) => createProduct(data),
+    onSuccess: () => {
+      toast('Listing submitted for approval successfully', 'success');
       navigate('/dashboard/listings');
-    } catch (err) {
+    },
+    onError: (err) => {
       const errors = err.response?.data?.errors;
       if (errors) {
         const errorMessages = Object.values(errors).flat().join(' · ');
@@ -158,11 +196,28 @@ export default function CreateListingPage() {
       } else {
         toast.error(err.response?.data?.message || 'Failed to submit listing.');
       }
+      const errorMsg = errors
+        ? Object.values(errors).flat().join(' · ')
+        : err.response?.data?.message || 'Failed to submit listing.';
+      setError(errorMsg);
+      toast(errorMsg || 'Failed to submit listing', 'error');
       setStep(2);
-    } finally {
-      setSubmitting(false);
-    }
+    },
+  });
+
+  const handleSubmit = () => {
+    setError('');
+    const data = new FormData();
+    Object.entries(form).forEach(([key, val]) => {
+      if (val) data.append(key, val);
+    });
+    images.forEach((img, i) => {
+      data.append(`images[${i}]`, img);
+    });
+    createMutation.mutate(data);
   };
+
+  const submitting = createMutation.isPending;
 
   const canNext = () => {
     if (step === 1) return form.category_id && form.subcategory_id;
@@ -174,6 +229,28 @@ export default function CreateListingPage() {
   const selectedSub = subcategories.find(s => s.subcategory_id == form.subcategory_id);
 
   const progress = ((step - 1) / (steps.length - 1)) * 100;
+
+  // 👇 Block listing creation until the user has verified their email
+  if (!isVerified) {
+    return (
+      <DashboardLayout>
+        <div className="max-w-2xl mx-auto text-center py-16">
+          <div className="text-5xl mb-4">📧</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">Verify your email first</h2>
+          <p className="text-gray-500 mb-6">
+            You need to verify your email address before you can create a listing. Check your inbox for the verification link.
+          </p>
+          <button
+            onClick={() => resendMutation.mutate()}
+            disabled={resendMutation.isPending}
+            className="btn-lift bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60"
+          >
+            {resendMutation.isPending ? 'Sending…' : 'Resend verification email'}
+          </button>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -274,6 +351,52 @@ export default function CreateListingPage() {
                     return (
                       <motion.button
                         key={cat.category_id}
+        {/* Error */}
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6 flex gap-2">
+            <span>⚠️</span><span>{error}</span>
+          </div>
+        )}
+
+        {/* Step content */}
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-8">
+
+          {/* Step 1 — Category */}
+          {step === 1 && (
+            <div>
+              <h3 className="font-bold text-gray-800 text-lg mb-1">Choose a Category</h3>
+              <p className="text-gray-500 text-sm mb-6">Select the category that best describes your item</p>
+
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
+                {categories.map(cat => (
+                  <button
+                    key={cat.category_id}
+                    type="button"
+                    onClick={() => setForm({ ...form, category_id: cat.category_id, subcategory_id: '' })}
+                    className={`p-4 rounded-xl border-2 text-left transition
+                      ${form.category_id == cat.category_id
+                        ? 'border-blue-500 bg-blue-50'
+                        : 'border-gray-200 hover:border-blue-300 bg-white'
+                      }`}
+                  >
+                    <span className="text-2xl block mb-1">
+                      {{'Electronics':'💻','Mobile Devices':'📱','Accessories':'🔌','Networking':'🌐','Appliances':'🖨️','Other':'📦'}[cat.name] || '📦'}
+                    </span>
+                    <span className={`text-sm font-medium ${form.category_id == cat.category_id ? 'text-blue-700' : 'text-gray-700'}`}>
+                      {cat.name}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
+              {/* Subcategory */}
+              {subcategories.length > 0 && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-2">Subcategory</label>
+                  <div className="flex flex-wrap gap-2">
+                    {subcategories.map(sub => (
+                      <button
+                        key={sub.subcategory_id}
                         type="button"
                         onClick={() => setForm({ ...form, category_id: cat.category_id })}
                         className={`p-4 rounded-2xl border-2 text-left transition-all duration-200

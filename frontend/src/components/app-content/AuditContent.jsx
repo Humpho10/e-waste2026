@@ -1,20 +1,20 @@
 // src/components/app-content/AuditContent.jsx
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { getAuditTrail } from '../../api/admin';
 import { useAuth } from '../../context/AuthContext';
 
 export default function AuditContent() {
-  const [audit, setAudit] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState({ action: 'all', table: 'all' });
 
   const { permissions } = useAuth();
 
-  useEffect(() => {
-    getAuditTrail(filter)
-      .then(res => setAudit(res.data.audit))
-      .finally(() => setLoading(false));
-  }, [filter]);
+  // Distinct key from admin/AuditPage.jsx — this call passes filter params
+  // to the endpoint, so it's a different query shape and shouldn't share cache.
+  const { data: audit = [], isLoading: loading } = useQuery({
+    queryKey: ['audit-trail', filter],
+    queryFn: () => getAuditTrail(filter).then(res => res.data.audit),
+  });
 
   const actionOptions = ['all', 'created', 'updated', 'deleted'];
   const tableOptions = ['all', 'users', 'products', 'categories', 'roles'];
@@ -87,4 +87,4 @@ export default function AuditContent() {
       )}
     </>
   );
-}
+}
