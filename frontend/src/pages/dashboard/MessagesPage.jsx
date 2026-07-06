@@ -1,4 +1,21 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FiMessageCircle,
+  FiSend,
+  FiUser,
+  FiPackage,
+  FiClock,
+  FiChevronLeft,
+  FiSearch,
+  FiCheck,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiMoreVertical,
+  FiPhone,
+  FiMail,
+  FiMapPin
+} from 'react-icons/fi';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
@@ -6,9 +23,13 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 
 export default function MessagesPage() {
-  const { user, permissions } = useAuth(); // 👈 Get permissions
+  const { user, permissions } = useAuth();
   const [active, setActive]               = useState(null);
   const [newMsg, setNewMsg]               = useState('');
+  const [searchTerm, setSearchTerm]       = useState('');
+  const messagesEndRef = useRef(null);
+  const [isMobileView, setIsMobileView]   = useState(false);
+  const [showMobileChat, setShowMobileChat] = useState(false);
 
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -21,13 +42,22 @@ export default function MessagesPage() {
     queryFn: () => getConversations().then(res => res.data.conversations || []),
   });
 
+  // Filter conversations by search
+  const filteredConversations = conversations.filter(conv =>
+    conv.other_person?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    conv.product_title?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   const { data: messages = [] } = useQuery({
     queryKey: ['messages', active?.product_id],
     queryFn: () => getProductMessages(active.product_id).then(res => res.data.messages || []),
     enabled: !!active,
   });
 
-  const openConversation = (conv) => setActive(conv);
+  const openConversation = (conv) => {
+    setActive(conv);
+    if (isMobileView) setShowMobileChat(true);
+  };
 
   const sendMutation = useMutation({
     mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
@@ -47,14 +77,36 @@ export default function MessagesPage() {
 
   const sending = sendMutation.isPending;
 
-  return (
-    <DashboardLayout>
-      <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Messages</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Your conversations with buyers and sellers</p>
-      </div>
+  // Check if mobile view
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobileView(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
+  // Format time
+  const formatTime = (date) => {
+    return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Format date for message grouping
+  const formatDate = (date) => {
+    const msgDate = new Date(date);
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    
+    if (msgDate.toDateString() === today.toDateString()) {
+      return 'Today';
+    } else if (msgDate.toDateString() === yesterday.toDateString()) {
+      return 'Yesterday';
+    } else {
+      return msgDate.toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' });
+    }
+  };
 
         {/* Conversations list */}
         <div className="w-72 border-r border-gray-100 dark:border-slate-800 flex flex-col shrink-0">

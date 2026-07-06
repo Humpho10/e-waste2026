@@ -41,11 +41,13 @@ export default function MyListingsPage() {
     onError: (err) => toast(err.response?.data?.message || 'Could not delete.', 'error'),
   });
 
-  const handleDelete = async (id, title) => {
+  const handleDelete = async (hashId, title) => { // uses hashId
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
     setDeleting(id);
     try {
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(hashId);
+    } catch {
+      // error toast is handled in the mutation's onError
     } finally {
       setDeleting(null);
     }

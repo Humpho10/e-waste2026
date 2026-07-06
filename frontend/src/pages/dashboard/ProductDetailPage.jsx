@@ -1,5 +1,25 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FiArrowLeft,
+  FiMapPin,
+  FiTag,
+  FiPackage,
+  FiUser,
+  FiPhone,
+  FiMail, 
+  FiMessageCircle,
+  FiSend,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiHeart,
+  FiShare2,
+  FiEye,
+  FiCalendar,
+  FiDollarSign,
+  FiSearch
+} from 'react-icons/fi';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getProduct } from '../../api/products';
@@ -21,8 +41,8 @@ export default function ProductDetailPage() {
   const canSendMessage = permissions?.includes('message-send') || false;
 
   const { data: product, isLoading: loading } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => getProduct(id).then(res => res.data.product),
+    queryKey: ['product', slug, hashId],
+    queryFn: () => getProduct(slug, hashId).then(res => res.data.product),
   });
 
   const sendMutation = useMutation({

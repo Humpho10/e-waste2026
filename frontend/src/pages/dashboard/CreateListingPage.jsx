@@ -1,8 +1,39 @@
-import { useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useDropzone } from 'react-dropzone';
+import { toast } from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getCategories, createProduct } from '../../api/products';
+import { 
+  FiChevronRight, 
+  FiChevronLeft, 
+  FiCheck, 
+  FiX,
+  FiUpload,
+  FiImage,
+  FiTag,
+  FiFileText,
+  FiGrid,
+  FiList,
+  FiArrowRight,
+  FiArrowLeft,
+  FiCamera,
+  FiTrash2,
+  FiEye,
+  FiAlertCircle,
+  FiMonitor,
+  FiSmartphone,
+  FiZap,
+  FiGlobe,
+  FiPrinter,
+  FiPackage,
+  FiStar,
+  FiThumbsUp,
+  FiBarChart2,
+  FiTool
+} from 'react-icons/fi';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { resendVerification } from '../../api/auth';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
@@ -16,9 +47,16 @@ const steps = [
 
 export default function CreateListingPage() {
   const navigate = useNavigate();
-  const [step, setStep]             = useState(1);
+  const fileInputRef = useRef(null);
+  
+  const [step, setStep] = useState(1);
+  const [categories, setCategories] = useState([]);
+  const [subcategories, setSubcategories] = useState([]);
+  const [submitting, setSubmitting] = useState(false);
+  const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
+  const [isDragging, setIsDragging] = useState(false);
   const [error, setError]           = useState('');
-  const [images, setImages]         = useState([]);
   const [previews, setPreviews]     = useState([]);
 
   // 👇 Get permissions and toast
@@ -67,13 +105,22 @@ export default function CreateListingPage() {
     setPreviews(prev => prev.filter((_, i) => i !== index));
   };
 
-  const createMutation = useMutation({
-    mutationFn: (data) => createProduct(data),
-    onSuccess: () => {
-      toast('Listing submitted for approval successfully', 'success');
+  const handleSubmit = async () => {
+    setSubmitting(true);
+    
+    try {
+      const data = new FormData();
+      Object.entries(form).forEach(([key, val]) => {
+        if (val) data.append(key, val);
+      });
+      images.forEach((img, i) => {
+        data.append(`images[${i}]`, img);
+      });
+
+      await createProduct(data);
+      toast.success('Your listing has been submitted for review!');
       navigate('/dashboard/listings');
-    },
-    onError: (err) => {
+    } catch (err) {
       const errors = err.response?.data?.errors;
       const errorMsg = errors
         ? Object.values(errors).flat().join(' · ')
@@ -81,22 +128,10 @@ export default function CreateListingPage() {
       setError(errorMsg);
       toast(errorMsg || 'Failed to submit listing', 'error');
       setStep(2);
-    },
-  });
-
-  const handleSubmit = () => {
-    setError('');
-    const data = new FormData();
-    Object.entries(form).forEach(([key, val]) => {
-      if (val) data.append(key, val);
-    });
-    images.forEach((img, i) => {
-      data.append(`images[${i}]`, img);
-    });
-    createMutation.mutate(data);
+    } finally {
+      setSubmitting(false);
+    }
   };
-
-  const submitting = createMutation.isPending;
 
   const canNext = () => {
     if (step === 1) return form.category_id && form.subcategory_id;
@@ -178,52 +213,29 @@ export default function CreateListingPage() {
           ))}
         </div>
 
-        {/* Error */}
-        {error && (
-          <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-6 flex gap-2">
-            <span>⚠️</span><span>{error}</span>
-          </div>
-        )}
+        {/* Animated content */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -20 }}
+            transition={{ duration: 0.3 }}
+            className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8"
+          >
+            {/* Step content */}
+            {step === 1 && (
+              <div>
+                <h3 className="text-xl font-bold text-gray-800 mb-1">Choose a Category</h3>
+                <p className="text-gray-500 text-sm mb-6">Select the category that best describes your item</p>
 
-        {/* Step content */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-8">
-
-          {/* Step 1 — Category */}
-          {step === 1 && (
-            <div>
-              <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg mb-1">Choose a Category</h3>
-              <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Select the category that best describes your item</p>
-
-              <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-6">
-                {categories.map(cat => (
-                  <button
-                    key={cat.category_id}
-                    type="button"
-                    onClick={() => setForm({ ...form, category_id: cat.category_id, subcategory_id: '' })}
-                    className={`p-4 rounded-xl border-2 text-left transition
-                      ${form.category_id == cat.category_id
-                        ? 'border-blue-500 bg-blue-50 dark:bg-blue-950/40'
-                        : 'border-gray-200 dark:border-slate-700 hover:border-blue-300 bg-white dark:bg-slate-900'
-                      }`}
-                  >
-                    <span className="text-2xl block mb-1">
-                      {{'Electronics':'💻','Mobile Devices':'📱','Accessories':'🔌','Networking':'🌐','Appliances':'🖨️','Other':'📦'}[cat.name] || '📦'}
-                    </span>
-                    <span className={`text-sm font-medium ${form.category_id == cat.category_id ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'}`}>
-                      {cat.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-
-              {/* Subcategory */}
-              {subcategories.length > 0 && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-2">Subcategory</label>
-                  <div className="flex flex-wrap gap-2">
-                    {subcategories.map(sub => (
-                      <button
-                        key={sub.subcategory_id}
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
+                  {categories.map(cat => {
+                    const isSelected = form.category_id == cat.category_id;
+                    const CatIcon = categoryIcons[cat.name] || FiPackage;
+                    return (
+                      <motion.button
+                        key={cat.category_id}
                         type="button"
                         onClick={() => setForm({ ...form, subcategory_id: sub.subcategory_id })}
                         className={`px-3 py-1.5 rounded-full text-sm border transition
