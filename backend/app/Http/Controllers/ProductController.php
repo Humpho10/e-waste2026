@@ -15,6 +15,7 @@ use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 
 class ProductController extends Controller
 {
@@ -76,23 +77,70 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(12);
 
+        // FIX: Transform the response to include slug and hash_id
+        $products->getCollection()->transform(function ($product) {
+            return [
+                'product_id' => $product->product_id,
+                'slug' => $product->slug,
+                'hash_id' => $product->hash_id,
+                'title' => $product->title,
+                'description' => $product->description,
+                'price' => $product->price,
+                'condition' => $product->condition,
+                'specification' => $product->specification,
+                'status' => $product->status,
+                'created_at' => $product->created_at,
+                'seller' => $product->seller,
+                'category' => $product->category,
+                'subCategory' => $product->subCategory,
+                'images' => $product->images,
+            ];
+        });
+
         return response()->json($products, 200);
     }
 
     // ── PUBLIC — View single approved listing ──────────────────
     // No permission check – public route
-    public function show(int $id)
+    public function show($slug, $hashId)
     {
+        // Find product by hash_id
         $product = Product::with([
             'seller:id,name,location,phone',
             'category:category_id,name',
             'subCategory:subcategory_id,sub_category_name',
             'images',
-        ])->where('status', 'approved')
-          ->findOrFail($id);
+        ])->where('hash_id', $hashId)
+          ->where('status', 'approved')
+          ->firstOrFail();
 
+        // If slug doesn't match current title, redirect to correct slug
+        $expectedSlug = Str::slug($product->title);
+        if ($slug !== $expectedSlug) {
+            return redirect()->route('product.show', [
+                'slug' => $expectedSlug,
+                'hashId' => $product->hash_id
+            ], 301);
+        }
+
+        // FIX: Include slug and hash_id in the response
         return response()->json([
-            'product' => $product
+            'product' => [
+                'product_id' => $product->product_id,
+                'slug' => $product->slug,
+                'hash_id' => $product->hash_id,
+                'title' => $product->title,
+                'description' => $product->description,
+                'price' => $product->price,
+                'condition' => $product->condition,
+                'specification' => $product->specification,
+                'status' => $product->status,
+                'created_at' => $product->created_at,
+                'seller' => $product->seller,
+                'category' => $product->category,
+                'subCategory' => $product->subCategory,
+                'images' => $product->images,
+            ]
         ], 200);
     }
 
@@ -165,20 +213,38 @@ class ProductController extends Controller
             ]);
         }
 
+        // FIX: Include slug and hash_id in the response
+        $productData = $product->load(['category', 'subCategory', 'images']);
+        $responseProduct = [
+            'product_id' => $productData->product_id,
+            'slug' => $productData->slug,
+            'hash_id' => $productData->hash_id,
+            'title' => $productData->title,
+            'description' => $productData->description,
+            'price' => $productData->price,
+            'condition' => $productData->condition,
+            'specification' => $productData->specification,
+            'status' => $productData->status,
+            'created_at' => $productData->created_at,
+            'category' => $productData->category,
+            'subCategory' => $productData->subCategory,
+            'images' => $productData->images,
+        ];
+
         return response()->json([
             'message' => 'Listing created successfully and submitted for approval.',
-            'product' => $product->load(['category', 'subCategory', 'images']),
+            'product' => $responseProduct,
         ], 201);
     }
 
     // ── SELLER — Edit own listing ──────────────────────────────
-    public function update(Request $request, int $id)
+    public function update(Request $request, $hashId)
     {
         if (!$this->user->can('product-edit')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to edit products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can edit their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -209,20 +275,38 @@ class ProductController extends Controller
 
         AuditLogger::log('products', $product->product_id, 'updated', $oldValue, $product->toArray());
 
+        // FIX: Include slug and hash_id in the response
+        $productData = $product->load(['category', 'subCategory', 'images']);
+        $responseProduct = [
+            'product_id' => $productData->product_id,
+            'slug' => $productData->slug,
+            'hash_id' => $productData->hash_id,
+            'title' => $productData->title,
+            'description' => $productData->description,
+            'price' => $productData->price,
+            'condition' => $productData->condition,
+            'specification' => $productData->specification,
+            'status' => $productData->status,
+            'created_at' => $productData->created_at,
+            'category' => $productData->category,
+            'subCategory' => $productData->subCategory,
+            'images' => $productData->images,
+        ];
+
         return response()->json([
             'message' => 'Listing updated successfully.',
-            'product' => $product->load(['category', 'subCategory', 'images']),
+            'product' => $responseProduct,
         ], 200);
     }
 
     // ── SELLER — Delete own listing ────────────────────────────
-    public function destroy(int $id)
+    public function destroy($hashId)
     {
         if (!$this->user->can('product-delete')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can delete their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -248,7 +332,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        AuditLogger::log('products', $id, 'deleted', $oldValue, null);
+        AuditLogger::log('products', $product->product_id, 'deleted', $oldValue, null);
 
         return response()->json([
             'message' => 'Listing deleted successfully.'
@@ -275,20 +359,40 @@ class ProductController extends Controller
 
         $products = $query->latest()->get();
 
+        // FIX: Transform the response to include slug and hash_id
+        $transformedProducts = $products->map(function ($product) {
+            return [
+                'product_id' => $product->product_id,
+                'slug' => $product->slug,
+                'hash_id' => $product->hash_id,
+                'title' => $product->title,
+                'description' => $product->description,
+                'price' => $product->price,
+                'condition' => $product->condition,
+                'specification' => $product->specification,
+                'status' => $product->status,
+                'rejection_reason' => $product->rejection_reason,
+                'created_at' => $product->created_at,
+                'category' => $product->category,
+                'subCategory' => $product->subCategory,
+                'images' => $product->images,
+            ];
+        });
+
         return response()->json([
-            'products' => $products,
-            'count'    => $products->count(),
+            'products' => $transformedProducts,
+            'count'    => $transformedProducts->count(),
         ], 200);
     }
 
     // ── SELLER — Resubmit after rejection ─────────────────────
-    public function resubmit(Request $request, int $id)
+    public function resubmit(Request $request, $hashId)
     {
         if (!$this->user->can('product-create')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to resubmit products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can resubmit their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -374,20 +478,38 @@ class ProductController extends Controller
             ]);
         }
 
+        // FIX: Include slug and hash_id in the response
+        $productData = $product->load(['category', 'subCategory', 'images']);
+        $responseProduct = [
+            'product_id' => $productData->product_id,
+            'slug' => $productData->slug,
+            'hash_id' => $productData->hash_id,
+            'title' => $productData->title,
+            'description' => $productData->description,
+            'price' => $productData->price,
+            'condition' => $productData->condition,
+            'specification' => $productData->specification,
+            'status' => $productData->status,
+            'created_at' => $productData->created_at,
+            'category' => $productData->category,
+            'subCategory' => $productData->subCategory,
+            'images' => $productData->images,
+        ];
+
         return response()->json([
             'message' => 'Listing resubmitted successfully. No additional fee required.',
-            'product' => $product->load(['category', 'subCategory', 'images']),
+            'product' => $responseProduct,
         ], 200);
     }
 
     // ── SELLER/BUYER — Send a message about a product ─────────
-    public function sendMessage(Request $request, int $id)
+    public function sendMessage(Request $request, $hashId)
     {
         if (!$this->user->can('message-send')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to send messages.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         $validated = $request->validate([
             'recipient_id' => 'required|exists:users,id',
@@ -425,13 +547,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER/BUYER — View messages on a product ──────────────
-    public function getMessages(int $id)
+    public function getMessages($hashId)
     {
         if (!$this->user->can('message-view')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to view messages.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         $messages = Message::with([
             'sender:id,name',

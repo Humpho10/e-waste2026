@@ -158,7 +158,7 @@ function ProductCard({ product }) {
   const handleClick = () => {
     if (!token)            navigate('/login');
     else if (product._sample) navigate('/dashboard/browse');
-    else                   navigate(`/dashboard/product/${product.product_id}`);
+    else                   navigate(`/dashboard/product/${product.slug}-${product.hash_id}`);
   };
 
   const img = product.images?.[0]?.image_path;
