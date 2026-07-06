@@ -111,9 +111,6 @@ function ProductCard({ product, index }) {
 
 export default function BrowsePage() {
   const [searchParams] = useSearchParams();
-  const [products, setProducts]   = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [loading, setLoading]     = useState(true);
   const [search, setSearch]       = useState(searchParams.get('search') || '');
   const [appliedSearch, setAppliedSearch] = useState(searchParams.get('search') || '');
   const [category, setCategory]   = useState(searchParams.get('category_id') || '');
