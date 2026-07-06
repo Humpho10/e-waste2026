@@ -225,10 +225,6 @@ export const Activity = (p) => (
   <svg {...base(p)}><polyline points="22 12 18 12 15 21 9 3 6 12 2 12" /></svg>
 );
 
-export const Clock = (p) => (
-  <svg {...base(p)}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
-);
-
 export const XCircle = (p) => (
   <svg {...base(p)}><circle cx="12" cy="12" r="10" /><line x1="15" y1="9" x2="9" y2="15" /><line x1="9" y1="9" x2="15" y2="15" /></svg>
 );

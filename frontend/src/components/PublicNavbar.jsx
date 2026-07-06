@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { logoutUser } from '../api/auth';
+import ThemeToggle from './ThemeToggle';
 import { Recycle, Menu, X } from './icons';
 
 // Shared top nav for every public-facing page (Home, About, Contact...).
@@ -58,6 +59,7 @@ export default function PublicNavbar({ onAbout, onHome, onBrowse }) {
 
         {/* Desktop auth */}
         <div className="hidden md:flex items-center gap-3">
+          <ThemeToggle variant="navbar" />
           {token ? (
             <>
               <Link to={dashboardPath()} className="text-sm text-blue-200 font-medium hover:text-white transition">
@@ -83,9 +85,12 @@ export default function PublicNavbar({ onAbout, onHome, onBrowse }) {
         </div>
 
         {/* Mobile toggle */}
-        <button className="md:hidden text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
-          {menuOpen ? <X /> : <Menu />}
-        </button>
+        <div className="md:hidden flex items-center gap-2">
+          <ThemeToggle variant="navbar" />
+          <button className="text-white p-1" onClick={() => setMenuOpen(o => !o)} aria-label="Menu">
+            {menuOpen ? <X /> : <Menu />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
