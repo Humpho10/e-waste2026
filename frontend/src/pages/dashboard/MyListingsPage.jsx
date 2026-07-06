@@ -83,17 +83,13 @@ export default function MyListingsPage() {
     onError: (err) => toast(err.response?.data?.message || 'Could not delete.', 'error'),
   });
 
-  const handleDelete = async (hashId, title) => { // CHANGED: now uses hashId
+  const handleDelete = async (hashId, title) => { // uses hashId
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
     setDeleting(hashId);
     try {
-      await deleteProduct(hashId);
-      toast('Listing deleted successfully', 'success');
-      fetchListings();
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Could not delete.';
-      toast(msg, 'error');
-      await deleteMutation.mutateAsync(id);
+      await deleteMutation.mutateAsync(hashId);
+    } catch {
+      // error toast is handled in the mutation's onError
     } finally {
       setDeleting(null);
     }

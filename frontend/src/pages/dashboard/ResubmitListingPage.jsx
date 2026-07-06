@@ -58,7 +58,7 @@ export default function ResubmitListingPage() {
     enabled: canResubmit,
   });
 
-  const product = listings?.find(p => p.product_id == id);
+  const product = listings?.find(p => p.hash_id == hashId);
 
   // Seed the editable form once the listing is found — render-time pattern
   // (not a useEffect) for the same reason as ProfileForm.jsx: TanStack
@@ -84,32 +84,17 @@ export default function ResubmitListingPage() {
       navigate('/dashboard/listings');
       return;
     }
-
-    myListings()
-      .then(res => {
-        const found = res.data.products?.find(p => p.hash_id == hashId);
-        if (!found) {
-          toast('Listing not found', 'error');
-          navigate('/dashboard/listings');
-          return;
-        }
-        if (found.status !== 'rejected') {
-          toast('Only rejected listings can be resubmitted', 'warning');
-          navigate('/dashboard/listings');
-          return;
-        }
-        setProduct(found);
-        setForm({
-          title:         found.title         || '',
-          description:   found.description   || '',
-          condition:     found.condition      || '',
-          price:         found.price          || '',
-          specification: found.specification  || '',
-        });
-        setExistingImages(found.images || []);
-      })
-      .finally(() => setLoading(false));
-  }, [hashId, canResubmit]);
+    if (loading) return;
+    if (!product) {
+      toast('Listing not found', 'error');
+      navigate('/dashboard/listings');
+      return;
+    }
+    if (product.status !== 'rejected') {
+      toast('Only rejected listings can be resubmitted', 'warning');
+      navigate('/dashboard/listings');
+    }
+  }, [hashId, canResubmit, loading, product]);
 
   const remainingSlots = 5 - (existingImages.length - removedImageIds.length) - newImages.length;
 
@@ -131,22 +116,9 @@ export default function ResubmitListingPage() {
     );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!canResubmit) {
-      toast('You do not have permission to resubmit.', 'error');
-      return;
-    }
-    setSubmitting(true);
-    try {
-      const data = new FormData();
-      Object.entries(form).forEach(([key, val]) => {
-        if (val !== '' && val !== null) data.append(key, val);
-      });
-      newImages.forEach((img, i) => data.append(`images[${i}]`, img));
-      removedImageIds.forEach((id, i) => data.append(`remove_images[${i}]`, id));
-
-      await resubmitProduct(hashId, data);
+  const resubmitMutation = useMutation({
+    mutationFn: (data) => resubmitProduct(hashId, data),
+    onSuccess: () => {
       toast('Listing resubmitted successfully — no additional fee required', 'success');
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
       navigate('/dashboard/listings');

@@ -60,9 +60,6 @@ const typeConfig = {
 };
 
 export default function NotificationsPage() {
-  const [notifications, setNotifications] = useState([]);
-  const [loading, setLoading]             = useState(true);
-
   // 👇 Get toast function
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -80,10 +77,6 @@ export default function NotificationsPage() {
     onError: (err) => toast(err.response?.data?.message || 'Failed to mark as read', 'error'),
   });
 
-  const handleMarkAllRead = async () => {
-    try {
-      await markAllRead();
-      fetchNotifs();
   const markAllReadMutation = useMutation({
     mutationFn: markAllRead,
     onSuccess: () => {
@@ -94,10 +87,6 @@ export default function NotificationsPage() {
     onError: (err) => toast(err.response?.data?.message || 'Failed to mark all as read', 'error'),
   });
 
-  const handleDelete = async (id) => {
-    try {
-      await deleteNotification(id);
-      fetchNotifs();
   const deleteMutation = useMutation({
     mutationFn: deleteNotification,
     onSuccess: () => {

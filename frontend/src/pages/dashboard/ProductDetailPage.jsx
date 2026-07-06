@@ -8,7 +8,7 @@ import {
   FiPackage,
   FiUser,
   FiPhone,
-  FiMail,
+  FiMail, 
   FiMessageCircle,
   FiSend,
   FiCheckCircle,
@@ -52,14 +52,9 @@ export default function ProductDetailPage() {
 
   const canSendMessage = permissions?.includes('message-send') || false;
 
-  useEffect(() => {
-    getProduct(slug, hashId)
-      .then(res => setProduct(res.data.product))
-      .finally(() => setLoading(false));
-  }, [slug, hashId]);
   const { data: product, isLoading: loading } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => getProduct(id).then(res => res.data.product),
+    queryKey: ['product', slug, hashId],
+    queryFn: () => getProduct(slug, hashId).then(res => res.data.product),
   });
 
   const sendMutation = useMutation({
