@@ -13,12 +13,12 @@
 <body>
     <div class="container">
         <div class="header">
-            <h2>♻️ NWT Marketplace</h2>
+            <h2>♻️ E-Waste Mart</h2>
             <p>Product Manager Account Created</p>
         </div>
         <div class="body">
             <p>Hello <strong>{{ $name }}</strong>,</p>
-            <p>Your Product Manager account has been created on the NWT Marketplace platform. You can now log in and start managing product listings in your assigned categories.</p>
+            <p>Your Product Manager account has been created on E-Waste Mart. You can now log in and start managing product listings in your assigned categories.</p>
 
             <div class="credentials">
                 <p><strong>Your Login Credentials:</strong></p>
@@ -27,10 +27,10 @@
             </div>
 
             <p>Please log in and change your password as soon as possible.</p>
-            <p>Login at: <a href="http://localhost:5173/login">NWT Marketplace</a></p>
+            <p>Login at: <a href="{{ $loginUrl }}">E-Waste Mart</a></p>
         </div>
         <div class="footer">
-            <p>© 2026 NWT Uganda. Promoting circular economy through e-waste management.</p>
+            <p>© 2026 E-Waste Mart. Promoting circular economy through e-waste management.</p>
         </div>
     </div>
 </body>

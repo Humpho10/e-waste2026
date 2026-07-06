@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\ProductApprovedMail;
 use App\Mail\ProductRejectedMail;
+use App\Mail\ProductManagerCreatedMail;
 
 class ManagerController extends Controller
 {
@@ -34,7 +35,7 @@ class ManagerController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view users.'], 403);
         }
 
-        $users = User::doesntHave('roles')
+        $users = User::role('User')
                     ->orderBy('created_at', 'desc')
                     ->get(['id', 'name', 'email', 'phone', 'location', 'is_active', 'created_at']);
 
@@ -135,14 +136,7 @@ class ManagerController extends Controller
         // Send email notification
         $plainPassword = $validated['password'];
         try {
-            Mail::send('emails.pm_created', [
-                'name'     => $pm->name,
-                'email'    => $pm->email,
-                'password' => $plainPassword,
-            ], function ($mail) use ($pm) {
-                $mail->to($pm->email)
-                     ->subject('Your Product Manager Account Has Been Created');
-            });
+            Mail::to($pm->email)->send(new ProductManagerCreatedMail($pm->name, $pm->email, $plainPassword));
         } catch (\Exception $e) {
             // Silently log — don't fail the request
         }
@@ -238,7 +232,7 @@ class ManagerController extends Controller
 
         $pms = User::role('Product-Manager')
                     ->orderBy('created_at', 'desc')
-                    ->get(['id', 'name', 'email', 'phone', 'is_active', 'created_at']);
+                    ->get(['id', 'name', 'email', 'phone', 'location', 'is_active', 'created_at']);
 
         foreach ($pms as $pm) {
             $pm->assignments = ProductManagerAssignment::where('product_manager_id', $pm->id)
@@ -248,6 +242,94 @@ class ManagerController extends Controller
 
         return response()->json([
             'product_managers' => $pms
+        ], 200);
+    }
+
+    // ── UPDATE PRODUCT MANAGER ────────────────────────────────
+    public function updateProductManager(Request $request, $id)
+    {
+        if (!$this->user()->can('pm-edit')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to edit product managers.'], 403);
+        }
+
+        $pm = User::findOrFail($id);
+
+        if (!$pm->hasRole('Product-Manager')) {
+            return response()->json(['error' => 'This account is not a Product Manager.'], 400);
+        }
+
+        $validated = $request->validate([
+            'name'           => 'required|string|max:100',
+            'email'          => 'required|email|unique:users,email,' . $pm->id,
+            'phone'          => 'nullable|string|max:20',
+            'location'       => 'nullable|string|max:100',
+            'password'       => 'nullable|string|min:8',
+            'category_id'    => 'required|array|min:1',
+            'category_id.*'  => 'exists:categories,category_id',
+        ]);
+
+        $oldValue = $pm->toArray();
+
+        $pm->name     = $validated['name'];
+        $pm->email    = $validated['email'];
+        $pm->phone    = $validated['phone'] ?? null;
+        $pm->location = $validated['location'] ?? null;
+
+        if (!empty($validated['password'])) {
+            $pm->password = Hash::make($validated['password']);
+        }
+
+        $pm->save();
+
+        // Replace category assignments with the submitted set.
+        ProductManagerAssignment::where('product_manager_id', $pm->id)->delete();
+        foreach ($validated['category_id'] as $categoryId) {
+            ProductManagerAssignment::create([
+                'product_manager_id' => $pm->id,
+                'category_id'        => $categoryId,
+            ]);
+        }
+
+        AuditLogger::log('users', $pm->id, 'updated', $oldValue, $pm->toArray());
+
+        $assignments = ProductManagerAssignment::where('product_manager_id', $pm->id)
+            ->with('category:category_id,name')
+            ->get();
+
+        return response()->json([
+            'message'         => 'Product Manager updated successfully.',
+            'product_manager' => $pm,
+            'assignments'     => $assignments,
+        ], 200);
+    }
+
+    // ── DELETE PRODUCT MANAGER ────────────────────────────────
+    public function deleteProductManager($id)
+    {
+        if (!$this->user()->can('pm-delete')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to delete product managers.'], 403);
+        }
+
+        $pm = User::findOrFail($id);
+
+        if (!$pm->hasRole('Product-Manager')) {
+            return response()->json(['error' => 'This account is not a Product Manager.'], 400);
+        }
+
+        if ($pm->id === Auth::id()) {
+            return response()->json(['message' => 'You cannot delete your own account.'], 403);
+        }
+
+        $oldValue = $pm->toArray();
+        $pmName   = $pm->name;
+
+        $pm->tokens()->delete();
+        $pm->delete(); // cascades: product_manager_assignments rows; nulls out reviewed_by on any products they reviewed
+
+        AuditLogger::log('users', $id, 'deleted', $oldValue, null);
+
+        return response()->json([
+            'message' => "{$pmName} has been removed.",
         ], 200);
     }
 
@@ -534,7 +616,7 @@ class ManagerController extends Controller
 
         return response()->json([
             'stats' => [
-                'total_users'            => User::doesntHave('roles')->count(),
+                'total_users'            => User::role('User')->count(),
                 'total_product_managers' => User::role('Product-Manager')->count(),
                 'total_products'         => Product::count(),
                 'pending_products'       => Product::where('status', 'pending')->count(),
@@ -542,6 +624,42 @@ class ManagerController extends Controller
                 'rejected_products'      => Product::where('status', 'rejected')->count(),
             ],
         ], 200);
+    }
+
+    // ── STATS: TRENDS (last 30 days) ──────────────────────────
+    public function trends()
+    {
+        if (!$this->user()->can('dashboard-view') &&
+            !$this->user()->can('product-list') &&
+            !$this->user()->can('user-list')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to view dashboard stats.'], 403);
+        }
+
+        $days  = 30;
+        $start = now()->subDays($days - 1)->startOfDay();
+
+        $listingCounts = Product::where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        $userCounts = User::role('User')
+            ->where('created_at', '>=', $start)
+            ->selectRaw('DATE(created_at) as day, COUNT(*) as total')
+            ->groupBy('day')
+            ->pluck('total', 'day');
+
+        $series = [];
+        for ($i = 0; $i < $days; $i++) {
+            $date = $start->copy()->addDays($i)->format('Y-m-d');
+            $series[] = [
+                'date'     => $date,
+                'listings' => (int) ($listingCounts[$date] ?? 0),
+                'users'    => (int) ($userCounts[$date] ?? 0),
+            ];
+        }
+
+        return response()->json(['trends' => $series], 200);
     }
 
     // ── GET PROFILE ───────────────────────────────────────────

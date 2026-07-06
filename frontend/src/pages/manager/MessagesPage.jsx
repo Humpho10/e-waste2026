@@ -1,20 +1,18 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { BiMessageSquare, BiSend } from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
 import { useBadge } from '../../context/BadgeContext';
-// 👇 Import toast hook
-import { useToast } from '../../components/Toast'; // or '../context/ToastContext' if that's where it lives
+import { useToast } from '../../components/Toast';
 
-export default function WorkspaceMessagesPage() {
-  const { user }                          = useAuth();
-  const [active, setActive]               = useState(null);
-  const [newMsg, setNewMsg]               = useState('');
+export default function ManagerMessagesPage() {
+  const { user }             = useAuth();
+  const [active, setActive]  = useState(null);
+  const [newMsg, setNewMsg]  = useState('');
 
-  // 👇 Get the refresh function from context
   const { refresh } = useBadge();
-  // 👇 Get toast function
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -41,13 +39,11 @@ export default function WorkspaceMessagesPage() {
   const sendMutation = useMutation({
     mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
     onSuccess: () => {
-      // 👇 Success toast
       toast('Message sent', 'success');
       setNewMsg('');
       queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id] });
     },
     onError: (err) => {
-      // 👇 Error toast
       const errorMsg = err.response?.data?.message || 'Failed to send message';
       toast(errorMsg, 'error');
     },
@@ -64,7 +60,9 @@ export default function WorkspaceMessagesPage() {
   return (
     <ManagerLayout>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Messages</h2>
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <BiMessageSquare className="text-orange-500" size={22} /> Messages
+        </h2>
         <p className="text-gray-500 text-sm mt-1">Communications regarding listings in your categories</p>
       </div>
 
@@ -89,7 +87,7 @@ export default function WorkspaceMessagesPage() {
               </div>
             ) : conversations.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-3xl mb-2">💬</p>
+                <BiMessageSquare size={32} className="mx-auto mb-2 text-gray-200" />
                 <p className="text-sm text-gray-400">No conversations yet</p>
               </div>
             ) : (
@@ -97,9 +95,9 @@ export default function WorkspaceMessagesPage() {
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-teal-50' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-orange-50' : ''}`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm shrink-0">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
@@ -108,7 +106,7 @@ export default function WorkspaceMessagesPage() {
                     <p className="text-xs text-gray-400 truncate">{conv.last_message}</p>
                   </div>
                   {conv.unread_count > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center shrink-0 mt-1">
+                    <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center shrink-0 mt-1">
                       {conv.unread_count}
                     </span>
                   )}
@@ -123,7 +121,7 @@ export default function WorkspaceMessagesPage() {
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
-                <p className="text-5xl mb-4">💬</p>
+                <BiMessageSquare size={48} className="mx-auto mb-4 text-gray-200" />
                 <p className="font-bold text-gray-700 mb-1">Select a conversation</p>
                 <p className="text-gray-400 text-sm">Choose a conversation from the left</p>
               </div>
@@ -131,7 +129,7 @@ export default function WorkspaceMessagesPage() {
           ) : (
             <>
               <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 flex items-center justify-center font-bold text-sm">
+                <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -144,9 +142,9 @@ export default function WorkspaceMessagesPage() {
                   const isMe = msg.sender_id === user?.id;
                   return (
                     <div key={msg.message_id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-teal-600 text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'}`}>
                         <p className="leading-relaxed">{msg.message_text}</p>
-                        <p className={`text-xs mt-1 ${isMe ? 'text-teal-200' : 'text-gray-400'}`}>
+                        <p className={`text-xs mt-1 ${isMe ? 'text-orange-100' : 'text-gray-400'}`}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -159,13 +157,18 @@ export default function WorkspaceMessagesPage() {
                   type="text" value={newMsg}
                   onChange={e => setNewMsg(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
                 />
                 <button
                   type="submit" disabled={sending || !newMsg.trim()}
-                  className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                  className="bg-orange-500 hover:bg-orange-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 flex items-center gap-2"
                 >
-                  {sending ? '...' : 'Send'}
+                  {sending ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <BiSend size={14} />
+                  )}
+                  Send
                 </button>
               </form>
             </>

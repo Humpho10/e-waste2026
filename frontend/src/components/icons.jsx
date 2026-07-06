@@ -78,6 +78,10 @@ export const Chat = (p) => (
   <svg {...base(p)}><path d="M21 11.5a8.4 8.4 0 0 1-9 8.4 9 9 0 0 1-4-.9L3 21l1.9-4a8.4 8.4 0 0 1-.9-4 8.4 8.4 0 0 1 8.4-8.4A8.4 8.4 0 0 1 21 11.5Z" /></svg>
 );
 
+export const User = (p) => (
+  <svg {...base(p)}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></svg>
+);
+
 export const Users = (p) => (
   <svg {...base(p)}><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" /><circle cx="9" cy="7" r="4" /><path d="M22 21v-2a4 4 0 0 0-3-3.9" /><path d="M16 3.1a4 4 0 0 1 0 7.8" /></svg>
 );
@@ -129,6 +133,26 @@ export const Package = (p) => (
 
 export const Camera = (p) => (
   <svg {...base(p)}><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2Z" /><circle cx="12" cy="13" r="4" /></svg>
+);
+
+export const Mail = (p) => (
+  <svg {...base(p)}><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 6-10 7L2 6" /></svg>
+);
+
+export const Send = (p) => (
+  <svg {...base(p)}><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></svg>
+);
+
+export const Clock = (p) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></svg>
+);
+
+export const ArrowUp = (p) => (
+  <svg {...base(p)}><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></svg>
+);
+
+export const Target = (p) => (
+  <svg {...base(p)}><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="6" /><circle cx="12" cy="12" r="2" /></svg>
 );
 
 export const Google = (p) => (
