@@ -2,6 +2,7 @@ import api from './axios';
 
 // Stats
 export const getManagerStats = () => api.get('/manager/stats');
+export const getManagerTrends = () => api.get('/manager/stats/trends');
 
 // Users
 export const getManagerUsers = () => api.get('/manager/users');
@@ -12,6 +13,8 @@ export const deactivateUser = (id) => api.patch(`/manager/users/${id}/deactivate
 // Product Managers
 export const getProductManagers = () => api.get('/manager/product-managers');
 export const createProductManager = (data) => api.post('/manager/product-managers', data);
+export const updateProductManager = (id, data) => api.put(`/manager/product-managers/${id}`, data);
+export const deleteProductManager = (id) => api.delete(`/manager/product-managers/${id}`);
 
 // Assignments
 export const assignCategory = (data) => api.post('/manager/assignments', data);

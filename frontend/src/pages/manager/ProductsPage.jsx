@@ -1,8 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  BiBox, BiSearch, BiEye, BiCheck, BiX, BiChevronLeft, BiChevronRight,
+  BiInbox, BiImage, BiCheckCircle, BiXCircle,
+} from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
-import { getManagerProducts, approveProduct, rejectProduct } from '../../api/manager';
+import { getManagerProducts, approveProduct, rejectProduct, getManagerStats } from '../../api/manager';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -11,6 +15,66 @@ const statusConfig = {
   approved: { label: 'Approved', color: 'bg-green-100 text-green-700',   dot: 'bg-green-400'  },
   rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700',       dot: 'bg-red-400'    },
 };
+
+function ImageThumb({ src, alt, className }) {
+  const [errored, setErrored] = useState(false);
+  if (!src || errored) {
+    return (
+      <div className={`flex items-center justify-center bg-gray-100 text-gray-300 ${className}`}>
+        <BiImage size={16} />
+      </div>
+    );
+  }
+  return <img src={src} alt={alt} className={className} onError={() => setErrored(true)} />;
+}
+
+// ---------- Approve Confirm Modal ----------
+function ApproveModal({ product, onClose, onApproved }) {
+  const { toast } = useToast();
+
+  const approveMutation = useMutation({
+    mutationFn: () => approveProduct(product.product_id),
+    onSuccess: () => {
+      toast(`"${product.title}" has been approved and is now live`, 'success');
+      onApproved(product.product_id);
+      onClose();
+    },
+    onError: (err) => {
+      toast(err.response?.data?.message || 'Failed to approve', 'error');
+      onClose();
+    },
+  });
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+        <div className="p-6">
+          <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mb-4">
+            <BiCheckCircle size={20} />
+          </div>
+          <h3 className="text-lg font-bold text-gray-800 mb-1">Approve "{product.title}"?</h3>
+          <p className="text-sm text-gray-500 mb-6">It will immediately go live on the marketplace and the seller will be notified.</p>
+          <div className="flex gap-3">
+            <button
+              onClick={() => approveMutation.mutate()}
+              disabled={approveMutation.isPending}
+              className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition"
+            >
+              {approveMutation.isPending ? 'Approving...' : 'Yes, approve'}
+            </button>
+            <button
+              onClick={onClose}
+              disabled={approveMutation.isPending}
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // ---------- Reject Modal ----------
 function RejectModal({ product, onClose, onRejected, toast }) {
@@ -45,10 +109,12 @@ function RejectModal({ product, onClose, onRejected, toast }) {
         <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
-              <h3 className="text-white font-bold text-lg">Reject Listing</h3>
+              <h3 className="text-white font-bold text-lg flex items-center gap-2"><BiXCircle size={18} /> Reject Listing</h3>
               <p className="text-red-200 text-xs mt-0.5 truncate max-w-xs">{product.title}</p>
             </div>
-            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
+            <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">
+              <BiX size={16} />
+            </button>
           </div>
         </div>
         <div className="p-6">
@@ -100,13 +166,6 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
   const [activeImg, setActiveImg] = useState(0);
   const images = product.images || [];
 
-  useEffect(() => {
-    if (product.images?.length > 0) {
-      console.log('Images:', product.images);
-      console.log('First image URL:', product.images[0]?.image_url);
-    }
-  }, [product]);
-
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
@@ -118,7 +177,9 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
               Submitted by {product.seller?.name} · {new Date(product.created_at).toLocaleDateString()}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">✕</button>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+            <BiX size={16} />
+          </button>
         </div>
 
         {/* Body */}
@@ -128,29 +189,20 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
             <div>
               <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center relative group mb-2">
                 {images.length > 0 ? (
-                  <img
-                    src={images[activeImg]?.image_url}
-                    alt={product.title}
-                    className="w-full h-full object-cover"
-                    onError={(e) => {
-                      console.error('Image load error:', e.target.src);
-                      e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<span class="text-5xl opacity-20">📦</span>';
-                    }}
-                  />
+                  <ImageThumb src={images[activeImg]?.image_url} alt={product.title} className="w-full h-full object-cover" />
                 ) : (
-                  <span className="text-5xl opacity-20">📦</span>
+                  <BiImage size={48} className="text-gray-200" />
                 )}
                 {images.length > 1 && (
                   <>
                     <button
                       onClick={() => setActiveImg(p => (p - 1 + images.length) % images.length)}
                       className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                    >‹</button>
+                    ><BiChevronLeft size={16} /></button>
                     <button
                       onClick={() => setActiveImg(p => (p + 1) % images.length)}
                       className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/40 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
-                    >›</button>
+                    ><BiChevronRight size={16} /></button>
                     <span className="absolute top-2 right-2 bg-black/40 text-white text-xs px-2 py-0.5 rounded-full">
                       {activeImg + 1}/{images.length}
                     </span>
@@ -165,22 +217,14 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                       onClick={() => setActiveImg(i)}
                       className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${activeImg === i ? 'border-blue-500' : 'border-gray-200 opacity-60'}`}
                     >
-                      <img
-                        src={img.image_url}
-                        alt="Thumbnail"
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          e.target.style.display = 'none';
-                          e.target.parentElement.innerHTML = '📦';
-                        }}
-                      />
+                      <ImageThumb src={img.image_url} alt="Thumbnail" className="w-full h-full object-cover" />
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Details - unchanged */}
+            {/* Details */}
             <div className="space-y-4">
               {[
                 { label: 'Category',    value: product.category?.name },
@@ -210,24 +254,24 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           </div>
         </div>
 
-        {/* Footer actions - unchanged */}
+        {/* Footer actions */}
         <div className="px-6 py-4 border-t border-gray-100 flex gap-3 shrink-0">
           {product.status === 'pending' && (
             <>
               {canApprove && (
                 <button
                   onClick={() => onApprove(product)}
-                  className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
                 >
-                  ✓ Approve Listing
+                  <BiCheck size={16} /> Approve Listing
                 </button>
               )}
               {canReject && (
                 <button
                   onClick={() => onReject(product)}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+                  className="flex-1 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold transition"
                 >
-                  ✕ Reject Listing
+                  <BiX size={16} /> Reject Listing
                 </button>
               )}
               {!canApprove && !canReject && (
@@ -238,13 +282,13 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
             </>
           )}
           {product.status === 'approved' && (
-            <div className="flex-1 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center">
-              ✓ This listing is approved and live
+            <div className="flex-1 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center">
+              <BiCheckCircle size={16} /> This listing is approved and live
             </div>
           )}
           {product.status === 'rejected' && (
-            <div className="flex-1 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center">
-              ✕ This listing has been rejected
+            <div className="flex-1 flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center">
+              <BiXCircle size={16} /> This listing has been rejected
             </div>
           )}
           <button
@@ -265,7 +309,7 @@ export default function ProductsPage() {
   const [status, setStatus] = useState(searchParams.get('status') || 'all');
   const [search, setSearch] = useState('');
   const [rejectTarget, setRejectTarget] = useState(null);
-  const [approving, setApproving] = useState(null);
+  const [approveTarget, setApproveTarget] = useState(null);
   const [viewProduct, setViewProduct] = useState(null);
 
   const { permissions } = useAuth();
@@ -280,29 +324,17 @@ export default function ProductsPage() {
     queryFn: () => getManagerProducts(status !== 'all' ? { status } : {}).then(res => res.data.products),
   });
 
+  // Shared with the Overview page — reuses the cache if already fetched.
+  const { data: stats } = useQuery({
+    queryKey: ['manager-stats'],
+    queryFn: () => getManagerStats().then(res => res.data.stats),
+  });
+
   const setProductStatus = (productId, newStatus) => {
     queryClient.setQueryData(['manager-products', status], (old = []) =>
       old.map(p => p.product_id === productId ? { ...p, status: newStatus } : p)
     );
-  };
-
-  const approveMutation = useMutation({
-    mutationFn: (productId) => approveProduct(productId),
-    onSuccess: (_res, productId) => setProductStatus(productId, 'approved'),
-  });
-
-  const handleApprove = async (product) => {
-    if (!window.confirm(`Approve "${product.title}"?`)) return;
-    setApproving(product.product_id);
-    try {
-      await approveMutation.mutateAsync(product.product_id);
-      toast(`"${product.title}" has been approved and is now live`, 'success');
-    } catch (err) {
-      const msg = err.response?.data?.message || 'Failed to approve';
-      toast(msg, 'error');
-    } finally {
-      setApproving(null);
-    }
+    queryClient.invalidateQueries({ queryKey: ['manager-stats'] });
   };
 
   const filtered = products.filter(p =>
@@ -310,32 +342,46 @@ export default function ProductsPage() {
     p.seller?.name.toLowerCase().includes(search.toLowerCase())
   );
 
+  const filters = [
+    { key: 'all',      label: 'All Listings', count: stats?.total_products },
+    { key: 'pending',  label: 'Pending',      count: stats?.pending_products },
+    { key: 'approved', label: 'Approved',     count: stats?.approved_products },
+    { key: 'rejected', label: 'Rejected',     count: stats?.rejected_products },
+  ];
+
   return (
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Listings</h2>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <BiBox className="text-orange-500" size={22} /> Listings
+          </h2>
           <p className="text-gray-500 text-sm mt-1">{products.length} listings found</p>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex flex-wrap gap-3 mb-6">
-        {['all', 'pending', 'approved', 'rejected'].map(s => (
+        {filters.map(f => (
           <button
-            key={s}
-            onClick={() => setStatus(s)}
-            className={`px-4 py-2 rounded-xl text-sm font-medium transition capitalize
-              ${status === s
+            key={f.key}
+            onClick={() => setStatus(f.key)}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition
+              ${status === f.key
                 ? 'bg-orange-500 text-white shadow-sm'
                 : 'bg-white border border-gray-200 text-gray-600 hover:border-orange-300'
               }`}
           >
-            {s === 'all' ? 'All Listings' : s}
+            {f.label}
+            {typeof f.count === 'number' && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${status === f.key ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+                {f.count}
+              </span>
+            )}
           </button>
         ))}
         <div className="relative ml-auto">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">🔍</span>
+          <BiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
           <input
             type="text"
             placeholder="Search listings..."
@@ -363,7 +409,9 @@ export default function ProductsPage() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="text-5xl mb-4">📭</div>
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+            <BiInbox size={28} className="text-orange-400" />
+          </div>
           <h3 className="font-bold text-gray-700 mb-2">No listings found</h3>
           <p className="text-gray-400 text-sm">
             {status !== 'all' ? `No ${status} listings at the moment.` : 'No listings have been submitted yet.'}
@@ -374,7 +422,6 @@ export default function ProductsPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 border-b border-gray-100">
               <tr>
-                {/* Added 'Image' column */}
                 {['Image', 'Listing', 'Seller', 'Category', 'Price', 'Condition', 'Status', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wide">
                     {h}
@@ -388,25 +435,13 @@ export default function ProductsPage() {
                 const firstImage = product.images?.[0];
                 return (
                   <tr key={product.product_id} className="border-t border-gray-50 hover:bg-gray-50 transition">
-                    {/* Image column */}
                     <td className="px-4 py-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 flex items-center justify-center shrink-0">
-                        {firstImage ? (
-                          <img
-                            src={firstImage.image_url}
-                            alt={product.title}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.target.style.display = 'none';
-                              e.target.parentElement.innerHTML = '📦';
-                            }}
-                          />
-                        ) : (
-                          <span className="text-lg">📦</span>
-                        )}
-                      </div>
+                      <ImageThumb
+                        src={firstImage?.image_url}
+                        alt={product.title}
+                        className="w-10 h-10 rounded-xl overflow-hidden shrink-0 object-cover"
+                      />
                     </td>
-                    {/* Listing info */}
                     <td className="px-4 py-3">
                       <p className="font-medium text-gray-800 max-w-[180px] truncate">{product.title}</p>
                       <p className="text-xs text-gray-400 mt-0.5">
@@ -436,41 +471,40 @@ export default function ProductsPage() {
                       <div className="flex gap-2 items-center">
                         <button
                           onClick={() => setViewProduct(product)}
-                          className="text-xs bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg font-medium transition"
+                          title="View details"
+                          className="w-8 h-8 flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 rounded-lg transition"
                         >
-                          👁 View
+                          <BiEye size={14} />
                         </button>
 
                         {product.status === 'pending' && canApprove && (
                           <button
-                            onClick={() => handleApprove(product)}
-                            disabled={approving === product.product_id}
-                            className="text-xs bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition disabled:opacity-50"
+                            onClick={() => setApproveTarget(product)}
+                            title="Approve"
+                            className="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 rounded-lg transition"
                           >
-                            {approving === product.product_id
-                              ? <span className="flex items-center gap-1"><span className="w-3 h-3 border border-green-400 border-t-green-600 rounded-full animate-spin" /> Approving...</span>
-                              : '✓ Approve'
-                            }
+                            <BiCheck size={14} />
                           </button>
                         )}
 
                         {product.status === 'pending' && canReject && (
                           <button
                             onClick={() => setRejectTarget(product)}
-                            className="text-xs bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg font-medium transition"
+                            title="Reject"
+                            className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 rounded-lg transition"
                           >
-                            ✕ Reject
+                            <BiX size={14} />
                           </button>
                         )}
 
                         {product.status === 'approved' && (
-                          <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-lg">
-                            ✓ Approved
+                          <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                            <BiCheckCircle size={12} /> Approved
                           </span>
                         )}
                         {product.status === 'rejected' && (
-                          <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-lg">
-                            ✕ Rejected
+                          <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                            <BiXCircle size={12} /> Rejected
                           </span>
                         )}
                       </div>
@@ -484,14 +518,19 @@ export default function ProductsPage() {
       )}
 
       {/* Modals */}
+      {approveTarget && (
+        <ApproveModal
+          product={approveTarget}
+          onClose={() => setApproveTarget(null)}
+          onApproved={(productId) => setProductStatus(productId, 'approved')}
+        />
+      )}
+
       {rejectTarget && (
         <RejectModal
           product={rejectTarget}
           onClose={() => setRejectTarget(null)}
-          onRejected={(productId) => {
-            setProductStatus(productId, 'rejected');
-            setRejectTarget(null);
-          }}
+          onRejected={(productId) => setProductStatus(productId, 'rejected')}
           toast={toast}
         />
       )}
@@ -500,7 +539,7 @@ export default function ProductsPage() {
         <ProductDetailModal
           product={viewProduct}
           onClose={() => setViewProduct(null)}
-          onApprove={(p) => { setViewProduct(null); handleApprove(p); }}
+          onApprove={(p) => { setViewProduct(null); setApproveTarget(p); }}
           onReject={(p) => { setViewProduct(null); setRejectTarget(p); }}
           canApprove={canApprove}
           canReject={canReject}

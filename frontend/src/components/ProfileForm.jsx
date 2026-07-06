@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FiCamera, FiCheckCircle, FiAlertCircle, FiLock, FiUser, FiMail } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 // 👇 Import toast hook
 import { useToast } from '../components/Toast';
@@ -110,7 +111,9 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
 
       {/* Avatar */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Profile Photo</h3>
+        <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide flex items-center gap-1.5">
+          <FiCamera size={14} /> Profile Photo
+        </h3>
         <div className="flex items-center gap-6">
           <div
             onClick={() => fileRef.current?.click()}
@@ -120,12 +123,15 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
               <>
                 <img src={preview} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                  <span className="text-white text-xs font-medium">Change</span>
+                  <FiCamera size={20} className="text-white" />
                 </div>
               </>
             ) : (
-              <div className={`w-full h-full ${c.avatar} flex items-center justify-center text-white text-2xl font-bold`}>
+              <div className={`w-full h-full ${c.avatar} flex items-center justify-center text-white text-2xl font-bold relative`}>
                 {user?.name?.charAt(0).toUpperCase()}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <FiCamera size={20} className="text-white" />
+                </div>
               </div>
             )}
           </div>
@@ -133,8 +139,8 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
           <div>
             <p className="font-bold text-gray-800 text-lg">{form.name}</p>
             <p className="text-sm text-gray-400">{user?.email}</p>
-            <button type="button" onClick={() => fileRef.current?.click()} className={`mt-1 text-xs ${c.text} hover:underline`}>
-              Click to change photo
+            <button type="button" onClick={() => fileRef.current?.click()} className={`mt-1 text-xs ${c.text} hover:underline flex items-center gap-1`}>
+              <FiCamera size={12} /> Click to change photo
             </button>
           </div>
         </div>
@@ -142,16 +148,18 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
 
       {/* Personal info */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-        <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide">Personal Information</h3>
+        <h3 className="font-bold text-gray-800 mb-4 text-sm uppercase tracking-wide flex items-center gap-1.5">
+          <FiUser size={14} /> Personal Information
+        </h3>
 
         {success && (
-          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2">
-            <span>✅</span><span>{success}</span>
+          <div className="bg-green-50 border border-green-200 text-green-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2 items-start">
+            <FiCheckCircle size={16} className="shrink-0 mt-0.5" /><span>{success}</span>
           </div>
         )}
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2">
-            <span>⚠️</span><span>{error}</span>
+          <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2 items-start">
+            <FiAlertCircle size={16} className="shrink-0 mt-0.5" /><span>{error}</span>
           </div>
         )}
 
@@ -172,7 +180,9 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
             </div>
           ))}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Email Address</label>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5 flex items-center gap-1.5">
+              <FiMail size={12} /> Email Address
+            </label>
             <input type="email" value={user?.email || ''} disabled
               className="w-full border border-gray-100 rounded-xl px-4 py-2.5 text-sm bg-gray-100 text-gray-400 cursor-not-allowed" />
             <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
@@ -183,7 +193,9 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
       {/* Password */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Password</h3>
+          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-1.5">
+            <FiLock size={14} /> Password
+          </h3>
           <button type="button" onClick={() => setChangePass(!changePass)} className={`text-sm ${c.text} hover:underline font-medium`}>
             {changePass ? 'Cancel' : 'Change password'}
           </button>
