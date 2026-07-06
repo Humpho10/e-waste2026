@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { BadgeProvider } from './context/BadgeContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/Toast';
+import 'bootstrap-icons/font/bootstrap-icons.css';
 import './index.css';
 
 const queryClient = new QueryClient();

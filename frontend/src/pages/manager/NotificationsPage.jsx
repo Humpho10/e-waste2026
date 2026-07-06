@@ -1,21 +1,24 @@
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import {
+  BiBell, BiCheckCircle, BiXCircle, BiMessageSquare, BiUserPlus, BiPackage,
+  BiCheck, BiTrash2, BiCheckSquare,
+} from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { getNotifications, markRead, markAllRead, deleteNotification } from '../../api/notifications';
 import { useBadge } from '../../context/BadgeContext';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-// 👇 Import toast hook
-import { useToast } from '../../components/Toast'; // or '../../context/ToastContext' if that's where it lives
+import { useToast } from '../../components/Toast';
 
 const typeConfig = {
-  product_approved:    { icon: '✅', color: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'   },
-  product_rejected:    { icon: '❌', color: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50'       },
-  new_message:         { icon: '💬', color: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50'     },
-  account_created:     { icon: '🎉', color: 'bg-purple-50 border-purple-200' },
-  new_listing:         { icon: '📦', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700'     },
+  product_approved: { icon: BiCheckCircle,  color: 'bg-green-50 border-green-200',   iconColor: 'text-green-600'  },
+  product_rejected: { icon: BiXCircle,      color: 'bg-red-50 border-red-200',       iconColor: 'text-red-500'    },
+  new_message:      { icon: BiMessageSquare, color: 'bg-blue-50 border-blue-200',    iconColor: 'text-blue-600'   },
+  account_created:  { icon: BiUserPlus,     color: 'bg-purple-50 border-purple-200', iconColor: 'text-purple-600' },
+  new_listing:      { icon: BiPackage,      color: 'bg-gray-50 border-gray-200',     iconColor: 'text-gray-500'   },
 };
+const defaultCfg = { icon: BiBell, color: 'bg-gray-50 border-gray-200', iconColor: 'text-gray-400' };
 
-export default function AdminNotificationsPage() {
+export default function ManagerNotificationsPage() {
   const { refresh } = useBadge();
-  // 👇 Get toast function
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -37,7 +40,6 @@ export default function AdminNotificationsPage() {
     onSuccess: () => {
       invalidateNotifs();
       refresh();
-      // 👇 Success toast
       toast('All notifications marked as read', 'info');
     },
     onError: (err) => toast(err.response?.data?.message || 'Failed to mark all as read', 'error'),
@@ -48,7 +50,6 @@ export default function AdminNotificationsPage() {
     onSuccess: () => {
       invalidateNotifs();
       refresh();
-      // 👇 Success toast
       toast('Notification removed', 'info');
     },
     onError: (err) => toast(err.response?.data?.message || 'Failed to delete notification', 'error'),
@@ -64,12 +65,14 @@ export default function AdminNotificationsPage() {
     <ManagerLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notifications</h2>
-          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{unread > 0 ? `${unread} unread` : 'All caught up!'}</p>
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+            <BiBell className="text-orange-500" size={22} /> Notifications
+          </h2>
+          <p className="text-gray-500 text-sm mt-1">{unread > 0 ? `${unread} unread` : 'All caught up!'}</p>
         </div>
         {unread > 0 && (
-          <button onClick={handleMarkAllRead} className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium">
-            Mark all as read
+          <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+            <BiCheckSquare size={14} /> Mark all as read
           </button>
         )}
       </div>
@@ -87,26 +90,43 @@ export default function AdminNotificationsPage() {
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">🔔</div>
-          <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No notifications yet</h3>
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+            <BiBell size={28} className="text-orange-400" />
+          </div>
+          <h3 className="font-bold text-gray-700 mb-2">No notifications yet</h3>
         </div>
       ) : (
         <div className="space-y-3">
           {notifications.map(notif => {
-            const cfg = typeConfig[notif.type] || { icon: '🔔', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700' };
+            const cfg = typeConfig[notif.type] || defaultCfg;
+            const Icon = cfg.icon;
             return (
               <div key={notif.notification_id} className={`rounded-2xl border p-5 flex gap-4 items-start ${cfg.color} ${!notif.is_read ? 'shadow-sm' : 'opacity-75'}`}>
-                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-xl shrink-0 shadow-sm">{cfg.icon}</div>
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                  <Icon size={18} className={cfg.iconColor} />
+                </div>
                 <div className="flex-1">
                   <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>{notif.message}</p>
                   <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
                 </div>
-                <div className="flex gap-2 shrink-0">
+                <div className="flex gap-1 shrink-0">
                   {!notif.is_read && (
-                    <button onClick={() => handleMarkRead(notif.notification_id)} className="text-xs text-blue-600 dark:text-blue-400 hover:underline">Mark read</button>
+                    <button
+                      onClick={() => handleMarkRead(notif.notification_id)}
+                      title="Mark as read"
+                      className="w-8 h-8 flex items-center justify-center text-blue-500 hover:bg-blue-50 rounded-lg transition"
+                    >
+                      <BiCheck size={15} />
+                    </button>
                   )}
-                  <button onClick={() => handleDelete(notif.notification_id)} className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500">✕</button>
+                  <button
+                    onClick={() => handleDelete(notif.notification_id)}
+                    title="Delete"
+                    className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition"
+                  >
+                    <BiTrash2 size={14} />
+                  </button>
                 </div>
               </div>
             );

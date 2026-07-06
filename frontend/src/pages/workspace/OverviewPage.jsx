@@ -1,19 +1,76 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMStats } from '../../api/productManager';
 import { useAuth } from '../../context/AuthContext';
+import Chart from '../../components/Chart';
+import { CHART_COLORS } from '../../lib/chartTheme';
 
-function StatCard({ icon, label, value, bg, to, sub }) {
+const STORAGE = 'http://localhost:8000/storage';
+const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
+const ugxShort = (n) => {
+  const v = Number(n || 0);
+  if (v >= 1e9) return `UGX ${(v / 1e9).toFixed(1)}B`;
+  if (v >= 1e6) return `UGX ${(v / 1e6).toFixed(1)}M`;
+  if (v >= 1e3) return `UGX ${(v / 1e3).toFixed(0)}K`;
+  return `UGX ${v.toLocaleString()}`;
+};
+
+const toISO = (d) => d.toISOString().slice(0, 10);
+
+// Build a {from, to} ISO range for each preset, relative to today.
+function presetRange(preset) {
+  const now = new Date();
+  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
+  const start = (() => {
+    switch (preset) {
+      case 'week': {                       // Monday → today
+        const day = (now.getDay() + 6) % 7; // 0 = Monday
+        return new Date(y, m, d - day);
+      }
+      case 'month': return new Date(y, m, 1);
+      case 'year':  return new Date(y, 0, 1);
+      case 'all':   return new Date(2000, 0, 1);
+      default:      return new Date(y, m, 1);
+    }
+  })();
+  return { from: toISO(start), to: toISO(now) };
+}
+
+const PERIOD_PRESETS = [
+  { key: 'week',  label: 'This week'  },
+  { key: 'month', label: 'This month' },
+  { key: 'year',  label: 'This year'  },
+  { key: 'all',   label: 'All time'   },
+];
+
+function timeAgo(dateStr) {
+  if (!dateStr) return '';
+  const s = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+  if (s < 60) return 'just now';
+  const m = Math.floor(s / 60); if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60); if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24); return `${d}d ago`;
+}
+
+/* ── KPI card ─────────────────────────────────────────────── */
+function StatCard({ icon, label, value, to, accent, sub, loading }) {
   return (
-    <Link to={to} className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-800 hover:shadow-md hover:border-teal-100 transition group">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center text-2xl mb-4 ${bg}`}>
-        {icon}
+    <Link
+      to={to}
+      className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+    >
+      <div className="flex items-center justify-between mb-3">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${accent.chip}`}>
+          <i className={`bi ${icon}`} />
+        </div>
+        <i className="bi bi-arrow-up-right text-gray-300 group-hover:text-gray-400 transition" />
       </div>
-      {value === undefined || value === null ? (
-        <div className="h-8 w-16 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse mb-1" />
+      {loading ? (
+        <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mb-1" />
       ) : (
-        <p className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">{value}</p>
+        <p className="text-2xl font-bold text-gray-800 mb-0.5">{value}</p>
       )}
       <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
@@ -21,116 +78,355 @@ function StatCard({ icon, label, value, bg, to, sub }) {
   );
 }
 
+function ChartCard({ title, icon, action, children, className = '' }) {
+  return (
+    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
+      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+        <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+          <i className={`bi ${icon} text-teal-600`} />
+          {title}
+        </h3>
+        {action}
+      </div>
+      <div className="p-4">{children}</div>
+    </div>
+  );
+}
+
 export default function WorkspaceOverviewPage() {
   const { user } = useAuth();
 
-  const { data: stats, isLoading: loading, isError, refetch } = useQuery({
-    queryKey: ['pm-stats'],
-    queryFn: () => getPMStats().then(res => res.data.stats),
+  // Period selector state — preset or a custom {from, to} range.
+  const [preset, setPreset]   = useState('month');
+  const [custom, setCustom]   = useState({ from: '', to: '' });
+  const range = preset === 'custom'
+    ? custom
+    : presetRange(preset);
+  const rangeReady = !!(range.from && range.to);
+
+  const { data, isLoading, isError, refetch } = useQuery({
+    queryKey: ['pm-stats', range.from, range.to],
+    queryFn: () => getPMStats({ from: range.from, to: range.to }).then((res) => res.data),
+    enabled: rangeReady,
   });
+
+  const stats         = data?.stats ?? {};
+  const byCategory    = data?.by_category ?? [];
+  const recentPending = data?.recent_pending ?? [];
+  const period        = data?.period ?? {};
 
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  const statCards = [
-    { icon: '📂', label: 'My Categories',    value: stats?.assigned_categories, bg: 'bg-teal-50',   to: '/workspace/products',                sub: 'Categories assigned to you'  },
-    { icon: '📦', label: 'Total Listings',   value: stats?.total_products,      bg: 'bg-blue-50 dark:bg-blue-950/40',   to: '/workspace/products',                sub: 'In your categories'          },
-    { icon: '⏳', label: 'Pending Review',   value: stats?.pending_products,    bg: 'bg-yellow-50 dark:bg-yellow-950/40', to: '/workspace/products?status=pending',  sub: 'Awaiting your review'        },
-    { icon: '✅', label: 'Approved',         value: stats?.approved_products,   bg: 'bg-green-50 dark:bg-green-950/40',  to: '/workspace/products?status=approved', sub: 'Approved by you'             },
-    { icon: '❌', label: 'Rejected',         value: stats?.rejected_products,   bg: 'bg-red-50 dark:bg-red-950/40',    to: '/workspace/products?status=rejected', sub: 'Sent back for correction'    },
+  const noCategories = !isLoading && (stats.assigned_categories ?? 0) === 0;
+
+  const kpis = [
+    { icon: 'bi-folder2-open',   label: 'My Categories',  value: stats.assigned_categories, to: '/workspace/products',                accent: { chip: 'bg-teal-50 text-teal-600' },      sub: 'Assigned to you' },
+    { icon: 'bi-box-seam',       label: 'Total Listings', value: stats.total_products,      to: '/workspace/products',                accent: { chip: 'bg-indigo-50 text-indigo-600' },  sub: 'In your categories' },
+    { icon: 'bi-check2-circle',  label: 'Approved',       value: stats.approved_products,   to: '/workspace/products?status=approved', accent: { chip: 'bg-emerald-50 text-emerald-600' }, sub: 'Live on marketplace' },
+    { icon: 'bi-x-circle',       label: 'Rejected',       value: stats.rejected_products,   to: '/workspace/products?status=rejected', accent: { chip: 'bg-red-50 text-red-500' },        sub: 'Sent back' },
+    { icon: 'bi-cash-coin',      label: 'Inventory Value',value: ugx(stats.inventory_value), to: '/workspace/products?status=approved', accent: { chip: 'bg-amber-50 text-amber-600' },   sub: 'Approved listings' },
   ];
+
+  /* ── Chart option builders ──────────────────────────────── */
+  const donutOptions = {
+    chart: { type: 'pie', height: 250 },
+    title: {
+      text: `<div style="text-align:center"><div style="font-size:26px;font-weight:700;color:#0f172a">${stats.total_products ?? 0}</div><div style="font-size:11px;color:#94a3b8">listings</div></div>`,
+      align: 'center', verticalAlign: 'middle', y: 0, useHTML: true,
+    },
+    tooltip: { pointFormat: '<b>{point.y}</b> ({point.percentage:.0f}%)' },
+    plotOptions: {
+      pie: {
+        innerSize: '74%', borderWidth: 3, borderColor: '#fff', borderRadius: 5,
+        dataLabels: { enabled: false },
+      },
+    },
+    legend: { enabled: true, align: 'center', verticalAlign: 'bottom' },
+    series: [{
+      name: 'Listings', showInLegend: true,
+      data: [
+        { name: 'Approved', y: stats.approved_products || 0, color: CHART_COLORS.approved },
+        { name: 'Pending',  y: stats.pending_products || 0,  color: CHART_COLORS.pending },
+        { name: 'Rejected', y: stats.rejected_products || 0, color: CHART_COLORS.rejected },
+      ],
+    }],
+  };
+
+  // Period performance: value approved (money, columns) + listings submitted (line).
+  const perfSeries = period.series ?? [];
+  const perfOptions = {
+    chart: { height: 260 },
+    xAxis: { categories: perfSeries.map((p) => p.label), crosshair: true },
+    yAxis: [
+      { title: { text: null }, labels: { formatter() { return ugxShort(this.value); } } },
+      { title: { text: null }, allowDecimals: false, opposite: true },
+    ],
+    legend: { enabled: true, align: 'center', verticalAlign: 'bottom' },
+    tooltip: { shared: true },
+    plotOptions: { column: { borderRadius: 3, borderWidth: 0 } },
+    series: [
+      {
+        name: 'Value approved', type: 'column', yAxis: 0, color: CHART_COLORS.teal,
+        data: perfSeries.map((p) => p.approved_value),
+        tooltip: { pointFormatter() { return `<span style="color:${this.color}">●</span> Value approved: <b>${ugx(this.y)}</b><br/>`; } },
+      },
+      {
+        name: 'Listings submitted', type: 'spline', yAxis: 1, color: CHART_COLORS.pending,
+        data: perfSeries.map((p) => p.submitted), marker: { enabled: false },
+      },
+    ],
+  };
+
+  const categoryOptions = {
+    chart: { type: 'column', height: 300 },
+    xAxis: { categories: byCategory.map((c) => c.name), labels: { autoRotation: [0, -25, -45] } },
+    yAxis: { allowDecimals: false, reversedStacks: false },
+    tooltip: { shared: true },
+    plotOptions: { column: { stacking: 'normal', borderRadius: 3, borderWidth: 0, pointPadding: 0.08, groupPadding: 0.14 } },
+    series: [
+      { name: 'Approved', data: byCategory.map((c) => c.approved), color: CHART_COLORS.approved },
+      { name: 'Pending',  data: byCategory.map((c) => c.pending),  color: CHART_COLORS.pending },
+      { name: 'Rejected', data: byCategory.map((c) => c.rejected), color: CHART_COLORS.rejected },
+    ],
+  };
 
   return (
     <WorkspaceLayout>
-      {/* Header */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-          {greeting}, {user?.name?.split(' ')[0]} 👋
-        </h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
-          Here's an overview of listings in your assigned categories.
-        </p>
+      {/* ── Hero band ─────────────────────────────────────── */}
+      <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-teal-600 via-teal-700 to-slate-800 p-6 md:p-7 mb-6 shadow-lg">
+        <div className="absolute -right-8 -top-10 w-48 h-48 rounded-full bg-white/10" />
+        <div className="absolute -right-16 top-16 w-40 h-40 rounded-full bg-white/5" />
+        <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+          <div>
+            <h2 className="text-2xl font-bold text-white">
+              {greeting}, {user?.name?.split(' ')[0]} <span className="inline-block">👋</span>
+            </h2>
+            <p className="text-teal-100 text-sm mt-1">
+              You have <span className="font-semibold text-white">{stats.pending_products ?? 0}</span> listing(s) waiting for your review.
+            </p>
+            <Link
+              to="/workspace/products?status=pending"
+              className="inline-flex items-center gap-2 mt-4 bg-white text-teal-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-teal-50 transition shadow"
+            >
+              <i className="bi bi-clipboard-check" /> Review pending listings
+            </Link>
+          </div>
+          {/* Hero mini-metrics */}
+          <div className="flex gap-3">
+            <div className="bg-white/10 backdrop-blur rounded-2xl px-5 py-4 text-center min-w-[104px] border border-white/10">
+              <i className="bi bi-hourglass-split text-amber-300 text-xl" />
+              <p className="text-2xl font-bold text-white mt-1">{stats.pending_products ?? 0}</p>
+              <p className="text-[11px] text-teal-100 uppercase tracking-wide">Pending</p>
+            </div>
+            <div className="bg-white/10 backdrop-blur rounded-2xl px-5 py-4 text-center min-w-[104px] border border-white/10">
+              <i className="bi bi-lightning-charge-fill text-yellow-300 text-xl" />
+              <p className="text-2xl font-bold text-white mt-1">{stats.reviewed_this_week ?? 0}</p>
+              <p className="text-[11px] text-teal-100 uppercase tracking-wide">Reviewed 7d</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {isError && (
-        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-6">
-          Failed to load stats — <button onClick={() => refetch()} className="underline">Retry</button>
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
+          <i className="bi bi-exclamation-triangle" /> Failed to load stats —
+          <button onClick={() => refetch()} className="underline font-medium">Retry</button>
         </div>
       )}
 
-      {/* Stat cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        {statCards.map(card => <StatCard key={card.label} {...card} />)}
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-
-        {/* Quick actions */}
-        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide mb-4">Quick Actions</h3>
-          <div className="space-y-2">
-            {[
-              { label: '⏳ Review Pending',    to: '/workspace/products?status=pending',  style: 'bg-teal-600 hover:bg-teal-700 text-white'              },
-              { label: '📦 All Listings',      to: '/workspace/products',                 style: 'bg-slate-800 hover:bg-slate-900 text-white'            },
-              { label: '💬 Messages',          to: '/workspace/messages',                 style: 'border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200' },
-              { label: '🔔 Notifications',     to: '/workspace/notifications',            style: 'border border-gray-200 dark:border-slate-700 hover:bg-gray-50 dark:hover:bg-slate-800 text-gray-700 dark:text-gray-200' },
-            ].map(({ label, to, style }) => (
-              <Link key={to} to={to} className={`block w-full text-center py-2.5 rounded-xl text-sm font-medium transition ${style}`}>
-                {label}
-              </Link>
-            ))}
+      {noCategories ? (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-600 text-3xl flex items-center justify-center mx-auto mb-4">
+            <i className="bi bi-folder-x" />
           </div>
+          <h3 className="font-bold text-gray-700">No categories assigned yet</h3>
+          <p className="text-gray-400 text-sm mt-1 max-w-sm mx-auto">
+            Once a manager assigns categories to you, your listings, charts and review queue will appear here.
+          </p>
         </div>
-
-        {/* Status breakdown */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex justify-between items-center">
-            <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide">Listings in My Categories</h3>
-            <Link to="/workspace/products" className="text-teal-600 dark:text-teal-400 text-xs hover:underline font-medium">
-              View all →
-            </Link>
+      ) : (
+        <>
+          {/* ── KPI cards ─────────────────────────────────── */}
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
+            {kpis.map((k) => <StatCard key={k.label} {...k} loading={isLoading} />)}
           </div>
 
-          {loading ? (
-            <div className="p-6 space-y-4 animate-pulse">
-              {Array(3).fill(0).map((_, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <div className="h-3 w-16 bg-gray-100 dark:bg-slate-800 rounded" />
-                  <div className="flex-1 h-3 bg-gray-100 dark:bg-slate-800 rounded-full" />
-                  <div className="h-3 w-8 bg-gray-100 dark:bg-slate-800 rounded" />
+          {/* ── Performance panel (period accountability) ─── */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
+              <div>
+                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                  <i className="bi bi-graph-up-arrow text-teal-600" /> Performance
+                </h3>
+                <p className="text-xs text-gray-400 mt-0.5">
+                  {period.from && period.to ? `${period.from} → ${period.to}` : '—'} · value of listings approved in your categories
+                </p>
+              </div>
+              {/* Period selector */}
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
+                  {PERIOD_PRESETS.map((p) => (
+                    <button key={p.key} onClick={() => setPreset(p.key)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === p.key ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                      {p.label}
+                    </button>
+                  ))}
+                  <button onClick={() => setPreset('custom')}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === 'custom' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                    Custom
+                  </button>
+                </div>
+                {preset === 'custom' && (
+                  <div className="flex items-center gap-1.5">
+                    <input type="date" value={custom.from} max={custom.to || undefined}
+                      onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))}
+                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                    <span className="text-gray-400 text-xs">→</span>
+                    <input type="date" value={custom.to} min={custom.from || undefined}
+                      onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))}
+                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Period KPI strip */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+              {[
+                { icon: 'bi-cash-stack',         tint: 'text-teal-600 bg-teal-50',       label: 'Value approved',   value: ugx(period.approved_value) },
+                { icon: 'bi-inbox',              tint: 'text-indigo-600 bg-indigo-50',   label: 'Submitted',        value: period.submitted ?? 0 },
+                { icon: 'bi-check2-circle',      tint: 'text-emerald-600 bg-emerald-50', label: 'Approved',         value: period.approved ?? 0 },
+                { icon: 'bi-x-circle',           tint: 'text-red-500 bg-red-50',         label: 'Rejected',         value: period.rejected ?? 0 },
+                { icon: 'bi-lightning-charge',   tint: 'text-amber-600 bg-amber-50',     label: 'Reviewed by you',  value: period.reviewed ?? 0 },
+              ].map((m) => (
+                <div key={m.label} className="rounded-xl border border-gray-100 p-3">
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${m.tint}`}><i className={`bi ${m.icon}`} /></div>
+                  {isLoading
+                    ? <div className="h-6 w-14 bg-gray-100 rounded animate-pulse" />
+                    : <p className="text-lg font-bold text-gray-800 leading-tight break-words">{m.value}</p>}
+                  <p className="text-xs text-gray-500 mt-0.5">{m.label}</p>
                 </div>
               ))}
             </div>
-          ) : (
-            <div className="p-6 space-y-4">
-              {[
-                { label: 'Approved',  value: stats?.approved_products, total: stats?.total_products, color: 'bg-green-500'  },
-                { label: 'Pending',   value: stats?.pending_products,  total: stats?.total_products, color: 'bg-yellow-400' },
-                { label: 'Rejected',  value: stats?.rejected_products, total: stats?.total_products, color: 'bg-red-400'    },
-              ].map(({ label, value, total, color }) => {
-                const pct = total > 0 ? Math.round(((value || 0) / total) * 100) : 0;
-                return (
-                  <div key={label}>
-                    <div className="flex justify-between text-sm mb-1.5">
-                      <span className="text-gray-600 dark:text-gray-300 font-medium">{label}</span>
-                      <span className="text-gray-400 dark:text-gray-500">{value ?? 0} listings ({pct}%)</span>
-                    </div>
-                    <div className="h-2.5 bg-gray-100 dark:bg-slate-800 rounded-full overflow-hidden">
-                      <div className={`h-full rounded-full transition-all duration-500 ${color}`} style={{ width: `${pct}%` }} />
-                    </div>
-                  </div>
-                );
-              })}
-              {!stats?.total_products && (
-                <div className="text-center py-6 text-gray-400 dark:text-gray-500">
-                  <p className="text-3xl mb-2">📭</p>
-                  <p className="text-sm">No listings in your categories yet</p>
+
+            {/* Period chart */}
+            {isLoading ? (
+              <div className="h-[260px] bg-gray-50 rounded-xl animate-pulse" />
+            ) : perfSeries.length ? (
+              <Chart options={perfOptions} />
+            ) : (
+              <div className="h-[260px] flex flex-col items-center justify-center text-gray-300">
+                <i className="bi bi-calendar-x text-4xl mb-2" />
+                <p className="text-sm">No activity in this period</p>
+              </div>
+            )}
+
+            {period.revenue > 0 && (
+              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5">
+                <i className="bi bi-cash-coin text-emerald-500" /> Recorded sales revenue this period:
+                <span className="font-semibold text-gray-700">{ugx(period.revenue)}</span>
+              </p>
+            )}
+          </div>
+
+          {/* ── Charts: status + category ─────────────────── */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+            <ChartCard title="Listings by status" icon="bi-pie-chart-fill">
+              {isLoading
+                ? <div className="h-[250px] bg-gray-50 rounded-xl animate-pulse" />
+                : <Chart options={donutOptions} />}
+            </ChartCard>
+            <ChartCard
+              title="Listings by category"
+              icon="bi-bar-chart-line-fill"
+              className="lg:col-span-2"
+              action={<Link to="/workspace/products" className="text-teal-600 text-xs hover:underline font-medium">View all →</Link>}
+            >
+              {isLoading ? (
+                <div className="h-[300px] bg-gray-50 rounded-xl animate-pulse" />
+              ) : byCategory.length ? (
+                <Chart options={categoryOptions} />
+              ) : (
+                <div className="h-[300px] flex flex-col items-center justify-center text-gray-300">
+                  <i className="bi bi-inboxes text-4xl mb-2" />
+                  <p className="text-sm">No listings yet</p>
                 </div>
               )}
+            </ChartCard>
+          </div>
+
+          {/* ── Review queue ──────────────────────────────── */}
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
+                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
+                  <i className="bi bi-clipboard-check text-teal-600" /> Review queue
+                </h3>
+                {stats.pending_products > 0 && (
+                  <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+                    {stats.pending_products} waiting
+                  </span>
+                )}
+              </div>
+
+              <div className="divide-y divide-gray-50 flex-1">
+                {isLoading ? (
+                  Array(4).fill(0).map((_, i) => (
+                    <div key={i} className="flex items-center gap-3 px-5 py-3 animate-pulse">
+                      <div className="w-11 h-11 rounded-lg bg-gray-100 shrink-0" />
+                      <div className="flex-1 space-y-2">
+                        <div className="h-3 w-3/4 bg-gray-100 rounded" />
+                        <div className="h-2.5 w-1/2 bg-gray-100 rounded" />
+                      </div>
+                    </div>
+                  ))
+                ) : recentPending.length ? (
+                  recentPending.map((p) => (
+                    <Link
+                      key={p.product_id}
+                      to="/workspace/products?status=pending"
+                      className="flex items-center gap-3 px-5 py-3 hover:bg-teal-50/40 transition group"
+                    >
+                      <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300">
+                        {p.image
+                          ? <img src={`${STORAGE}/${p.image}`} alt="" className="w-full h-full object-cover" />
+                          : <i className="bi bi-image" />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-700">{p.title}</p>
+                        <p className="text-xs text-gray-400 truncate">
+                          {p.category} · {ugx(p.price)}
+                        </p>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="text-[11px] text-gray-400 flex items-center gap-1 justify-end">
+                          <i className="bi bi-clock" />{timeAgo(p.created_at)}
+                        </span>
+                        <span className="text-[11px] text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition">
+                          Review →
+                        </span>
+                      </div>
+                    </Link>
+                  ))
+                ) : (
+                  <div className="flex flex-col items-center justify-center text-center py-12 text-gray-300">
+                    <i className="bi bi-check2-all text-4xl mb-2 text-emerald-300" />
+                    <p className="text-sm text-gray-400">All caught up — nothing pending!</p>
+                  </div>
+                )}
+              </div>
+
+              {recentPending.length > 0 && (
+                <Link
+                  to="/workspace/products?status=pending"
+                  className="block text-center text-teal-600 text-xs font-semibold py-3 border-t border-gray-50 hover:bg-teal-50/40 transition"
+                >
+                  Go to review queue →
+                </Link>
+              )}
             </div>
-          )}
-        </div>
-      </div>
+        </>
+      )}
     </WorkspaceLayout>
   );
 }

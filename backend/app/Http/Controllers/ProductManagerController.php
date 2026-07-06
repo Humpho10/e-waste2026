@@ -44,7 +44,7 @@ class ProductManagerController extends Controller
     }
 
     // ── STATS ─────────────────────────────────────────────────
-    public function stats()
+    public function stats(Request $request)
     {
         // Check if user has permission to view dashboard
         if (!$this->user->can('dashboard-view') && !$this->user->can('product-list')) {
@@ -53,15 +53,194 @@ class ProductManagerController extends Controller
 
         $categoryIds = $this->assignedCategoryIds();
 
+        // Base query scoped to the categories this PM is assigned to.
+        $scoped = fn () => Product::whereIn('category_id', $categoryIds);
+
+        $total    = (clone $scoped())->count();
+        $pending  = (clone $scoped())->where('status', 'pending')->count();
+        $approved = (clone $scoped())->where('status', 'approved')->count();
+        $rejected = (clone $scoped())->where('status', 'rejected')->count();
+
+        // Listings this PM personally reviewed in the last 7 days.
+        $reviewedThisWeek = (clone $scoped())
+            ->where('reviewed_by', Auth::id())
+            ->where('reviewed_at', '>=', now()->subDays(7))
+            ->count();
+
+        // Live inventory value = sum of approved listing prices.
+        $inventoryValue = (clone $scoped())->where('status', 'approved')->sum('price');
+
+        // ── Per-category breakdown (stacked bar chart) ──────────
+        $names = \App\Models\Category::whereIn('category_id', $categoryIds)
+            ->pluck('name', 'category_id');
+
+        $grouped = (clone $scoped())
+            ->selectRaw('category_id, status, COUNT(*) as c')
+            ->groupBy('category_id', 'status')
+            ->get();
+
+        $byCategory = [];
+        foreach ($categoryIds as $cid) {
+            $byCategory[$cid] = [
+                'name'     => $names[$cid] ?? 'Category #' . $cid,
+                'pending'  => 0,
+                'approved' => 0,
+                'rejected' => 0,
+                'total'    => 0,
+            ];
+        }
+        foreach ($grouped as $row) {
+            if (!isset($byCategory[$row->category_id])) {
+                continue;
+            }
+            $status = in_array($row->status, ['pending', 'approved', 'rejected']) ? $row->status : 'pending';
+            $byCategory[$row->category_id][$status] += $row->c;
+            $byCategory[$row->category_id]['total']  += $row->c;
+        }
+        // Sort busiest first, keep the top 8 for a readable chart.
+        $byCategory = collect($byCategory)->sortByDesc('total')->take(8)->values();
+
+        // ── New listings per day, last 14 days (trend area) ─────
+        $since  = now()->subDays(13)->startOfDay();
+        $counts = (clone $scoped())
+            ->where('created_at', '>=', $since)
+            ->selectRaw('DATE(created_at) as d, COUNT(*) as c')
+            ->groupBy('d')
+            ->pluck('c', 'd');
+
+        $dailyNew = [];
+        for ($i = 13; $i >= 0; $i--) {
+            $day = now()->subDays($i);
+            $key = $day->format('Y-m-d');
+            $dailyNew[] = [
+                'date'  => $day->format('M j'),
+                'count' => (int) ($counts[$key] ?? 0),
+            ];
+        }
+
+        // ── Oldest pending listings — the PM's review queue ─────
+        $recentPending = (clone $scoped())
+            ->with(['seller:id,name', 'category:category_id,name', 'images'])
+            ->where('status', 'pending')
+            ->orderBy('created_at', 'asc')
+            ->take(6)
+            ->get()
+            ->map(fn ($p) => [
+                'product_id' => $p->product_id,
+                'title'      => $p->title,
+                'price'      => $p->price,
+                'condition'  => $p->condition,
+                'category'   => $p->category?->name,
+                'seller'     => $p->seller?->name,
+                'image'      => $p->images->first()->image_path ?? null,
+                'created_at' => $p->created_at,
+            ]);
+
+        // ── Period performance (week / month / year / custom) ───
+        $period = $this->periodPerformance($request, $categoryIds);
+
         return response()->json([
             'stats' => [
                 'assigned_categories' => count($categoryIds),
-                'total_products'      => Product::whereIn('category_id', $categoryIds)->count(),
-                'pending_products'    => Product::whereIn('category_id', $categoryIds)->where('status', 'pending')->count(),
-                'approved_products'   => Product::whereIn('category_id', $categoryIds)->where('status', 'approved')->count(),
-                'rejected_products'   => Product::whereIn('category_id', $categoryIds)->where('status', 'rejected')->count(),
+                'total_products'      => $total,
+                'pending_products'    => $pending,
+                'approved_products'   => $approved,
+                'rejected_products'   => $rejected,
+                'reviewed_this_week'  => $reviewedThisWeek,
+                'inventory_value'     => round((float) $inventoryValue, 2),
             ],
+            'by_category'    => $byCategory,
+            'daily_new'      => $dailyNew,
+            'recent_pending' => $recentPending,
+            'period'         => $period,
         ], 200);
+    }
+
+    // ── PERIOD PERFORMANCE — accountability over a date range ──
+    // Accepts ?from=YYYY-MM-DD&to=YYYY-MM-DD (defaults to the current month).
+    // Returns activity counts, the value of listings approved in the window,
+    // any recorded sales revenue, and a time-bucketed series for charting.
+    private function periodPerformance(Request $request, array $categoryIds)
+    {
+        $to = $request->filled('to')
+            ? \Illuminate\Support\Carbon::parse($request->input('to'))->endOfDay()
+            : now()->endOfDay();
+
+        $from = $request->filled('from')
+            ? \Illuminate\Support\Carbon::parse($request->input('from'))->startOfDay()
+            : now()->startOfMonth();
+
+        // Guard against a reversed range.
+        if ($from->greaterThan($to)) {
+            [$from, $to] = [$to->copy()->startOfDay(), $from->copy()->endOfDay()];
+        }
+
+        $scoped = fn () => Product::whereIn('category_id', $categoryIds);
+
+        // Activity in the window.
+        $submitted = (clone $scoped())->whereBetween('created_at', [$from, $to])->count();
+        $approved  = (clone $scoped())->where('status', 'approved')->whereBetween('reviewed_at', [$from, $to])->count();
+        $rejected  = (clone $scoped())->where('status', 'rejected')->whereBetween('reviewed_at', [$from, $to])->count();
+        $reviewed  = (clone $scoped())->where('reviewed_by', Auth::id())->whereBetween('reviewed_at', [$from, $to])->count();
+
+        // Value of listings this PM cleared to go live in the window ("money added").
+        $approvedValue = (clone $scoped())
+            ->where('status', 'approved')
+            ->whereBetween('reviewed_at', [$from, $to])
+            ->sum('price');
+
+        // Actual sales revenue for products in these categories (0 until sales are recorded).
+        $revenue = \App\Models\Transaction::whereBetween('transactions.created_at', [$from, $to])
+            ->whereIn('product_id', (clone $scoped())->select('product_id'))
+            ->sum('amount');
+
+        // Choose a readable granularity based on the span.
+        $days = $from->diffInDays($to) + 1;
+        $unit = $days <= 45 ? 'day' : ($days <= 731 ? 'month' : 'year');
+        $sqlFmt = ['day' => '%Y-%m-%d', 'month' => '%Y-%m', 'year' => '%Y'][$unit];
+        $keyFmt = ['day' => 'Y-m-d', 'month' => 'Y-m', 'year' => 'Y'][$unit];
+        $labelFmt = ['day' => 'M j', 'month' => 'M Y', 'year' => 'Y'][$unit];
+
+        $submittedByBucket = (clone $scoped())
+            ->whereBetween('created_at', [$from, $to])
+            ->selectRaw("DATE_FORMAT(created_at, '{$sqlFmt}') as k, COUNT(*) as c")
+            ->groupBy('k')->pluck('c', 'k');
+
+        $valueByBucket = (clone $scoped())
+            ->where('status', 'approved')
+            ->whereBetween('reviewed_at', [$from, $to])
+            ->selectRaw("DATE_FORMAT(reviewed_at, '{$sqlFmt}') as k, SUM(price) as s")
+            ->groupBy('k')->pluck('s', 'k');
+
+        $series = [];
+        $cursor = $from->copy();
+        $guard = 0;
+        while ($cursor->lessThanOrEqualTo($to) && $guard++ < 500) {
+            $key = $cursor->format($keyFmt);
+            $series[] = [
+                'label'          => $cursor->format($labelFmt),
+                'submitted'      => (int) ($submittedByBucket[$key] ?? 0),
+                'approved_value' => round((float) ($valueByBucket[$key] ?? 0), 2),
+            ];
+            match ($unit) {
+                'day'   => $cursor->addDay(),
+                'month' => $cursor->addMonthNoOverflow(),
+                'year'  => $cursor->addYear(),
+            };
+        }
+
+        return [
+            'from'           => $from->toDateString(),
+            'to'             => $to->toDateString(),
+            'unit'           => $unit,
+            'submitted'      => $submitted,
+            'approved'       => $approved,
+            'rejected'       => $rejected,
+            'reviewed'       => $reviewed,
+            'approved_value' => round((float) $approvedValue, 2),
+            'revenue'        => round((float) $revenue, 2),
+            'series'         => $series,
+        ];
     }
 
     // ── LIST PRODUCTS IN ASSIGNED CATEGORIES ──────────────────

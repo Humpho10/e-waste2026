@@ -1,5 +1,6 @@
 import { useState, useRef } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FiCamera, FiCheckCircle, FiAlertCircle, FiLock, FiUser, FiMail } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 // 👇 Import toast hook
 import { useToast } from '../components/Toast';
@@ -120,12 +121,15 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
               <>
                 <img src={preview} alt="" className="w-full h-full object-cover" />
                 <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-                  <span className="text-white text-xs font-medium">Change</span>
+                  <FiCamera size={20} className="text-white" />
                 </div>
               </>
             ) : (
-              <div className={`w-full h-full ${c.avatar} flex items-center justify-center text-white text-2xl font-bold`}>
+              <div className={`w-full h-full ${c.avatar} flex items-center justify-center text-white text-2xl font-bold relative`}>
                 {user?.name?.charAt(0).toUpperCase()}
+                <div className="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
+                  <FiCamera size={20} className="text-white" />
+                </div>
               </div>
             )}
           </div>
