@@ -7,6 +7,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Message;
 use App\Models\Notification;
 use App\Models\Product;
+use App\Models\Settings;
+use App\Models\User;
 use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 
@@ -158,6 +160,20 @@ class MessageController extends Controller
             'message'      => "You have a new message regarding \"{$product->title}\".",
             'is_read'      => false,
         ]);
+
+        // Optional oversight ping — lets Admins/Super Admins keep an eye on
+        // buyer-seller conversations without joining every thread.
+        if (Settings::current()->notify_admins_on_new_message) {
+            User::role(['Admin', 'Super-Admin'])->get()->each(function ($admin) use ($product) {
+                Notification::create([
+                    'user_id'      => $admin->id,
+                    'type'         => 'new_message_oversight',
+                    'reference_id' => $product->product_id,
+                    'message'      => "New message activity on \"{$product->title}\".",
+                    'is_read'      => false,
+                ]);
+            });
+        }
 
         return response()->json([
             'message'      => 'Message sent successfully.',

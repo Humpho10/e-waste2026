@@ -81,8 +81,8 @@ export default function PermissionsContent() {
     return (
       <div className="text-center py-20">
         <div className="text-6xl mb-4">🔒</div>
-        <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-        <p className="text-gray-500">You don't have permission to view permissions.</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
+        <p className="text-gray-500 dark:text-gray-400">You don't have permission to view permissions.</p>
       </div>
     );
   }
@@ -91,14 +91,14 @@ export default function PermissionsContent() {
     <>
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Permissions</h2>
-          <p className="text-gray-500 text-sm mt-1">{permissions.length} permissions defined</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Permissions</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{permissions.length} permissions defined</p>
         </div>
         <div className="flex gap-3">
           <input
             type="text" placeholder="Search permissions..." value={search}
             onChange={e => setSearch(e.target.value)}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-52"
+            className="border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500 w-52"
           />
           {canCreatePermission && (
             <button
@@ -112,33 +112,33 @@ export default function PermissionsContent() {
       </div>
 
       {loading ? (
-        <div className="text-gray-400">Loading permissions...</div>
+        <div className="text-gray-400 dark:text-gray-500">Loading permissions...</div>
       ) : Object.keys(grouped).length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
           <div className="text-5xl mb-4">🔑</div>
-          <h3 className="font-bold text-gray-700 mb-2">No permissions found</h3>
-          <p className="text-gray-400 text-sm">Try adjusting your search.</p>
+          <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No permissions found</h3>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">Try adjusting your search.</p>
         </div>
       ) : (
         <div className="space-y-6">
           {Object.entries(grouped).map(([group, perms]) => (
-            <div key={group} className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-              <div className="px-6 py-3 bg-gray-50 border-b border-gray-100">
-                <h3 className="font-bold text-gray-700 uppercase text-sm">{group}</h3>
-                <p className="text-xs text-gray-400">{perms.length} permissions</p>
+            <div key={group} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
+              <div className="px-6 py-3 bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
+                <h3 className="font-bold text-gray-700 dark:text-gray-200 uppercase text-sm">{group}</h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500">{perms.length} permissions</p>
               </div>
               <table className="w-full text-sm">
                 <tbody>
                   {perms.map((p, i) => (
-                    <tr key={p.id} className={`border-b border-gray-50 hover:bg-gray-50 ${i % 2 === 0 ? '' : 'bg-gray-50/50'}`}>
-                      <td className="px-6 py-3 text-gray-400 w-12">{i + 1}</td>
+                    <tr key={p.id} className={`border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 ${i % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-slate-800/30'}`}>
+                      <td className="px-6 py-3 text-gray-400 dark:text-gray-500 w-12">{i + 1}</td>
                       <td className="px-4 py-3">
-                        <span className="bg-purple-100 text-purple-700 px-2 py-1 rounded-full text-xs font-medium">🔑 {p.name}</span>
+                        <span className="bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-medium">🔑 {p.name}</span>
                       </td>
-                      <td className="px-4 py-3 text-gray-400">{p.guard_name}</td>
+                      <td className="px-4 py-3 text-gray-400 dark:text-gray-500">{p.guard_name}</td>
                       <td className="px-4 py-3 text-right">
                         {canDeletePermission && (
-                          <button onClick={() => handleDelete(p.id, p.name)} className="text-xs text-red-500 hover:underline">Delete</button>
+                          <button onClick={() => handleDelete(p.id, p.name)} className="text-xs text-red-500 dark:text-red-400 hover:underline">Delete</button>
                         )}
                       </td>
                     </tr>
@@ -152,25 +152,25 @@ export default function PermissionsContent() {
 
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-lg w-full max-w-md p-6">
-            <h3 className="text-lg font-bold text-gray-800 mb-4">Add New Permission</h3>
-            {error && <div className="bg-red-50 text-red-600 text-sm px-4 py-2 rounded mb-4">{error}</div>}
+          <div className="bg-white dark:bg-slate-900 rounded-xl shadow-lg w-full max-w-md p-6">
+            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-4">Add New Permission</h3>
+            {error && <div className="bg-red-50 dark:bg-red-950/40 text-red-600 dark:text-red-400 text-sm px-4 py-2 rounded mb-4">{error}</div>}
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Permission Name</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Permission Name</label>
                 <input
                   type="text" value={form.name} required
                   onChange={e => setForm({ name: e.target.value })}
                   placeholder="e.g. report-view"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                  className="w-full border border-gray-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
                 />
-                <p className="text-xs text-gray-400 mt-1">Use lowercase with hyphens e.g. listing-approve</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Use lowercase with hyphens e.g. listing-approve</p>
               </div>
               <div className="flex gap-3 pt-2">
                 <button type="submit" disabled={submitting} className="flex-1 bg-green-600 hover:bg-green-700 text-white py-2 rounded-lg text-sm font-medium disabled:opacity-50">
                   {submitting ? 'Creating...' : 'Create Permission'}
                 </button>
-                <button type="button" onClick={() => setShowModal(false)} className="flex-1 border border-gray-300 text-gray-600 hover:bg-gray-50 py-2 rounded-lg text-sm">Cancel</button>
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 border border-gray-300 dark:border-slate-600 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2 rounded-lg text-sm">Cancel</button>
               </div>
             </form>
           </div>
@@ -178,4 +178,4 @@ export default function PermissionsContent() {
       )}
     </>
   );
-}
+}

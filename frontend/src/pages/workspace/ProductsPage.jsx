@@ -58,7 +58,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Images */}
             <div>
-              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center relative group mb-2">
+              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-slate-800 flex items-center justify-center relative group mb-2">
                 {images.length > 0 ? (
                   <>
                     <img src={getImageUrl(images[activeImg]) || ''} alt="Product" className="w-full h-full object-cover" />
@@ -78,7 +78,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                         <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
                           {images.map((_, i) => (
                             <button key={i} onClick={() => setActiveImg(i)}
-                              className={`w-2 h-2 rounded-full transition ${activeImg === i ? 'bg-white' : 'bg-white/50'}`}
+                              className={`w-2 h-2 rounded-full transition ${activeImg === i ? 'bg-white dark:bg-slate-900' : 'bg-white/50'}`}
                             />
                           ))}
                         </div>
@@ -93,7 +93,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 <div className="flex gap-2 overflow-x-auto">
                   {images.map((img, i) => (
                     <button key={i} onClick={() => setActiveImg(i)}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition shrink-0 ${activeImg === i ? 'border-teal-500' : 'border-gray-200 opacity-60'}`}>
+                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition shrink-0 ${activeImg === i ? 'border-teal-500' : 'border-gray-200 dark:border-slate-700 opacity-60'}`}>
                       <img src={getImageUrl(img) || ''} alt="" className="w-full h-full object-cover" />
                     </button>
                   ))}
@@ -118,13 +118,13 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 </div>
               ))}
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">Description</p>
-                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-3">{product.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Description</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3">{product.description}</p>
               </div>
               {product.specification && (
                 <div>
-                  <p className="text-sm text-gray-500 font-medium mb-1">Specifications</p>
-                  <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-3">{product.specification}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Specifications</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3">{product.specification}</p>
                 </div>
               )}
               {product.status === 'rejected' && product.rejection_reason && (
@@ -138,7 +138,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex gap-3 shrink-0">
           {product.status === 'pending' && (
             <>
               {canApprove && (
@@ -154,7 +154,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 </button>
               )}
               {!canApprove && !canReject && (
-                <div className="flex-1 bg-gray-50 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-medium text-center">
+                <div className="flex-1 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-400 py-2.5 rounded-xl text-sm font-medium text-center">
                   No actions available
                 </div>
               )}
@@ -170,7 +170,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
               <i className="bi bi-x-circle-fill" /> This listing has been rejected
             </div>
           )}
-          <button onClick={onClose} className="border border-gray-200 text-gray-600 hover:bg-gray-50 px-6 py-2.5 rounded-xl text-sm transition">
+          <button onClick={onClose} className="border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 px-6 py-2.5 rounded-xl text-sm transition">
             Close
           </button>
         </div>
@@ -205,7 +205,7 @@ function RejectModal({ product, onClose, onRejected, toast }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5">
           <div className="flex items-center justify-between">
             <div className="min-w-0">
@@ -225,21 +225,21 @@ function RejectModal({ product, onClose, onRejected, toast }) {
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">Reason for rejection</label>
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">Reason for rejection</label>
               <textarea
                 value={reason} required rows={4}
                 onChange={e => setReason(e.target.value)}
                 placeholder="Explain clearly why this listing is being rejected so the seller can correct it..."
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-gray-50 resize-none"
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-gray-50 dark:bg-slate-800/60 resize-none"
               />
-              <p className="text-xs text-gray-400 mt-1">{reason.length} characters (min 10)</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{reason.length} characters (min 10)</p>
             </div>
             <div className="flex gap-3">
               <button type="submit" disabled={submitting}
                 className="flex-1 inline-flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition">
                 {submitting ? <><i className="bi bi-arrow-repeat animate-spin" /> Rejecting...</> : <><i className="bi bi-send" /> Reject &amp; notify seller</>}
               </button>
-              <button type="button" onClick={onClose} className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm transition">
+              <button type="button" onClick={onClose} className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 py-2.5 rounded-xl text-sm transition">
                 Cancel
               </button>
             </div>
@@ -430,13 +430,13 @@ export default function WorkspaceProductsPage() {
         <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="flex gap-4 px-6 py-4 border-b border-gray-50 items-center">
-              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+              <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-100 rounded w-48" />
-                <div className="h-3 bg-gray-100 rounded w-32" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-48" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-32" />
               </div>
-              <div className="h-5 w-20 bg-gray-100 rounded-full" />
-              <div className="h-8 w-24 bg-gray-100 rounded-xl" />
+              <div className="h-5 w-20 bg-gray-100 dark:bg-slate-800 rounded-full" />
+              <div className="h-8 w-24 bg-gray-100 dark:bg-slate-800 rounded-xl" />
             </div>
           ))}
         </div>
@@ -488,10 +488,10 @@ export default function WorkspaceProductsPage() {
         /* ── Table view ──────────────────────────────────── */
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Listing', 'Seller', 'Category', 'Price', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>

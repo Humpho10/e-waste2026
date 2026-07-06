@@ -76,7 +76,7 @@ export default function Browse() {
   const activeFilterCount = [categoryId, condition, minPrice, maxPrice].filter(Boolean).length;
 
   return (
-    <div className="bg-slate-50 min-h-[calc(100vh-4rem)]">
+    <div className="bg-slate-50 dark:bg-slate-950 min-h-[calc(100vh-4rem)]">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
         {/* Search bar */}
         <form onSubmit={applyFilters} className="flex gap-2 mb-4">
@@ -86,13 +86,13 @@ export default function Browse() {
               value={q}
               onChange={(e) => setQ(e.target.value)}
               placeholder="Search for a part…"
-              className="w-full bg-white border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 rounded-lg pl-9 pr-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
-            className="flex items-center gap-1.5 border border-slate-300 bg-white hover:bg-slate-50 text-sm font-medium text-slate-700 rounded-lg px-4 py-2.5 transition-colors"
+            className="flex items-center gap-1.5 border border-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 text-sm font-medium text-slate-700 rounded-lg px-4 py-2.5 transition-colors"
           >
             <SlidersHorizontal size={15} />
             Filters
@@ -112,7 +112,7 @@ export default function Browse() {
 
         {/* Filter panel */}
         {filtersOpen && (
-          <div className="bg-white border border-slate-200 rounded-xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
               <select
@@ -198,11 +198,11 @@ export default function Browse() {
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/3] bg-white border border-slate-200 rounded-xl animate-pulse" />
+              <div key={i} className="aspect-[4/3] bg-white dark:bg-slate-900 border border-slate-200 rounded-xl animate-pulse" />
             ))}
           </div>
         ) : result?.data?.length === 0 ? (
-          <div className="bg-white border border-slate-200 rounded-xl py-20 text-center">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl py-20 text-center">
             <p className="text-slate-500 text-sm mb-1">No matching listings.</p>
             <p className="text-slate-400 text-xs">Try a different search or clear your filters.</p>
           </div>

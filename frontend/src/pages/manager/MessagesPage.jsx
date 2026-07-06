@@ -66,21 +66,21 @@ export default function ManagerMessagesPage() {
         <p className="text-gray-500 text-sm mt-1">Communications regarding listings in your categories</p>
       </div>
 
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex h-[600px]">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
         {/* Conversations */}
-        <div className="w-72 border-r border-gray-100 flex flex-col shrink-0">
+        <div className="w-72 border-r border-gray-100 dark:border-slate-800 flex flex-col shrink-0">
           <div className="px-4 py-3 border-b border-gray-50">
-            <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Conversations</p>
+            <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Conversations</p>
           </div>
           <div className="flex-1 overflow-y-auto">
             {loading ? (
               <div className="p-4 space-y-3 animate-pulse">
                 {Array(4).fill(0).map((_, i) => (
                   <div key={i} className="flex gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+                    <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
                     <div className="flex-1 space-y-1.5 pt-1">
-                      <div className="h-3 bg-gray-100 rounded w-24" />
-                      <div className="h-3 bg-gray-100 rounded w-32" />
+                      <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-24" />
+                      <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-32" />
                     </div>
                   </div>
                 ))}
@@ -101,9 +101,9 @@ export default function ManagerMessagesPage() {
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
-                    <p className="font-semibold text-gray-800 text-sm truncate">{conv.other_person?.name}</p>
-                    <p className="text-xs text-gray-400 truncate mt-0.5">{conv.product_title}</p>
-                    <p className="text-xs text-gray-400 truncate">{conv.last_message}</p>
+                    <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{conv.other_person?.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.product_title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{conv.last_message}</p>
                   </div>
                   {conv.unread_count > 0 && (
                     <span className="w-5 h-5 rounded-full bg-orange-500 text-white text-xs flex items-center justify-center shrink-0 mt-1">
@@ -133,8 +133,8 @@ export default function ManagerMessagesPage() {
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <p className="font-bold text-gray-800 text-sm">{active.other_person?.name}</p>
-                  <p className="text-xs text-gray-400">Re: {active.product_title}</p>
+                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">{active.other_person?.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title}</p>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -152,7 +152,7 @@ export default function ManagerMessagesPage() {
                   );
                 })}
               </div>
-              <form onSubmit={handleSend} className="px-4 py-3 border-t border-gray-100 flex gap-3">
+              <form onSubmit={handleSend} className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex gap-3">
                 <input
                   type="text" value={newMsg}
                   onChange={e => setNewMsg(e.target.value)}

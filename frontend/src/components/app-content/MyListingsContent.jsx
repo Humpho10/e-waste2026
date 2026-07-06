@@ -7,10 +7,10 @@ import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 
 const statusConfig = {
-  pending:     { label: 'Pending Review', color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400' },
-  approved:    { label: 'Approved — Live', color: 'bg-green-100 text-green-700',  dot: 'bg-green-400'  },
-  rejected:    { label: 'Rejected',        color: 'bg-red-100 text-red-700',      dot: 'bg-red-400'    },
-  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700',    dot: 'bg-blue-400'   },
+  pending:     { label: 'Pending Review', color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
+  approved:    { label: 'Approved — Live', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',  dot: 'bg-green-400'  },
+  rejected:    { label: 'Rejected',        color: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',      dot: 'bg-red-400'    },
+  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400',    dot: 'bg-blue-400'   },
 };
 
 export default function MyListingsContent() {
@@ -56,8 +56,8 @@ export default function MyListingsContent() {
     <>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">My Listings</h2>
-          <p className="text-gray-500 text-sm mt-1">{listings.length} listing{listings.length !== 1 ? 's' : ''}</p>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">My Listings</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">{listings.length} listing{listings.length !== 1 ? 's' : ''}</p>
         </div>
         {canCreate && (
           <Link
@@ -77,7 +77,7 @@ export default function MyListingsContent() {
             className={`px-4 py-2 rounded-xl text-sm font-medium transition capitalize
               ${status === s
                 ? 'bg-blue-600 text-white shadow-sm'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-blue-300'
+                : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-blue-300'
               }`}
           >
             {s === 'all' ? 'All' : s}
@@ -88,21 +88,21 @@ export default function MyListingsContent() {
       {loading ? (
         <div className="space-y-3 animate-pulse">
           {Array(4).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4 items-center">
-              <div className="w-14 h-14 rounded-xl bg-gray-100 shrink-0" />
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 flex gap-4 items-center">
+              <div className="w-14 h-14 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-gray-100 rounded w-56" />
-                <div className="h-3 bg-gray-100 rounded w-32" />
+                <div className="h-4 bg-gray-100 dark:bg-slate-800 rounded w-56" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-32" />
               </div>
-              <div className="h-6 w-20 bg-gray-100 rounded-full" />
+              <div className="h-6 w-20 bg-gray-100 dark:bg-slate-800 rounded-full" />
             </div>
           ))}
         </div>
       ) : listings.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
           <div className="text-5xl mb-4">📭</div>
-          <h3 className="font-bold text-gray-700 mb-2">No listings yet</h3>
-          <p className="text-gray-400 text-sm mb-6">Post your first e-waste component to start selling</p>
+          <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No listings yet</h3>
+          <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">Post your first e-waste component to start selling</p>
           {canCreate && (
             <Link
               to="/dashboard/create"
@@ -117,8 +117,8 @@ export default function MyListingsContent() {
           {listings.map(listing => {
             const cfg = statusConfig[listing.status] || statusConfig.pending;
             return (
-              <div key={listing.product_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md transition-all p-5 flex gap-4 items-start">
-                <div className="w-14 h-14 rounded-xl bg-blue-50 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
+              <div key={listing.product_id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex gap-4 items-start">
+                <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
                   {listing.images?.[0] ? (
                     <img
                       src={`http://localhost:8000/storage/${listing.images[0].image_path}`}
@@ -128,8 +128,8 @@ export default function MyListingsContent() {
                   ) : '📦'}
                 </div>
                 <div className="flex-1 overflow-hidden">
-                  <h3 className="font-bold text-gray-800 truncate">{listing.title}</h3>
-                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-400">
+                  <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{listing.title}</h3>
+                  <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-400 dark:text-gray-500">
                     <span>UGX {Number(listing.price).toLocaleString()}</span>
                     <span>·</span>
                     <span>{listing.condition}</span>
@@ -139,9 +139,9 @@ export default function MyListingsContent() {
                     <span>{new Date(listing.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                   </div>
                   {listing.status === 'rejected' && listing.rejection_reason && (
-                    <div className="mt-2 bg-red-50 border border-red-100 rounded-lg px-3 py-2">
-                      <p className="text-xs text-red-600 font-medium">Rejection reason:</p>
-                      <p className="text-xs text-red-500 mt-0.5">{listing.rejection_reason}</p>
+                    <div className="mt-2 bg-red-50 dark:bg-red-950/40 border border-red-100 rounded-lg px-3 py-2">
+                      <p className="text-xs text-red-600 dark:text-red-400 font-medium">Rejection reason:</p>
+                      <p className="text-xs text-red-500 dark:text-red-400 mt-0.5">{listing.rejection_reason}</p>
                     </div>
                   )}
                 </div>
@@ -154,7 +154,7 @@ export default function MyListingsContent() {
                     {canEdit && ['pending', 'rejected'].includes(listing.status) && (
                       <Link
                         to={`/dashboard/edit/${listing.product_id}`}
-                        className="text-xs text-blue-500 hover:underline"
+                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                       >
                         Edit
                       </Link>
@@ -171,7 +171,7 @@ export default function MyListingsContent() {
                       <button
                         onClick={() => handleDelete(listing.product_id, listing.title)}
                         disabled={deleting === listing.product_id}
-                        className="text-xs text-red-400 hover:underline disabled:opacity-50"
+                        className="text-xs text-red-500 dark:text-red-400 hover:underline disabled:opacity-50"
                       >
                         {deleting === listing.product_id ? '...' : 'Delete'}
                       </button>
@@ -185,4 +185,4 @@ export default function MyListingsContent() {
       )}
     </>
   );
-}
+}

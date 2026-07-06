@@ -16,6 +16,7 @@ use App\Http\Controllers\ContactController;
 Route::prefix('auth')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login',    [AuthController::class, 'login']);
+    Route::post('/google',   [AuthController::class, 'google']);              // ← Google Sign-In
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
     Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
     Route::post('/verify-email',    [AuthController::class, 'verifyEmail']);    // ← new
@@ -34,6 +35,7 @@ Route::get('/products', [ProductController::class, 'browse']);
 Route::get('/products/{id}', [ProductController::class, 'show']);
 
 Route::get('/stats', [StatsController::class, 'index']); // ← new public stats
+Route::get('/settings/public', [StatsController::class, 'publicSettings']);
 
 // Contact page — rate-limited (5/min per IP) since it's unauthenticated.
 Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:5,1');
@@ -71,6 +73,15 @@ Route::middleware(['auth:sanctum', 'check.permissions:user-list,role-list,permis
 
     // ── Audit ──────────────────────────────────────────────
     Route::get('/audit',               [AdminController::class, 'getAuditTrail'])->middleware('can:audit-list');
+    Route::get('/audit/export',        [AdminController::class, 'exportAuditTrail'])->middleware('can:audit-list');
+
+    // ── Messages (platform-wide oversight) ──────────────────
+    Route::get('/messages',            [AdminController::class, 'getMessages'])->middleware('can:message-view');
+    Route::get('/messages/{productId}',[AdminController::class, 'getMessageThread'])->middleware('can:message-view');
+
+    // ── System Settings ──────────────────────────────────────
+    Route::get('/settings',  [AdminController::class, 'getSettings']);
+    Route::put('/settings',  [AdminController::class, 'updateSettings']);
 
     // ── Profile ────────────────────────────────────────────
     Route::get('/profile',  [AdminController::class, 'getProfile']);

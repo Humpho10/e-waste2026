@@ -10,13 +10,13 @@ import { useAuth } from '../../context/AuthContext';
 
 function SkeletonRow() {
   return (
-    <tr className="animate-pulse border-t border-gray-50">
-      <td className="px-4 py-3"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-gray-100" /><div className="h-3 w-24 bg-gray-100 rounded" /></div></td>
-      <td className="px-4 py-3"><div className="h-3 w-32 bg-gray-100 rounded" /></td>
-      <td className="px-4 py-3"><div className="h-3 w-20 bg-gray-100 rounded" /></td>
-      <td className="px-4 py-3"><div className="h-3 w-16 bg-gray-100 rounded" /></td>
-      <td className="px-4 py-3"><div className="h-5 w-16 bg-gray-100 rounded-full" /></td>
-      <td className="px-4 py-3"><div className="flex gap-2"><div className="h-5 w-16 bg-gray-100 rounded" /><div className="h-5 w-16 bg-gray-100 rounded" /></div></td>
+    <tr className="animate-pulse border-t border-gray-50 dark:border-slate-800">
+      <td className="px-4 py-3"><div className="flex items-center gap-2"><div className="w-8 h-8 rounded-full bg-gray-100 dark:bg-slate-800" /><div className="h-3 w-24 bg-gray-100 dark:bg-slate-800 rounded" /></div></td>
+      <td className="px-4 py-3"><div className="h-3 w-32 bg-gray-100 dark:bg-slate-800 rounded" /></td>
+      <td className="px-4 py-3"><div className="h-3 w-20 bg-gray-100 dark:bg-slate-800 rounded" /></td>
+      <td className="px-4 py-3"><div className="h-3 w-16 bg-gray-100 dark:bg-slate-800 rounded" /></td>
+      <td className="px-4 py-3"><div className="h-5 w-16 bg-gray-100 dark:bg-slate-800 rounded-full" /></td>
+      <td className="px-4 py-3"><div className="flex gap-2"><div className="h-5 w-16 bg-gray-100 dark:bg-slate-800 rounded" /><div className="h-5 w-16 bg-gray-100 dark:bg-slate-800 rounded" /></div></td>
     </tr>
   );
 }
@@ -122,7 +122,7 @@ export default function UsersPage() {
             placeholder="Search users..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white"
+            className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900"
           />
         </div>
       </div>
@@ -161,12 +161,12 @@ export default function UsersPage() {
       )}
 
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Name', 'Email', 'Phone', 'Location', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
@@ -186,24 +186,24 @@ export default function UsersPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Name', 'Email', 'Phone', 'Location', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wide">{h}</th>
+                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
               {filtered.map(user => (
-                <tr key={user.id} className="border-t border-gray-50 hover:bg-gray-50 transition">
+                <tr key={user.id} className="border-t border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 flex items-center justify-center text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-bold">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
-                      <span className="font-medium text-gray-800">{user.name}</span>
+                      <span className="font-medium text-gray-800 dark:text-gray-100">{user.name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3 text-gray-600">
@@ -218,8 +218,8 @@ export default function UsersPage() {
                   <td className="px-4 py-3">
                     <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${
                       user.is_active
-                        ? 'bg-green-100 text-green-700'
-                        : 'bg-gray-100 text-gray-500'
+                        ? 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400'
+                        : 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'
                     }`}>
                       <span className={`w-1.5 h-1.5 rounded-full ${user.is_active ? 'bg-green-400' : 'bg-gray-400'}`} />
                       {user.is_active ? 'Active' : 'Inactive'}

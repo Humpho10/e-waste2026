@@ -11,6 +11,7 @@ use App\Models\SubCategory;
 use App\Models\Notification;
 use App\Models\Message;
 use App\Models\ProductManagerAssignment;
+use App\Models\Settings;
 use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -123,16 +124,28 @@ class ProductController extends Controller
             ], 403);
         }
 
+        $settings = Settings::current();
+
+        $priceRule = ['required', 'numeric', 'min:' . ($settings->min_listing_price ?? 0)];
+        if ($settings->max_listing_price) {
+            $priceRule[] = 'max:' . $settings->max_listing_price;
+        }
+
         $validated = $request->validate([
             'category_id'    => 'required|exists:categories,category_id',
             'subcategory_id' => 'required|exists:sub_categories,subcategory_id',
             'title'          => 'required|string|max:255',
             'description'    => 'required|string',
             'condition'      => 'required|in:New,Good,Fair,Poor',
-            'price'          => 'required|numeric|min:0',
+            'price'          => $priceRule,
             'specification'  => 'nullable|string',
-            'images'         => 'nullable|array|max:5',
-            'images.*'       => 'image|mimes:jpeg,png,jpg|max:2048',
+            'images'         => 'nullable|array|max:' . $settings->max_images_per_listing,
+            'images.*'       => 'image|mimes:jpeg,png,jpg|max:' . $settings->max_image_upload_size_kb,
+        ], [
+            'price.max'   => 'Listing price cannot exceed ' . number_format($settings->max_listing_price ?? 0) . '.',
+            'price.min'   => 'Listing price must be at least ' . number_format($settings->min_listing_price ?? 0) . '.',
+            'images.max'  => 'You can upload at most ' . $settings->max_images_per_listing . ' images per listing.',
+            'images.*.max'=> 'Each image must be smaller than ' . number_format($settings->max_image_upload_size_kb) . 'KB.',
         ]);
 
         $product = Product::create([
@@ -144,7 +157,9 @@ class ProductController extends Controller
             'condition'      => $validated['condition'],
             'price'          => $validated['price'],
             'specification'  => $validated['specification'] ?? null,
-            'status'         => 'pending',
+            // Auto-approve is a Super Admin setting — otherwise every new
+            // listing starts in the normal review queue.
+            'status'         => $settings->auto_approve_listings ? 'approved' : 'pending',
         ]);
 
         // Handle image uploads
@@ -172,8 +187,24 @@ class ProductController extends Controller
             ]);
         }
 
+        // Notify Admins/Super Admins too, if the Super Admin has that setting on.
+        if ($settings->notify_admins_on_new_listing) {
+            $admins = \App\Models\User::role(['Admin', 'Super-Admin'])->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id'      => $admin->id,
+                    'type'         => 'new_listing',
+                    'reference_id' => $product->product_id,
+                    'message'      => "New listing \"{$product->title}\" was submitted" . ($settings->auto_approve_listings ? ' and auto-approved.' : ' and is awaiting review.'),
+                    'is_read'      => false,
+                ]);
+            }
+        }
+
         return response()->json([
-            'message' => 'Listing created successfully and submitted for approval.',
+            'message' => $settings->auto_approve_listings
+                ? 'Listing created and published — it is now live on the marketplace.'
+                : 'Listing created successfully and submitted for approval.',
             'product' => $product->load(['category', 'subCategory', 'images']),
         ], 201);
     }
@@ -307,16 +338,26 @@ class ProductController extends Controller
             return response()->json(['error' => 'Only rejected listings can be resubmitted.'], 400);
         }
 
+        $settings = Settings::current();
+
+        $priceRule = ['sometimes', 'numeric', 'min:' . ($settings->min_listing_price ?? 0)];
+        if ($settings->max_listing_price) {
+            $priceRule[] = 'max:' . $settings->max_listing_price;
+        }
+
         $validated = $request->validate([
             'title'          => 'sometimes|string|max:255',
             'description'    => 'sometimes|string',
             'condition'      => 'sometimes|in:New,Good,Fair,Poor',
-            'price'          => 'sometimes|numeric|min:0',
+            'price'          => $priceRule,
             'specification'  => 'nullable|string',
-            'images'         => 'nullable|array|max:5',
-            'images.*'       => 'image|mimes:jpeg,png,jpg|max:2048',
+            'images'         => 'nullable|array|max:' . $settings->max_images_per_listing,
+            'images.*'       => 'image|mimes:jpeg,png,jpg|max:' . $settings->max_image_upload_size_kb,
             'remove_images'  => 'nullable|array',
             'remove_images.*' => 'integer',
+        ], [
+            'images.max'   => 'You can upload at most ' . $settings->max_images_per_listing . ' images per listing.',
+            'images.*.max' => 'Each image must be smaller than ' . number_format($settings->max_image_upload_size_kb) . 'KB.',
         ]);
 
         $oldValue = $product->toArray();
@@ -369,16 +410,18 @@ class ProductController extends Controller
             ]);
         }
 
-        // Notify all Admins
-        $admins = \App\Models\User::role('Admin')->get();
-        foreach ($admins as $admin) {
-            Notification::create([
-                'user_id'      => $admin->id,
-                'type'         => 'listing_resubmitted',
-                'reference_id' => $product->product_id,
-                'message'      => "Listing \"{$product->title}\" has been corrected and resubmitted for review.",
-                'is_read'      => false,
-            ]);
+        // Notify all Admins (respects the Super Admin's notification setting)
+        if (Settings::current()->notify_admins_on_new_listing) {
+            $admins = \App\Models\User::role('Admin')->get();
+            foreach ($admins as $admin) {
+                Notification::create([
+                    'user_id'      => $admin->id,
+                    'type'         => 'listing_resubmitted',
+                    'reference_id' => $product->product_id,
+                    'message'      => "Listing \"{$product->title}\" has been corrected and resubmitted for review.",
+                    'is_read'      => false,
+                ]);
+            }
         }
 
         return response()->json([
@@ -513,12 +556,20 @@ class ProductController extends Controller
     {
         $user = $request->user();
 
+        $profileSettings = Settings::current();
+
+        $passwordRule = $request->filled('password')
+            ? array_merge(['sometimes'], $profileSettings->passwordRules(), ['confirmed'])
+            : 'sometimes|string';
+
         $validated = $request->validate([
             'name'     => 'sometimes|string|max:255',
             'phone'    => 'sometimes|string|max:20',
             'location' => 'sometimes|string|max:100',
-            'password' => 'sometimes|string|min:8|confirmed',
-            'avatar'   => 'sometimes|image|mimes:jpeg,png,jpg|max:2048',
+            'password' => $passwordRule,
+            'avatar'   => 'sometimes|image|mimes:jpeg,png,jpg|max:' . $profileSettings->max_image_upload_size_kb,
+        ], [
+            'password.regex' => 'Password must include at least one letter and one number.',
         ]);
 
         if (isset($validated['name']))     $user->name     = $validated['name'];

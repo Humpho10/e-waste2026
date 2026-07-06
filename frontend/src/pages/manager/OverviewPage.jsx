@@ -16,7 +16,7 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, to, sub }) {
   return (
     <Link
       to={to}
-      className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100 hover:shadow-md hover:border-orange-100 transition group"
+      className="bg-white dark:bg-slate-900 rounded-2xl p-6 shadow-sm border border-gray-100 dark:border-slate-800 hover:shadow-md hover:border-orange-100 transition group"
     >
       <div className="flex items-start justify-between mb-4">
         <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${iconBg}`}>
@@ -24,12 +24,12 @@ function StatCard({ icon: Icon, label, value, iconBg, iconColor, to, sub }) {
         </div>
       </div>
       {value === undefined || value === null ? (
-        <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mb-1" />
+        <div className="h-8 w-16 bg-gray-100 dark:bg-slate-800 rounded-lg animate-pulse mb-1" />
       ) : (
-        <p className="text-3xl font-bold text-gray-800 mb-1">{value}</p>
+        <p className="text-3xl font-bold text-gray-800 dark:text-gray-100 mb-1">{value}</p>
       )}
-      <p className="text-sm text-gray-500 font-medium">{label}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
+      {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
     </Link>
   );
 }
@@ -91,7 +91,7 @@ export default function ManagerOverviewPage() {
       </div>
 
       {isError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6">
+        <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-6">
           Failed to load stats — <button onClick={() => refetch()} className="underline">Retry</button>
         </div>
       )}
@@ -105,8 +105,8 @@ export default function ManagerOverviewPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
 
         {/* Quick actions */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide mb-4">Quick Actions</h3>
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
+          <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide mb-4">Quick Actions</h3>
           <div className="space-y-2">
             {[
               { label: 'Create Product Manager', icon: BiPlus,        to: '/manager/product-managers',        style: 'bg-orange-500 hover:bg-orange-600 text-white'           },

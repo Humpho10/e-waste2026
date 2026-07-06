@@ -11,9 +11,9 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
-  pending:  { label: 'Pending',  color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400' },
-  approved: { label: 'Approved', color: 'bg-green-100 text-green-700',   dot: 'bg-green-400'  },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700',       dot: 'bg-red-400'    },
+  pending:  { label: 'Pending',  color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
+  approved: { label: 'Approved', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',   dot: 'bg-green-400'  },
+  rejected: { label: 'Rejected', color: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',       dot: 'bg-red-400'    },
 };
 
 function ImageThumb({ src, alt, className }) {
@@ -105,7 +105,7 @@ function RejectModal({ product, onClose, onRejected, toast }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-md overflow-hidden">
         <div className="bg-gradient-to-r from-red-500 to-red-600 px-6 py-5">
           <div className="flex items-center justify-between">
             <div>
@@ -119,13 +119,13 @@ function RejectModal({ product, onClose, onRejected, toast }) {
         </div>
         <div className="p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4">
+            <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4">
               {error}
             </div>
           )}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+              <label className="block text-sm font-semibold text-gray-700 dark:text-gray-200 mb-1.5">
                 Reason for rejection
               </label>
               <textarea
@@ -134,9 +134,9 @@ function RejectModal({ product, onClose, onRejected, toast }) {
                 onChange={e => setReason(e.target.value)}
                 rows={4}
                 placeholder="Explain clearly why this listing is being rejected so the seller can correct it..."
-                className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-gray-50 resize-none"
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-red-400 bg-gray-50 dark:bg-slate-800/60 resize-none"
               />
-              <p className="text-xs text-gray-400 mt-1">{reason.length} characters (min 10)</p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{reason.length} characters (min 10)</p>
             </div>
             <div className="flex gap-3">
               <button
@@ -149,7 +149,7 @@ function RejectModal({ product, onClose, onRejected, toast }) {
               <button
                 type="button"
                 onClick={onClose}
-                className="flex-1 border border-gray-200 text-gray-600 py-2.5 rounded-xl text-sm transition"
+                className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 py-2.5 rounded-xl text-sm transition"
               >
                 Cancel
               </button>
@@ -168,12 +168,12 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
         {/* Header */}
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between shrink-0">
           <div>
-            <h3 className="font-bold text-gray-800 text-lg">{product.title}</h3>
-            <p className="text-gray-400 text-xs mt-0.5">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 text-lg">{product.title}</h3>
+            <p className="text-gray-400 dark:text-gray-500 text-xs mt-0.5">
               Submitted by {product.seller?.name} · {new Date(product.created_at).toLocaleDateString()}
             </p>
           </div>
@@ -187,7 +187,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Images */}
             <div>
-              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 border border-gray-100 flex items-center justify-center relative group mb-2">
+              <div className="aspect-square rounded-2xl overflow-hidden bg-gray-50 dark:bg-slate-800/60 border border-gray-100 dark:border-slate-800 flex items-center justify-center relative group mb-2">
                 {images.length > 0 ? (
                   <ImageThumb src={images[activeImg]?.image_url} alt={product.title} className="w-full h-full object-cover" />
                 ) : (
@@ -215,7 +215,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                     <button
                       key={i}
                       onClick={() => setActiveImg(i)}
-                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${activeImg === i ? 'border-blue-500' : 'border-gray-200 opacity-60'}`}
+                      className={`w-12 h-12 rounded-lg overflow-hidden border-2 transition ${activeImg === i ? 'border-blue-500' : 'border-gray-200 dark:border-slate-700 opacity-60'}`}
                     >
                       <ImageThumb src={img.image_url} alt="Thumbnail" className="w-full h-full object-cover" />
                     </button>
@@ -236,18 +236,18 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 { label: 'Submitted',   value: new Date(product.created_at).toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between py-2 border-b border-gray-50">
-                  <span className="text-sm text-gray-500 font-medium">{label}</span>
-                  <span className="text-sm font-semibold text-gray-800">{value}</span>
+                  <span className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</span>
+                  <span className="text-sm font-semibold text-gray-800 dark:text-gray-100">{value}</span>
                 </div>
               ))}
               <div>
-                <p className="text-sm text-gray-500 font-medium mb-1">Description</p>
-                <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-3">{product.description}</p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Description</p>
+                <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3">{product.description}</p>
               </div>
               {product.specification && (
                 <div>
-                  <p className="text-sm text-gray-500 font-medium mb-1">Specifications</p>
-                  <p className="text-sm text-gray-700 leading-relaxed bg-gray-50 rounded-xl p-3">{product.specification}</p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 font-medium mb-1">Specifications</p>
+                  <p className="text-sm text-gray-700 dark:text-gray-200 leading-relaxed bg-gray-50 dark:bg-slate-800/60 rounded-xl p-3">{product.specification}</p>
                 </div>
               )}
             </div>
@@ -275,7 +275,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 </button>
               )}
               {!canApprove && !canReject && (
-                <div className="flex-1 bg-gray-50 border border-gray-200 text-gray-500 py-2.5 rounded-xl text-sm font-medium text-center">
+                <div className="flex-1 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-gray-500 dark:text-gray-400 py-2.5 rounded-xl text-sm font-medium text-center">
                   No actions available
                 </div>
               )}
@@ -293,7 +293,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           )}
           <button
             onClick={onClose}
-            className="border border-gray-200 text-gray-600 hover:bg-gray-50 px-6 py-2.5 rounded-xl text-sm transition"
+            className="border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 px-6 py-2.5 rounded-xl text-sm transition"
           >
             Close
           </button>
@@ -369,7 +369,7 @@ export default function ProductsPage() {
             className={`flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium transition
               ${status === f.key
                 ? 'bg-orange-500 text-white shadow-sm'
-                : 'bg-white border border-gray-200 text-gray-600 hover:border-orange-300'
+                : 'bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:border-orange-300'
               }`}
           >
             {f.label}
@@ -387,23 +387,23 @@ export default function ProductsPage() {
             placeholder="Search listings..."
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="pl-9 pr-4 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white w-52"
+            className="pl-9 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900 w-52"
           />
         </div>
       </div>
 
       {/* Table */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden animate-pulse">
           {Array(5).fill(0).map((_, i) => (
             <div key={i} className="flex gap-4 px-6 py-4 border-b border-gray-50 items-center">
-              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+              <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-100 rounded w-48" />
-                <div className="h-3 bg-gray-100 rounded w-32" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-48" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-32" />
               </div>
-              <div className="h-5 w-20 bg-gray-100 rounded-full" />
-              <div className="h-5 w-24 bg-gray-100 rounded" />
+              <div className="h-5 w-20 bg-gray-100 dark:bg-slate-800 rounded-full" />
+              <div className="h-5 w-24 bg-gray-100 dark:bg-slate-800 rounded" />
             </div>
           ))}
         </div>
@@ -418,12 +418,12 @@ export default function ProductsPage() {
           </p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-gray-50 border-b border-gray-100">
+            <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Image', 'Listing', 'Seller', 'Category', 'Price', 'Condition', 'Status', 'Actions'].map(h => (
-                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 font-semibold uppercase tracking-wide">
+                  <th key={h} className="text-left px-4 py-3 text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wide">
                     {h}
                   </th>
                 ))}
@@ -443,24 +443,24 @@ export default function ProductsPage() {
                       />
                     </td>
                     <td className="px-4 py-3">
-                      <p className="font-medium text-gray-800 max-w-[180px] truncate">{product.title}</p>
-                      <p className="text-xs text-gray-400 mt-0.5">
+                      <p className="font-medium text-gray-800 dark:text-gray-100 max-w-[180px] truncate">{product.title}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
                         {new Date(product.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
                       </p>
                     </td>
                     <td className="px-4 py-3">
-                      <p className="text-gray-700 font-medium">{product.seller?.name}</p>
-                      <p className="text-xs text-gray-400">{product.seller?.email}</p>
+                      <p className="text-gray-700 dark:text-gray-200 font-medium">{product.seller?.name}</p>
+                      <p className="text-xs text-gray-400 dark:text-gray-500">{product.seller?.email}</p>
                     </td>
                     <td className="px-4 py-3">
-                      <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">
+                      <span className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-gray-300 px-2 py-1 rounded-full">
                         {product.category?.name}
                       </span>
                     </td>
-                    <td className="px-4 py-3 font-semibold text-gray-800">
+                    <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100">
                       UGX {Number(product.price).toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-gray-500 text-xs">{product.condition}</td>
+                    <td className="px-4 py-3 text-gray-500 dark:text-gray-400 text-xs">{product.condition}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>
                         <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />

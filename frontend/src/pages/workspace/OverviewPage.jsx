@@ -72,8 +72,8 @@ function StatCard({ icon, label, value, to, accent, sub, loading }) {
       ) : (
         <p className="text-2xl font-bold text-gray-800 mb-0.5">{value}</p>
       )}
-      <p className="text-sm text-gray-500 font-medium">{label}</p>
-      {sub && <p className="text-xs text-gray-400 mt-0.5">{sub}</p>}
+      <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
+      {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
     </Link>
   );
 }

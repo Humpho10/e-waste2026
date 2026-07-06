@@ -5,12 +5,12 @@ import { getNotifications, markRead, markAllRead, deleteNotification } from '../
 import { useToast } from '../../components/Toast';
 
 const typeConfig = {
-  product_approved:    { icon: '✅', color: 'bg-green-50 border-green-200'  },
-  product_rejected:    { icon: '❌', color: 'bg-red-50 border-red-200'      },
-  new_message:         { icon: '💬', color: 'bg-blue-50 border-blue-200'    },
+  product_approved:    { icon: '✅', color: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'  },
+  product_rejected:    { icon: '❌', color: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50'      },
+  new_message:         { icon: '💬', color: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50'    },
   account_created:     { icon: '🎉', color: 'bg-purple-50 border-purple-200'},
-  listing_resubmitted: { icon: '🔄', color: 'bg-yellow-50 border-yellow-200'},
-  new_listing:         { icon: '📦', color: 'bg-gray-50 border-gray-200'    },
+  listing_resubmitted: { icon: '🔄', color: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50'},
+  new_listing:         { icon: '📦', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700'    },
 };
 
 export default function NotificationsPage() {
@@ -61,15 +61,15 @@ export default function NotificationsPage() {
     <DashboardLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Notifications</h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Notifications</h2>
+          <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">
             {unread > 0 ? `${unread} unread notification${unread !== 1 ? 's' : ''}` : 'All caught up!'}
           </p>
         </div>
         {unread > 0 && (
           <button
             onClick={handleMarkAllRead}
-            className="text-sm text-blue-600 hover:underline font-medium"
+            className="text-sm text-blue-600 dark:text-blue-400 hover:underline font-medium"
           >
             Mark all as read
           </button>
@@ -79,38 +79,38 @@ export default function NotificationsPage() {
       {loading ? (
         <div className="space-y-3 animate-pulse">
           {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-100 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/3" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-1/3" />
               </div>
             </div>
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
+        <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
           <div className="text-5xl mb-4">🔔</div>
-          <h3 className="font-bold text-gray-700 mb-2">No notifications yet</h3>
-          <p className="text-gray-400 text-sm">You'll be notified about your listings, messages and account activity</p>
+          <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No notifications yet</h3>
+          <p className="text-gray-400 dark:text-gray-500 text-sm">You'll be notified about your listings, messages and account activity</p>
         </div>
       ) : (
         <div className="space-y-3">
           {notifications.map(notif => {
-            const cfg = typeConfig[notif.type] || { icon: '🔔', color: 'bg-gray-50 border-gray-200' };
+            const cfg = typeConfig[notif.type] || { icon: '🔔', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700' };
             return (
               <div
                 key={notif.notification_id}
                 className={`rounded-2xl border p-5 flex gap-4 items-start transition ${cfg.color} ${!notif.is_read ? 'shadow-sm' : 'opacity-75'}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center text-xl shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-xl shrink-0 shadow-sm">
                   {cfg.icon}
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800' : 'text-gray-600'}`}>
+                  <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>
                     {notif.message}
                   </p>
-                  <p className="text-xs text-gray-400 mt-1">
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">
                     {new Date(notif.created_at).toLocaleString('en-UG', {
                       day: 'numeric', month: 'short', year: 'numeric',
                       hour: '2-digit', minute: '2-digit'
@@ -121,14 +121,14 @@ export default function NotificationsPage() {
                   {!notif.is_read && (
                     <button
                       onClick={() => handleMarkRead(notif.notification_id)}
-                      className="text-xs text-blue-600 hover:underline"
+                      className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                     >
                       Mark read
                     </button>
                   )}
                   <button
                     onClick={() => handleDelete(notif.notification_id)}
-                    className="text-xs text-gray-300 hover:text-red-500 transition"
+                    className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition"
                   >
                     ✕
                   </button>

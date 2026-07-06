@@ -80,11 +80,11 @@ export default function ManagerNotificationsPage() {
       {loading ? (
         <div className="space-y-3 animate-pulse">
           {Array(5).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-5 flex gap-4">
-              <div className="w-10 h-10 rounded-xl bg-gray-100 shrink-0" />
+            <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 flex gap-4">
+              <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
               <div className="flex-1 space-y-2">
-                <div className="h-3 bg-gray-100 rounded w-3/4" />
-                <div className="h-3 bg-gray-100 rounded w-1/3" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-3/4" />
+                <div className="h-3 bg-gray-100 dark:bg-slate-800 rounded w-1/3" />
               </div>
             </div>
           ))}
@@ -107,8 +107,8 @@ export default function ManagerNotificationsPage() {
                   <Icon size={18} className={cfg.iconColor} />
                 </div>
                 <div className="flex-1">
-                  <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800' : 'text-gray-600'}`}>{notif.message}</p>
-                  <p className="text-xs text-gray-400 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
+                  <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>{notif.message}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{new Date(notif.created_at).toLocaleString()}</p>
                 </div>
                 <div className="flex gap-1 shrink-0">
                   {!notif.is_read && (

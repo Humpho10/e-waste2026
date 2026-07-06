@@ -35,6 +35,9 @@ export const updateUserProfile = (data) => api.post('/profile', data, {
 // ── Homepage stats & photo search ──────────────────────────
 export const getStats = () => api.get('/stats');
 
+// Public settings — powers the storefront maintenance banner/branding.
+export const getPublicSettings = () => api.get('/settings/public');
+
 // TODO: build matching Laravel route/controller for image search
 export const searchByImage = () =>
   Promise.reject(new Error('Image search not implemented yet'));
