@@ -40,17 +40,17 @@ function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
           {initials}
         </div>
         <div className="flex-1 overflow-hidden">
-          <h3 className="font-bold text-gray-800 truncate">{pm.name}</h3>
-          <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1.5">
+          <h3 className="font-bold text-gray-800 truncate dark:text-gray-100">{pm.name}</h3>
+          <p className="text-xs text-gray-400 truncate mt-0.5 flex items-center gap-1.5 dark:text-gray-500">
             <BiMail size={12} /> {pm.email}
           </p>
           {pm.phone && (
-            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 dark:text-gray-500">
               <BiPhone size={12} /> {pm.phone}
             </p>
           )}
           {pm.location && (
-            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5">
+            <p className="text-xs text-gray-400 mt-0.5 flex items-center gap-1.5 dark:text-gray-500">
               <BiMapPin size={12} /> {pm.location}
             </p>
           )}
@@ -87,7 +87,7 @@ function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
           {canEdit && (
             <button
               onClick={() => onEdit(pm)}
-              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 py-2 rounded-lg transition"
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-gray-600 border border-gray-200 hover:bg-gray-50 py-2 rounded-lg transition dark:text-gray-300 dark:border-slate-700"
             >
               <BiEdit2 size={13} /> Edit
             </button>
@@ -95,7 +95,7 @@ function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
           {canDelete && (
             <button
               onClick={() => onDelete(pm)}
-              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 hover:bg-red-50 py-2 rounded-lg transition"
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-red-500 border border-red-100 hover:bg-red-50 py-2 rounded-lg transition dark:text-red-400"
             >
               <BiTrash2 size={13} /> Remove
             </button>
@@ -190,7 +190,7 @@ function PMFormModal({ mode, initial, onClose, onSaved }) {
         {/* Body */}
         <div className="p-6 overflow-y-auto flex-1">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-5 flex gap-2 items-start">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-5 flex gap-2 items-start dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
               <BiAlertCircle size={16} className="shrink-0 mt-0.5" /><span>{error}</span>
             </div>
           )}
@@ -295,13 +295,13 @@ function DeleteConfirmModal({ pm, onClose, onConfirmed }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden dark:bg-slate-900">
         <div className="p-6">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-4 dark:bg-red-950/40 dark:text-red-400">
             <BiTrash2 size={20} />
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Remove {pm.name}?</h3>
-          <p className="text-sm text-gray-500 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-gray-100">Remove {pm.name}?</h3>
+          <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">
             This permanently deletes their account, login access, and category assignments. This can't be undone.
           </p>
           <div className="flex gap-3">
@@ -315,7 +315,7 @@ function DeleteConfirmModal({ pm, onClose, onConfirmed }) {
             <button
               onClick={onClose}
               disabled={deleteMutation.isPending}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition dark:border-slate-700 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -356,10 +356,10 @@ export default function ProductManagersPage() {
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BiBriefcase className="text-orange-500" size={22} /> Product Managers
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+            <BiBriefcase className="text-orange-500 dark:text-orange-400" size={22} /> Product Managers
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
             {pms.length} product manager{pms.length !== 1 ? 's' : ''} on the platform
           </p>
         </div>
@@ -376,7 +376,7 @@ export default function ProductManagersPage() {
       {pms.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text" placeholder="Search product managers..."
               value={search} onChange={e => setSearch(e.target.value)}
@@ -391,12 +391,12 @@ export default function ProductManagersPage() {
           {Array(3).fill(0).map((_, i) => <SkeletonCard key={i} />)}
         </div>
       ) : pms.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiBriefcase size={28} className="text-orange-400" />
           </div>
-          <h3 className="text-lg font-bold text-gray-700 mb-2">No product managers yet</h3>
-          <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
+          <h3 className="text-lg font-bold text-gray-700 mb-2 dark:text-gray-200">No product managers yet</h3>
+          <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto dark:text-gray-500">
             Create product managers and assign them to categories to help review listings.
           </p>
           {canCreatePM && (

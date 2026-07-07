@@ -41,15 +41,15 @@ function ToggleStatusModal({ user, onClose, onConfirmed }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden dark:bg-slate-900">
         <div className="p-6">
-          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${activating ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-500'}`}>
+          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-4 ${activating ? 'bg-green-50 text-green-600 dark:bg-green-950/40 dark:text-green-400' : 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400'}`}>
             {activating ? <BiUserCheck size={20} /> : <BiUserX size={20} />}
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">
+          <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-gray-100">
             {activating ? 'Activate' : 'Deactivate'} {user.name}?
           </h3>
-          <p className="text-sm text-gray-500 mb-6">
+          <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">
             {activating
               ? 'They will regain access to their account and be able to log in again.'
               : "They'll be signed out and won't be able to log in until reactivated."}
@@ -67,7 +67,7 @@ function ToggleStatusModal({ user, onClose, onConfirmed }) {
             <button
               onClick={onClose}
               disabled={mutation.isPending}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition dark:border-slate-700 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -108,15 +108,15 @@ export default function UsersPage() {
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BiUsers className="text-orange-500" size={22} /> Users
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+            <BiUsers className="text-orange-500 dark:text-orange-400" size={22} /> Users
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
             {users.length} regular user{users.length !== 1 ? 's' : ''} on the platform
           </p>
         </div>
         <div className="relative max-w-sm">
-          <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search users..."
@@ -130,31 +130,31 @@ export default function UsersPage() {
       {/* Summary row */}
       {users.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-              <BiUsers size={16} className="text-orange-500" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 dark:bg-orange-950/40">
+              <BiUsers size={16} className="text-orange-500 dark:text-orange-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{users.length}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Total</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{users.length}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Total</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center shrink-0">
-              <BiUserCheck size={16} className="text-green-600" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-green-50 flex items-center justify-center shrink-0 dark:bg-green-950/40">
+              <BiUserCheck size={16} className="text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{activeCount}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Active</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{activeCount}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Active</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0">
-              <BiUserX size={16} className="text-gray-400" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center shrink-0 dark:bg-slate-800">
+              <BiUserX size={16} className="text-gray-400 dark:text-gray-500" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{inactiveCount}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Inactive</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{inactiveCount}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Inactive</p>
             </div>
           </div>
         </div>
@@ -176,12 +176,12 @@ export default function UsersPage() {
           </table>
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiUser size={28} className="text-orange-400" />
           </div>
-          <h3 className="font-bold text-gray-700 mb-2">No users found</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No users found</h3>
+          <p className="text-gray-400 text-sm dark:text-gray-500">
             {users.length === 0 ? 'No regular users have registered yet.' : `No results match "${search}"`}
           </p>
         </div>
@@ -200,19 +200,19 @@ export default function UsersPage() {
                 <tr key={user.id} className="border-t border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-bold">
+                      <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center text-xs font-bold dark:bg-blue-900/40">
                         {user.name.charAt(0).toUpperCase()}
                       </div>
                       <span className="font-medium text-gray-800 dark:text-gray-100">{user.name}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 text-gray-600">
+                  <td className="px-4 py-3 text-gray-600 dark:text-gray-300">
                     <span className="flex items-center gap-1.5"><BiMail size={12} className="text-gray-300" /> {user.email}</span>
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 text-gray-500 text-xs dark:text-gray-400">
                     {user.phone ? <span className="flex items-center gap-1.5"><BiPhone size={11} className="text-gray-300" /> {user.phone}</span> : '—'}
                   </td>
-                  <td className="px-4 py-3 text-gray-500 text-xs">
+                  <td className="px-4 py-3 text-gray-500 text-xs dark:text-gray-400">
                     {user.location ? <span className="flex items-center gap-1.5"><BiMapPin size={11} className="text-gray-300" /> {user.location}</span> : '—'}
                   </td>
                   <td className="px-4 py-3">
@@ -230,7 +230,7 @@ export default function UsersPage() {
                       {canActivate && !user.is_active && (
                         <button
                           onClick={() => setToggleTarget(user)}
-                          className="flex items-center gap-1.5 text-xs bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition"
+                          className="flex items-center gap-1.5 text-xs bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 px-3 py-1.5 rounded-lg font-medium transition dark:bg-green-950/40 dark:text-green-400 dark:border-green-800/50"
                         >
                           <BiUserCheck size={13} /> Activate
                         </button>
@@ -238,7 +238,7 @@ export default function UsersPage() {
                       {canDeactivate && user.is_active && (
                         <button
                           onClick={() => setToggleTarget(user)}
-                          className="flex items-center gap-1.5 text-xs bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg font-medium transition"
+                          className="flex items-center gap-1.5 text-xs bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 px-3 py-1.5 rounded-lg font-medium transition dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/50"
                         >
                           <BiUserX size={13} /> Deactivate
                         </button>

@@ -74,7 +74,7 @@ function ProductCard({ product }) {
   const handleClick = () => {
     if (!token)            navigate('/login');
     else if (product._sample) navigate('/dashboard/browse');
-    else                   navigate(`/dashboard/product/${product.product_id}`);
+    else                   navigate(`/dashboard/product/${product.slug}-${product.hash_id}`);
   };
 
   const img = product.images?.[0]?.image_path;
@@ -85,7 +85,7 @@ function ProductCard({ product }) {
       className="text-left bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 rounded-2xl p-4 hover:shadow-lg hover:border-blue-200 dark:hover:border-blue-800 hover:-translate-y-0.5 cursor-pointer transition-all duration-200 group focus:outline-none focus:ring-2 focus:ring-blue-400"
     >
       {/* Icon / image tile */}
-      <div className="w-full h-28 bg-gradient-to-br from-blue-50 to-sky-100 rounded-xl mb-3 flex items-center justify-center overflow-hidden text-blue-500">
+      <div className="w-full h-28 bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-950/40 dark:to-sky-950/40 rounded-xl mb-3 flex items-center justify-center overflow-hidden text-blue-500 dark:text-blue-400">
         {img && !imgError ? (
           <img src={`http://localhost:8000/storage/${img}`} alt={product.title}
             onError={() => setImgError(true)}
@@ -387,7 +387,7 @@ export default function HomePage() {
                 onClick={() => setHeroIndex(i)}
                 aria-label={`Show hero photo ${i + 1}`}
                 className={`h-1.5 rounded-full transition-all duration-300 ${
-                  i === heroIndex ? 'w-6 bg-white' : 'w-1.5 bg-white/35 hover:bg-white/60'
+                  i === heroIndex ? 'w-6 bg-white dark:bg-slate-900' : 'w-1.5 bg-white/35 hover:bg-white/60'
                 }`}
               />
             ))}
@@ -449,7 +449,7 @@ export default function HomePage() {
                       onClick={() => handleCategoryClick(cat)}
                     >
                       <span className="flex items-center gap-2.5">
-                        <span className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50'}`}>
+                        <span className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
                           {thumb ? (
                             <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
                           ) : (
@@ -706,7 +706,7 @@ export default function HomePage() {
             </p>
             <div className="flex justify-center gap-4 flex-wrap">
               <Link to="/register"
-                className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
+                className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow dark:bg-slate-900 dark:text-blue-400">
                 Create Free Account
               </Link>
               <Link to="/login"

@@ -78,7 +78,7 @@ export default function MessagesContent() {
                 onClick={() => openConversation(conv)}
                 className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-blue-50 dark:bg-blue-950/40' : ''}`}
               >
-                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0">
+                <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-blue-900/40">
                   {conv.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 overflow-hidden">
@@ -110,7 +110,7 @@ export default function MessagesContent() {
         ) : (
           <>
             <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm">
+              <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm dark:bg-blue-900/40">
                 {active.other_person?.name?.charAt(0).toUpperCase()}
               </div>
               <div>

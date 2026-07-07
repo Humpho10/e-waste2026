@@ -42,10 +42,10 @@ const steps = [
 ];
 
 const conditions = [
-  { value: 'New', label: 'Brand New', icon: FiStar, color: 'bg-green-100 text-green-700' },
-  { value: 'Good', label: 'Very Good', icon: FiThumbsUp, color: 'bg-blue-100 text-blue-700' },
-  { value: 'Fair', label: 'Fair', icon: FiBarChart2, color: 'bg-yellow-100 text-yellow-700' },
-  { value: 'Poor', label: 'Needs Repair', icon: FiTool, color: 'bg-red-100 text-red-700' },
+  { value: 'New', label: 'Brand New', icon: FiStar, color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400' },
+  { value: 'Good', label: 'Very Good', icon: FiThumbsUp, color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-400' },
+  { value: 'Fair', label: 'Fair', icon: FiBarChart2, color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400' },
+  { value: 'Poor', label: 'Needs Repair', icon: FiTool, color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400' },
 ];
 
 const categoryIcons = {
@@ -183,14 +183,14 @@ export default function CreateListingPage() {
         <div className="mb-8">
           <div className="flex items-start justify-between">
             <div>
-              <h2 className="text-3xl font-bold text-gray-800">Create Listing</h2>
-              <p className="text-gray-500 text-sm mt-1">
+              <h2 className="text-3xl font-bold text-gray-800 dark:text-gray-100">Create Listing</h2>
+              <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
                 Fill in the details below. Your listing will be reviewed before going live.
               </p>
             </div>
             <div className="hidden sm:block">
-              <div className="px-4 py-2 bg-blue-50 rounded-xl border border-blue-100">
-                <span className="text-sm font-medium text-blue-700">
+              <div className="px-4 py-2 bg-blue-50 rounded-xl border border-blue-100 dark:bg-blue-950/40">
+                <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
                   Step {step} of {steps.length}
                 </span>
               </div>
@@ -199,7 +199,7 @@ export default function CreateListingPage() {
 
           {/* Progress bar */}
           <div className="mt-6 relative">
-            <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 bg-gray-200 rounded-full overflow-hidden dark:bg-slate-700">
               <motion.div
                 className="h-full bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"
                 initial={{ width: 0 }}
@@ -229,22 +229,22 @@ export default function CreateListingPage() {
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-200 ring-4 ring-blue-100' 
                     : step > s.id 
                       ? 'bg-green-500 text-white shadow-lg shadow-green-200' 
-                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200'}
+                      : 'bg-gray-100 text-gray-400 hover:bg-gray-200 dark:bg-slate-800 dark:text-gray-500'}
                 `}>
                   {step > s.id ? <FiCheck className="w-6 h-6" /> : <s.icon className="w-5 h-5" />}
                 </div>
                 <span className={`text-xs mt-2 font-medium transition-colors ${
-                  step >= s.id ? 'text-gray-700' : 'text-gray-400'
+                  step >= s.id ? 'text-gray-700 dark:text-gray-200' : 'text-gray-400 dark:text-gray-500'
                 }`}>
                   {s.label}
                 </span>
-                <span className="text-[10px] text-gray-400 hidden sm:block mt-0.5">
+                <span className="text-[10px] text-gray-400 hidden sm:block mt-0.5 dark:text-gray-500">
                   {s.description}
                 </span>
               </motion.button>
               {i < steps.length - 1 && (
                 <div className={`flex-1 h-0.5 mx-2 rounded-full transition-all duration-500 ${
-                  step > s.id ? 'bg-green-400' : 'bg-gray-200'
+                  step > s.id ? 'bg-green-400' : 'bg-gray-200 dark:bg-slate-700'
                 }`} />
               )}
             </div>
@@ -259,13 +259,13 @@ export default function CreateListingPage() {
             animate={{ opacity: 1, x: 0 }}
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.3 }}
-            className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8"
+            className="bg-white rounded-3xl border border-gray-100 shadow-sm p-6 sm:p-8 dark:bg-slate-900 dark:border-slate-800"
           >
             {/* Step content */}
             {step === 1 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Choose a Category</h3>
-                <p className="text-gray-500 text-sm mb-6">Select the category that best describes your item</p>
+                <h3 className="text-xl font-bold text-gray-800 mb-1 dark:text-gray-100">Choose a Category</h3>
+                <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">Select the category that best describes your item</p>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-6">
                   {categories.map(cat => {
@@ -278,8 +278,8 @@ export default function CreateListingPage() {
                         onClick={() => setForm({ ...form, category_id: cat.category_id })}
                         className={`p-4 rounded-2xl border-2 text-left transition-all duration-200
                           ${isSelected
-                            ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100'
-                            : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:shadow-blue-50 bg-white'
+                            ? 'border-blue-500 bg-blue-50 shadow-md shadow-blue-100 dark:bg-blue-950/40'
+                            : 'border-gray-200 hover:border-blue-300 hover:shadow-md hover:shadow-blue-50 bg-white dark:border-slate-700 dark:bg-slate-900'
                           }`}
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
@@ -288,7 +288,7 @@ export default function CreateListingPage() {
                           <CatIcon className="w-7 h-7" />
                         </span>
                         <span className={`text-sm font-medium ${
-                          isSelected ? 'text-blue-700' : 'text-gray-700'
+                          isSelected ? 'text-blue-700 dark:text-blue-400' : 'text-gray-700 dark:text-gray-200'
                         }`}>
                           {cat.name}
                         </span>
@@ -298,7 +298,7 @@ export default function CreateListingPage() {
                             animate={{ scale: 1 }}
                             className="mt-1"
                           >
-                            <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full">
+                            <span className="inline-block px-2 py-0.5 bg-blue-100 text-blue-700 text-xs rounded-full dark:bg-blue-900/40 dark:text-blue-400">
                               Selected
                             </span>
                           </motion.div>
@@ -315,7 +315,7 @@ export default function CreateListingPage() {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.3 }}
                   >
-                    <label className="block text-sm font-semibold text-gray-700 mb-3">
+                    <label className="block text-sm font-semibold text-gray-700 mb-3 dark:text-gray-200">
                       Subcategory <span className="text-red-400">*</span>
                     </label>
                     <div className="flex flex-wrap gap-2">
@@ -329,7 +329,7 @@ export default function CreateListingPage() {
                             className={`px-4 py-2 rounded-full text-sm font-medium border-2 transition-all duration-200
                               ${isSelected
                                 ? 'bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-200'
-                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:shadow-md'
+                                : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:shadow-md dark:bg-slate-900 dark:text-gray-300 dark:border-slate-700'
                               }`}
                             whileHover={{ scale: 1.05 }}
                             whileTap={{ scale: 0.95 }}
@@ -347,25 +347,25 @@ export default function CreateListingPage() {
             {/* Step 2 — Details */}
             {step === 2 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Listing Details</h3>
-                <p className="text-gray-500 text-sm mb-6">Provide accurate details to help buyers find your item</p>
+                <h3 className="text-xl font-bold text-gray-800 mb-1 dark:text-gray-100">Listing Details</h3>
+                <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">Provide accurate details to help buyers find your item</p>
 
                 <div className="space-y-5">
                   {/* Title */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">
                       Title <span className="text-red-400">*</span>
                     </label>
                     <div className="relative">
-                      <FiTag className="absolute left-4 top-3.5 text-gray-400" />
+                      <FiTag className="absolute left-4 top-3.5 text-gray-400 dark:text-gray-500" />
                       <input
                         type="text"
                         value={form.title}
                         placeholder="e.g. Dell Laptop Screen 15.6 inch HD"
                         onChange={e => setForm({ ...form, title: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors dark:border-slate-700 dark:bg-slate-800/60"
                       />
-                      <span className="absolute right-4 top-3.5 text-xs text-gray-400">
+                      <span className="absolute right-4 top-3.5 text-xs text-gray-400 dark:text-gray-500">
                         {form.title.length}/100
                       </span>
                     </div>
@@ -373,17 +373,17 @@ export default function CreateListingPage() {
 
                   {/* Description */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">
                       Description <span className="text-red-400">*</span>
                     </label>
                     <div className="relative">
-                      <FiFileText className="absolute left-4 top-3.5 text-gray-400" />
+                      <FiFileText className="absolute left-4 top-3.5 text-gray-400 dark:text-gray-500" />
                       <textarea
                         value={form.description}
                         rows={4}
                         placeholder="Describe the item — what it is, where it came from, any defects..."
                         onChange={e => setForm({ ...form, description: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none"
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none dark:border-slate-700 dark:bg-slate-800/60"
                       />
                     </div>
                   </div>
@@ -391,7 +391,7 @@ export default function CreateListingPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     {/* Condition */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">
                         Condition <span className="text-red-400">*</span>
                       </label>
                       <div className="grid grid-cols-2 gap-2">
@@ -406,7 +406,7 @@ export default function CreateListingPage() {
                               className={`p-3 rounded-xl border-2 text-center transition-all duration-200
                                 ${isSelected
                                   ? `${c.color} border-current shadow-md`
-                                  : 'border-gray-200 hover:border-gray-400 bg-gray-50'
+                                  : 'border-gray-200 hover:border-gray-400 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/60'
                                 }`}
                               whileHover={{ scale: 1.03 }}
                               whileTap={{ scale: 0.97 }}
@@ -421,7 +421,7 @@ export default function CreateListingPage() {
 
                     {/* Price */}
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">
                         Price (UGX) <span className="text-red-400">*</span>
                       </label>
                       <div className="relative">
@@ -431,11 +431,11 @@ export default function CreateListingPage() {
                           min="0"
                           placeholder="e.g. 45000"
                           onChange={e => setForm({ ...form, price: e.target.value })}
-                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors"
+                          className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors dark:border-slate-700 dark:bg-slate-800/60"
                         />
                       </div>
                       {form.price && (
-                        <p className="text-xs text-gray-500 mt-1.5">
+                        <p className="text-xs text-gray-500 mt-1.5 dark:text-gray-400">
                           {formatUGX(form.price)}
                         </p>
                       )}
@@ -444,17 +444,17 @@ export default function CreateListingPage() {
 
                   {/* Specifications */}
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                      Specifications <span className="text-gray-400 font-normal">(optional)</span>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">
+                      Specifications <span className="text-gray-400 font-normal dark:text-gray-500">(optional)</span>
                     </label>
                     <div className="relative">
-                      <FiList className="absolute left-4 top-3.5 text-gray-400" />
+                      <FiList className="absolute left-4 top-3.5 text-gray-400 dark:text-gray-500" />
                       <textarea
                         value={form.specification}
                         rows={3}
                         placeholder="Technical details, dimensions, compatibility, part numbers..."
                         onChange={e => setForm({ ...form, specification: e.target.value })}
-                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none"
+                        className="w-full border border-gray-200 rounded-xl px-11 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-gray-50 hover:bg-white transition-colors resize-none dark:border-slate-700 dark:bg-slate-800/60"
                       />
                     </div>
                   </div>
@@ -465,10 +465,10 @@ export default function CreateListingPage() {
             {/* Step 3 — Images */}
             {step === 3 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Add Photos</h3>
-                <p className="text-gray-500 text-sm mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-1 dark:text-gray-100">Add Photos</h3>
+                <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">
                   Upload up to 5 photos. Clear photos get more buyer interest.
-                  <span className="block text-xs text-blue-600 mt-1">
+                  <span className="block text-xs text-blue-600 mt-1 dark:text-blue-400">
                     {images.length}/5 images uploaded
                   </span>
                 </p>
@@ -478,10 +478,10 @@ export default function CreateListingPage() {
                   {...getRootProps()}
                   className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200
                     ${isDragActive 
-                      ? 'border-blue-500 bg-blue-50 shadow-inner' 
+                      ? 'border-blue-500 bg-blue-50 shadow-inner dark:bg-blue-950/40' 
                       : images.length >= 5 
-                        ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60'
-                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30'
+                        ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60 dark:border-slate-600 dark:bg-slate-800/60'
+                        : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 dark:border-slate-600'
                     }`}
                 >
                   <input {...getInputProps()} />
@@ -491,20 +491,20 @@ export default function CreateListingPage() {
                     transition={{ duration: 0.2 }}
                   >
                     <div className="flex flex-col items-center">
-                      <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-4">
+                      <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center mb-4 dark:bg-blue-950/40">
                         {isDragActive ? (
                           <FiUpload className="w-8 h-8 text-blue-500" />
                         ) : (
-                          <FiCamera className="w-8 h-8 text-gray-400" />
+                          <FiCamera className="w-8 h-8 text-gray-400 dark:text-gray-500" />
                         )}
                       </div>
-                      <p className="font-semibold text-gray-700 mb-1">
+                      <p className="font-semibold text-gray-700 mb-1 dark:text-gray-200">
                         {isDragActive ? 'Drop your images here' : 'Click or drag to upload'}
                       </p>
-                      <p className="text-xs text-gray-400">
+                      <p className="text-xs text-gray-400 dark:text-gray-500">
                         JPEG, PNG, WebP · Up to 2MB each
                       </p>
-                      <p className="text-xs text-gray-400 mt-1">
+                      <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">
                         {images.length}/5 images used
                       </p>
                     </div>
@@ -519,7 +519,7 @@ export default function CreateListingPage() {
                         key={i}
                         initial={{ scale: 0.8, opacity: 0 }}
                         animate={{ scale: 1, opacity: 1 }}
-                        className="relative group rounded-2xl overflow-hidden aspect-square bg-gray-100"
+                        className="relative group rounded-2xl overflow-hidden aspect-square bg-gray-100 dark:bg-slate-800"
                       >
                         <img 
                           src={src} 
@@ -546,8 +546,8 @@ export default function CreateListingPage() {
                 )}
 
                 {images.length === 0 && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center">
-                    <p className="text-sm text-gray-500">
+                  <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center dark:bg-slate-800/60">
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
                       No photos added yet — you can skip this step and add photos later
                     </p>
                   </div>
@@ -558,12 +558,12 @@ export default function CreateListingPage() {
             {/* Step 4 — Review */}
             {step === 4 && (
               <div>
-                <h3 className="text-xl font-bold text-gray-800 mb-1">Review Your Listing</h3>
-                <p className="text-gray-500 text-sm mb-6">
+                <h3 className="text-xl font-bold text-gray-800 mb-1 dark:text-gray-100">Review Your Listing</h3>
+                <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">
                   Check everything before submitting for approval
                 </p>
 
-                <div className="space-y-4 bg-gray-50 rounded-2xl p-4 sm:p-6">
+                <div className="space-y-4 bg-gray-50 rounded-2xl p-4 sm:p-6 dark:bg-slate-800/60">
                   {[
                     { label: 'Category', value: selectedCategory?.name, icon: FiGrid },
                     { label: 'Subcategory', value: selectedSub?.sub_category_name, icon: FiTag },
@@ -572,11 +572,11 @@ export default function CreateListingPage() {
                     { label: 'Price', value: form.price ? formatUGX(form.price) : '', icon: FiTag },
                   ].map(({ label, value, icon: Icon }) => (
                     <div key={label} className="flex items-start justify-between py-3 border-b border-gray-200/60 last:border-0">
-                      <span className="flex items-center gap-2 text-sm text-gray-500 font-medium">
+                      <span className="flex items-center gap-2 text-sm text-gray-500 font-medium dark:text-gray-400">
                         <Icon className="w-4 h-4" />
                         {label}
                       </span>
-                      <span className="text-sm font-semibold text-gray-800 text-right max-w-[60%]">
+                      <span className="text-sm font-semibold text-gray-800 text-right max-w-[60%] dark:text-gray-100">
                         {value || '—'}
                       </span>
                     </div>
@@ -584,10 +584,10 @@ export default function CreateListingPage() {
 
                   {form.description && (
                     <div className="py-3 border-b border-gray-200/60">
-                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2">
+                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2 dark:text-gray-400">
                         <FiFileText className="w-4 h-4" /> Description
                       </p>
-                      <p className="text-sm text-gray-700 leading-relaxed">
+                      <p className="text-sm text-gray-700 leading-relaxed dark:text-gray-200">
                         {form.description}
                       </p>
                     </div>
@@ -595,7 +595,7 @@ export default function CreateListingPage() {
 
                   {imagePreviews.length > 0 && (
                     <div className="py-3">
-                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2">
+                      <p className="text-sm text-gray-500 font-medium mb-2 flex items-center gap-2 dark:text-gray-400">
                         <FiImage className="w-4 h-4" /> Photos ({imagePreviews.length})
                       </p>
                       <div className="flex gap-2">
@@ -613,13 +613,13 @@ export default function CreateListingPage() {
                 </div>
 
                 {/* Approval notice */}
-                <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-2xl px-4 py-4 flex gap-3">
+                <div className="mt-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 border border-blue-200 rounded-2xl px-4 py-4 flex gap-3 dark:border-blue-800/50">
                   <FiAlertCircle className="text-blue-500 shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-medium text-blue-800">
                       Review Process
                     </p>
-                    <p className="text-xs text-blue-700">
+                    <p className="text-xs text-blue-700 dark:text-blue-400">
                       Your listing will be reviewed by our team before going live. 
                       You'll receive a notification once it's approved or if changes are needed.
                     </p>
@@ -636,7 +636,7 @@ export default function CreateListingPage() {
             <motion.button
               type="button"
               onClick={() => setStep(step - 1)}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3.5 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 group"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-3.5 rounded-xl text-sm font-medium transition flex items-center justify-center gap-2 group dark:border-slate-700 dark:text-gray-300"
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
             >
@@ -686,7 +686,7 @@ export default function CreateListingPage() {
 
         {/* Mobile step indicator */}
         <div className="mt-4 sm:hidden text-center">
-          <p className="text-xs text-gray-400">
+          <p className="text-xs text-gray-400 dark:text-gray-500">
             Step {step} of {steps.length} · {steps[step - 1].label}
           </p>
         </div>

@@ -10,7 +10,7 @@ const statusConfig = {
   pending:     { label: 'Pending Review', color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
   approved:    { label: 'Approved — Live', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',  dot: 'bg-green-400'  },
   rejected:    { label: 'Rejected',        color: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',      dot: 'bg-red-400'    },
-  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400',    dot: 'bg-blue-400'   },
+  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400 dark:bg-blue-900/40',    dot: 'bg-blue-400'   },
 };
 
 export default function MyListingsContent() {

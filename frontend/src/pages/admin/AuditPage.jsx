@@ -91,7 +91,7 @@ function AuditDetailModal({ entry, onClose }) {
               {tableLabel(entry.table)} · Record #{entry.record_id} · {new Date(entry.created_at).toLocaleString()}
             </p>
           </div>
-          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0">
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0 dark:text-gray-500">
             <Bi name="x-lg" size={16} />
           </button>
         </div>

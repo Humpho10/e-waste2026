@@ -10,7 +10,7 @@ const statusConfig = {
   pending:     { label: 'Pending Review', color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
   approved:    { label: 'Approved — Live', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',  dot: 'bg-green-400'  },
   rejected:    { label: 'Rejected',        color: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',      dot: 'bg-red-400'    },
-  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400',    dot: 'bg-blue-400'   },
+  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400 dark:bg-blue-900/40',    dot: 'bg-blue-400'   },
 };
 
 export default function MyListingsPage() {
@@ -41,9 +41,9 @@ export default function MyListingsPage() {
     onError: (err) => toast(err.response?.data?.message || 'Could not delete.', 'error'),
   });
 
-  const handleDelete = async (hashId, title) => { // uses hashId
+  const handleDelete = async (hashId, title) => {
     if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
-    setDeleting(id);
+    setDeleting(hashId);
     try {
       await deleteMutation.mutateAsync(hashId);
     } catch {
@@ -173,7 +173,7 @@ export default function MyListingsPage() {
                     )}
                     {canResubmit && listing.status === 'rejected' && (
                       <Link
-                        to={`/dashboard/resubmit/${listing.product_id}`}
+                        to={`/dashboard/resubmit/${listing.hash_id}`}
                         className="text-xs bg-blue-600 text-white hover:bg-blue-700 px-3 py-1 rounded-lg font-medium transition"
                       >
                         Resubmit
@@ -181,11 +181,11 @@ export default function MyListingsPage() {
                     )}
                     {canDelete && listing.status !== 'approved' && (
                       <button
-                        onClick={() => handleDelete(listing.product_id, listing.title)}
-                        disabled={deleting === listing.product_id}
+                        onClick={() => handleDelete(listing.hash_id, listing.title)}
+                        disabled={deleting === listing.hash_id}
                         className="text-xs text-red-500 dark:text-red-400 hover:underline disabled:opacity-50"
                       >
-                        {deleting === listing.product_id ? '...' : 'Delete'}
+                        {deleting === listing.hash_id ? '...' : 'Delete'}
                       </button>
                     )}
                   </div>

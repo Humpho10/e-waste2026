@@ -7,7 +7,7 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 export default function ResubmitListingPage() {
-  const { id }     = useParams();
+  const { hashId } = useParams();
   const navigate   = useNavigate();
   const { toast }  = useToast();
   const { permissions } = useAuth(); // 👈 Get permissions

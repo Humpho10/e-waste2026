@@ -136,7 +136,7 @@ export default function ProfilePage() {
                       </div>
                     </>
                   ) : (
-                    <div className="w-full h-full bg-teal-50 flex flex-col items-center justify-center">
+                    <div className="w-full h-full bg-teal-50 flex flex-col items-center justify-center dark:bg-teal-950/40">
                       <span className="text-2xl">📷</span>
                       <span className="text-xs text-teal-600 dark:text-teal-400 mt-1">Upload</span>
                     </div>

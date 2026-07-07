@@ -11,14 +11,14 @@ function AppPage() {
     const colors = [
       'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50',
       'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50',
-      'bg-purple-50 border-purple-200',
+      'bg-purple-50 border-purple-200 dark:bg-purple-950/40',
       'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50',
       'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50',
-      'bg-indigo-50 border-indigo-200',
-      'bg-pink-50 border-pink-200',
+      'bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40',
+      'bg-pink-50 border-pink-200 dark:bg-pink-950/40',
       'bg-orange-50 dark:bg-orange-950/40 border-orange-200',
-      'bg-teal-50 border-teal-200',
-      'bg-cyan-50 border-cyan-200',
+      'bg-teal-50 border-teal-200 dark:bg-teal-950/40',
+      'bg-cyan-50 border-cyan-200 dark:bg-cyan-950/40',
     ];
     const index = permission.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0) % colors.length;
     return colors[index];

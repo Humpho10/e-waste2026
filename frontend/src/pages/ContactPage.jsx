@@ -41,7 +41,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 dark:bg-slate-800/60 dark:text-gray-100">
       <PublicNavbar />
 
       {/* ── Header ──────────────────────────────────────────── */}
@@ -64,43 +64,43 @@ export default function ContactPage() {
 
           {/* Left — direct contact info */}
           <Reveal className="md:col-span-2">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-full">
-              <h2 className="font-bold text-gray-800 mb-5">Other ways to reach us</h2>
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 h-full dark:bg-slate-900 dark:border-slate-800">
+              <h2 className="font-bold text-gray-800 mb-5 dark:text-gray-100">Other ways to reach us</h2>
               <div className="space-y-5">
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0 dark:bg-blue-950/40 dark:text-blue-400">
                     <Mail width={16} height={16} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">Email</p>
-                    <a href="mailto:hello@ewastemart.ug" className="text-blue-600 text-sm hover:underline">hello@ewastemart.ug</a>
+                    <p className="font-semibold text-gray-800 text-sm dark:text-gray-100">Email</p>
+                    <a href="mailto:hello@ewastemart.ug" className="text-blue-600 text-sm hover:underline dark:text-blue-400">hello@ewastemart.ug</a>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-green-50 text-green-600 flex items-center justify-center shrink-0 dark:bg-green-950/40 dark:text-green-400">
                     <MapPin width={16} height={16} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">Based in</p>
-                    <p className="text-gray-500 text-sm">Kampala, Uganda</p>
+                    <p className="font-semibold text-gray-800 text-sm dark:text-gray-100">Based in</p>
+                    <p className="text-gray-500 text-sm dark:text-gray-400">Kampala, Uganda</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0 dark:bg-amber-950/40 dark:text-amber-400">
                     <Clock width={16} height={16} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">Response time</p>
-                    <p className="text-gray-500 text-sm">Usually within 1–2 business days</p>
+                    <p className="font-semibold text-gray-800 text-sm dark:text-gray-100">Response time</p>
+                    <p className="text-gray-500 text-sm dark:text-gray-400">Usually within 1–2 business days</p>
                   </div>
                 </div>
                 <div className="flex items-start gap-3">
-                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0">
+                  <div className="w-9 h-9 rounded-xl bg-sky-50 text-sky-600 flex items-center justify-center shrink-0 dark:bg-sky-950/40 dark:text-sky-400">
                     <Chat width={16} height={16} />
                   </div>
                   <div>
-                    <p className="font-semibold text-gray-800 text-sm">Prefer to message a seller?</p>
-                    <p className="text-gray-500 text-sm">Use the chat on any listing page instead — this form is for the E-Waste Mart team.</p>
+                    <p className="font-semibold text-gray-800 text-sm dark:text-gray-100">Prefer to message a seller?</p>
+                    <p className="text-gray-500 text-sm dark:text-gray-400">Use the chat on any listing page instead — this form is for the E-Waste Mart team.</p>
                   </div>
                 </div>
               </div>
@@ -109,15 +109,15 @@ export default function ContactPage() {
 
           {/* Right — form */}
           <Reveal delay={100} className="md:col-span-3">
-            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 dark:bg-slate-900 dark:border-slate-800">
               {sent ? (
                 <div className="text-center py-10">
-                  <div className="grid place-items-center w-14 h-14 rounded-2xl bg-green-50 text-green-600 mx-auto mb-4">
+                  <div className="grid place-items-center w-14 h-14 rounded-2xl bg-green-50 text-green-600 mx-auto mb-4 dark:bg-green-950/40 dark:text-green-400">
                     <CheckCircle width={26} height={26} />
                   </div>
-                  <h3 className="font-bold text-gray-800 mb-2">Message sent</h3>
-                  <p className="text-gray-500 text-sm mb-6">Thanks for reaching out — we'll get back to you soon.</p>
-                  <button onClick={sendAnother} className="text-blue-600 text-sm font-semibold hover:underline">
+                  <h3 className="font-bold text-gray-800 mb-2 dark:text-gray-100">Message sent</h3>
+                  <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">Thanks for reaching out — we'll get back to you soon.</p>
+                  <button onClick={sendAnother} className="text-blue-600 text-sm font-semibold hover:underline dark:text-blue-400">
                     Send another message
                   </button>
                 </div>
@@ -125,49 +125,49 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Your name</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">Your name</label>
                       <div className="relative">
-                        <User width={16} height={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <User width={16} height={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                         <input
                           required type="text" value={form.name}
                           onChange={e => setForm({ ...form, name: e.target.value })}
                           placeholder="Jane Doe"
-                          className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                          className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/60"
                         />
                       </div>
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">Your email</label>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">Your email</label>
                       <div className="relative">
-                        <Mail width={16} height={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                        <Mail width={16} height={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                         <input
                           required type="email" value={form.email}
                           onChange={e => setForm({ ...form, email: e.target.value })}
                           placeholder="jane@example.com"
-                          className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                          className="w-full border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/60"
                         />
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Topic</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">Topic</label>
                     <select
                       value={form.topic}
                       onChange={e => setForm({ ...form, topic: e.target.value })}
-                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:border-slate-700 dark:bg-slate-800/60"
                     >
                       {TOPICS.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Message</label>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5 dark:text-gray-200">Message</label>
                     <textarea
                       required rows={5} value={form.message}
                       onChange={e => setForm({ ...form, message: e.target.value })}
                       placeholder="Tell us what's on your mind..."
-                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 resize-none dark:border-slate-700 dark:bg-slate-800/60"
                     />
                   </div>
 
