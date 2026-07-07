@@ -60,10 +60,10 @@ export default function ManagerMessagesPage() {
   return (
     <ManagerLayout>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-          <BiMessageSquare className="text-orange-500" size={22} /> Messages
+        <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+          <BiMessageSquare className="text-orange-500 dark:text-orange-400" size={22} /> Messages
         </h2>
-        <p className="text-gray-500 text-sm mt-1">Communications regarding listings in your categories</p>
+        <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">Communications regarding listings in your categories</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
@@ -88,16 +88,16 @@ export default function ManagerMessagesPage() {
             ) : conversations.length === 0 ? (
               <div className="p-6 text-center">
                 <BiMessageSquare size={32} className="mx-auto mb-2 text-gray-200" />
-                <p className="text-sm text-gray-400">No conversations yet</p>
+                <p className="text-sm text-gray-400 dark:text-gray-500">No conversations yet</p>
               </div>
             ) : (
               conversations.map((conv, i) => (
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-orange-50' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-orange-50 dark:bg-orange-950/40' : ''}`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-orange-900/40">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
@@ -122,14 +122,14 @@ export default function ManagerMessagesPage() {
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
                 <BiMessageSquare size={48} className="mx-auto mb-4 text-gray-200" />
-                <p className="font-bold text-gray-700 mb-1">Select a conversation</p>
-                <p className="text-gray-400 text-sm">Choose a conversation from the left</p>
+                <p className="font-bold text-gray-700 mb-1 dark:text-gray-200">Select a conversation</p>
+                <p className="text-gray-400 text-sm dark:text-gray-500">Choose a conversation from the left</p>
               </div>
             </div>
           ) : (
             <>
-              <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-3 dark:border-slate-800">
+                <div className="w-9 h-9 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm dark:bg-orange-900/40">
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -142,9 +142,9 @@ export default function ManagerMessagesPage() {
                   const isMe = msg.sender_id === user?.id;
                   return (
                     <div key={msg.message_id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-orange-500 text-white rounded-br-sm' : 'bg-gray-100 text-gray-800 rounded-bl-sm dark:bg-slate-800 dark:text-gray-100'}`}>
                         <p className="leading-relaxed">{msg.message_text}</p>
-                        <p className={`text-xs mt-1 ${isMe ? 'text-orange-100' : 'text-gray-400'}`}>
+                        <p className={`text-xs mt-1 ${isMe ? 'text-orange-100' : 'text-gray-400 dark:text-gray-500'}`}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -157,7 +157,7 @@ export default function ManagerMessagesPage() {
                   type="text" value={newMsg}
                   onChange={e => setNewMsg(e.target.value)}
                   placeholder="Type a message..."
-                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400"
+                  className="flex-1 border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 dark:border-slate-700"
                 />
                 <button
                   type="submit" disabled={sending || !newMsg.trim()}

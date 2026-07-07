@@ -20,7 +20,7 @@ function ImageThumb({ src, alt, className }) {
   const [errored, setErrored] = useState(false);
   if (!src || errored) {
     return (
-      <div className={`flex items-center justify-center bg-gray-100 text-gray-300 ${className}`}>
+      <div className={`flex items-center justify-center bg-gray-100 dark:bg-slate-800 text-gray-300 dark:text-gray-600 ${className}`}>
         <BiImage size={16} />
       </div>
     );
@@ -47,13 +47,13 @@ function ApproveModal({ product, onClose, onApproved }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden dark:bg-slate-900">
         <div className="p-6">
-          <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-green-50 text-green-600 flex items-center justify-center mb-4 dark:bg-green-950/40 dark:text-green-400">
             <BiCheckCircle size={20} />
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Approve "{product.title}"?</h3>
-          <p className="text-sm text-gray-500 mb-6">It will immediately go live on the marketplace and the seller will be notified.</p>
+          <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-gray-100">Approve "{product.title}"?</h3>
+          <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">It will immediately go live on the marketplace and the seller will be notified.</p>
           <div className="flex gap-3">
             <button
               onClick={() => approveMutation.mutate()}
@@ -65,7 +65,7 @@ function ApproveModal({ product, onClose, onApproved }) {
             <button
               onClick={onClose}
               disabled={approveMutation.isPending}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition dark:border-slate-700 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -177,7 +177,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
               Submitted by {product.seller?.name} · {new Date(product.created_at).toLocaleDateString()}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition">
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition dark:bg-slate-800 dark:text-gray-400">
             <BiX size={16} />
           </button>
         </div>
@@ -255,7 +255,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
         </div>
 
         {/* Footer actions */}
-        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 shrink-0">
+        <div className="px-6 py-4 border-t border-gray-100 flex gap-3 shrink-0 dark:border-slate-800">
           {product.status === 'pending' && (
             <>
               {canApprove && (
@@ -282,12 +282,12 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
             </>
           )}
           {product.status === 'approved' && (
-            <div className="flex-1 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center">
+            <div className="flex-1 flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center dark:bg-green-950/40 dark:border-green-800/50 dark:text-green-400">
               <BiCheckCircle size={16} /> This listing is approved and live
             </div>
           )}
           {product.status === 'rejected' && (
-            <div className="flex-1 flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center">
+            <div className="flex-1 flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
               <BiXCircle size={16} /> This listing has been rejected
             </div>
           )}
@@ -353,10 +353,10 @@ export default function ProductsPage() {
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BiBox className="text-orange-500" size={22} /> Listings
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+            <BiBox className="text-orange-500 dark:text-orange-400" size={22} /> Listings
           </h2>
-          <p className="text-gray-500 text-sm mt-1">{products.length} listings found</p>
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">{products.length} listings found</p>
         </div>
       </div>
 
@@ -374,14 +374,14 @@ export default function ProductsPage() {
           >
             {f.label}
             {typeof f.count === 'number' && (
-              <span className={`text-xs px-1.5 py-0.5 rounded-full ${status === f.key ? 'bg-white/20' : 'bg-gray-100 text-gray-500'}`}>
+              <span className={`text-xs px-1.5 py-0.5 rounded-full ${status === f.key ? 'bg-white/20' : 'bg-gray-100 text-gray-500 dark:bg-slate-800 dark:text-gray-400'}`}>
                 {f.count}
               </span>
             )}
           </button>
         ))}
         <div className="relative ml-auto">
-          <BiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <BiSearch size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
           <input
             type="text"
             placeholder="Search listings..."
@@ -408,12 +408,12 @@ export default function ProductsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiInbox size={28} className="text-orange-400" />
           </div>
-          <h3 className="font-bold text-gray-700 mb-2">No listings found</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No listings found</h3>
+          <p className="text-gray-400 text-sm dark:text-gray-500">
             {status !== 'all' ? `No ${status} listings at the moment.` : 'No listings have been submitted yet.'}
           </p>
         </div>
@@ -472,7 +472,7 @@ export default function ProductsPage() {
                         <button
                           onClick={() => setViewProduct(product)}
                           title="View details"
-                          className="w-8 h-8 flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 rounded-lg transition"
+                          className="w-8 h-8 flex items-center justify-center bg-gray-50 border border-gray-200 text-gray-500 hover:bg-gray-100 rounded-lg transition dark:bg-slate-800/60 dark:border-slate-700 dark:text-gray-400"
                         >
                           <BiEye size={14} />
                         </button>
@@ -481,7 +481,7 @@ export default function ProductsPage() {
                           <button
                             onClick={() => setApproveTarget(product)}
                             title="Approve"
-                            className="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 rounded-lg transition"
+                            className="w-8 h-8 flex items-center justify-center bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 rounded-lg transition dark:bg-green-950/40 dark:text-green-400 dark:border-green-800/50"
                           >
                             <BiCheck size={14} />
                           </button>
@@ -491,19 +491,19 @@ export default function ProductsPage() {
                           <button
                             onClick={() => setRejectTarget(product)}
                             title="Reject"
-                            className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 rounded-lg transition"
+                            className="w-8 h-8 flex items-center justify-center bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 rounded-lg transition dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/50"
                           >
                             <BiX size={14} />
                           </button>
                         )}
 
                         {product.status === 'approved' && (
-                          <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                          <span className="text-xs text-green-600 font-medium bg-green-50 px-2 py-1 rounded-lg flex items-center gap-1 dark:text-green-400 dark:bg-green-950/40">
                             <BiCheckCircle size={12} /> Approved
                           </span>
                         )}
                         {product.status === 'rejected' && (
-                          <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1">
+                          <span className="text-xs text-red-500 font-medium bg-red-50 px-2 py-1 rounded-lg flex items-center gap-1 dark:text-red-400 dark:bg-red-950/40">
                             <BiXCircle size={12} /> Rejected
                           </span>
                         )}

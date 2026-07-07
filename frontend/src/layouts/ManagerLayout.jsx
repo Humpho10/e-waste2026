@@ -78,7 +78,7 @@ export default function ManagerLayout({ children }) {
           {!collapsed && (
             <div className="overflow-hidden">
               <p className="text-white font-bold text-sm leading-tight truncate">E-Waste Mart</p>
-              <p className="text-slate-500 text-xs">Admin Panel</p>
+              <p className="text-slate-500 text-xs dark:text-gray-400">Admin Panel</p>
             </div>
           )}
         </div>
@@ -97,7 +97,7 @@ export default function ManagerLayout({ children }) {
             </div>
             <div className="overflow-hidden flex-1">
               <p className="text-white text-xs font-semibold truncate">{user?.name}</p>
-              <p className="text-slate-400 text-xs truncate">{user?.email}</p>
+              <p className="text-slate-400 text-xs truncate dark:text-gray-500">{user?.email}</p>
             </div>
             <div className="w-2 h-2 rounded-full bg-green-400 shrink-0" />
           </div>
@@ -122,7 +122,7 @@ export default function ManagerLayout({ children }) {
             return (
               <div key={group.key}>
                 {!collapsed && (
-                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 mb-1">
+                  <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 mb-1 dark:text-gray-400">
                     {group.label}
                   </p>
                 )}
@@ -140,7 +140,7 @@ export default function ManagerLayout({ children }) {
                           ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
                           ${active
                             ? 'bg-orange-500 text-white shadow-lg shadow-orange-900/30'
-                            : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                            : 'text-slate-400 hover:bg-slate-800 hover:text-white dark:text-gray-500'
                           }
                         `}
                       >

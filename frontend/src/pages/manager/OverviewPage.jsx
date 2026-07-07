@@ -60,12 +60,12 @@ export default function ManagerOverviewPage() {
   const GreetingIcon = hour < 12 ? BiSunrise : hour < 17 ? BiSun : BiMoon;
 
   const statCards = [
-    { icon: BiUsers,      label: 'Regular Users',    value: stats?.total_users,           iconBg: 'bg-blue-50',   iconColor: 'text-blue-600',   to: '/manager/users',                     sub: 'Registered buyers & sellers' },
-    { icon: BiBriefcase,  label: 'Product Managers', value: stats?.total_product_managers, iconBg: 'bg-orange-50', iconColor: 'text-orange-600', to: '/manager/product-managers',          sub: 'Managing listings'           },
-    { icon: BiBox,        label: 'Total Listings',   value: stats?.total_products,         iconBg: 'bg-purple-50', iconColor: 'text-purple-600', to: '/manager/products',                  sub: 'All time'                    },
-    { icon: BiClock,      label: 'Pending Review',   value: stats?.pending_products,       iconBg: 'bg-yellow-50', iconColor: 'text-yellow-600', to: '/manager/products?status=pending',   sub: 'Awaiting approval'           },
-    { icon: BiCheckCircle,label: 'Approved',         value: stats?.approved_products,      iconBg: 'bg-green-50',  iconColor: 'text-green-600',  to: '/manager/products?status=approved',  sub: 'Live on marketplace'         },
-    { icon: BiXCircle,    label: 'Rejected',         value: stats?.rejected_products,       iconBg: 'bg-red-50',    iconColor: 'text-red-600',    to: '/manager/products?status=rejected',  sub: 'Needs correction'            },
+    { icon: BiUsers,      label: 'Regular Users',    value: stats?.total_users,           iconBg: 'bg-blue-50 dark:bg-blue-950/40',   iconColor: 'text-blue-600 dark:text-blue-400',   to: '/manager/users',                     sub: 'Registered buyers & sellers' },
+    { icon: BiBriefcase,  label: 'Product Managers', value: stats?.total_product_managers, iconBg: 'bg-orange-50 dark:bg-orange-950/40', iconColor: 'text-orange-600 dark:text-orange-400', to: '/manager/product-managers',          sub: 'Managing listings'           },
+    { icon: BiBox,        label: 'Total Listings',   value: stats?.total_products,         iconBg: 'bg-purple-50 dark:bg-purple-950/40', iconColor: 'text-purple-600 dark:text-purple-400', to: '/manager/products',                  sub: 'All time'                    },
+    { icon: BiClock,      label: 'Pending Review',   value: stats?.pending_products,       iconBg: 'bg-yellow-50 dark:bg-yellow-950/40', iconColor: 'text-yellow-600 dark:text-yellow-400', to: '/manager/products?status=pending',   sub: 'Awaiting approval'           },
+    { icon: BiCheckCircle,label: 'Approved',         value: stats?.approved_products,      iconBg: 'bg-green-50 dark:bg-green-950/40',  iconColor: 'text-green-600 dark:text-green-400',  to: '/manager/products?status=approved',  sub: 'Live on marketplace'         },
+    { icon: BiXCircle,    label: 'Rejected',         value: stats?.rejected_products,       iconBg: 'bg-red-50 dark:bg-red-950/40',    iconColor: 'text-red-600 dark:text-red-400',    to: '/manager/products?status=rejected',  sub: 'Needs correction'            },
   ];
 
   const statusBreakdown = [
@@ -80,11 +80,11 @@ export default function ManagerOverviewPage() {
       {/* Header */}
       <div className="mb-8 flex items-center gap-2">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
             {greeting}, {user?.name?.split(' ')[0]}
             <GreetingIcon size={20} className="text-orange-400" />
           </h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
             Here's your marketplace overview for today.
           </p>
         </div>
@@ -112,8 +112,8 @@ export default function ManagerOverviewPage() {
               { label: 'Create Product Manager', icon: BiPlus,        to: '/manager/product-managers',        style: 'bg-orange-500 hover:bg-orange-600 text-white'           },
               { label: 'Add Category',           icon: BiFolderPlus,  to: '/manager/categories',               style: 'bg-slate-800 hover:bg-slate-900 text-white'              },
               { label: 'Review Pending Listings',icon: BiClock,       to: '/manager/products?status=pending',  style: 'bg-yellow-500 hover:bg-yellow-600 text-white'            },
-              { label: 'View All Listings',      icon: BiList,        to: '/manager/products',                 style: 'border border-gray-200 hover:bg-gray-50 text-gray-700'  },
-              { label: 'Manage Users',           icon: BiUsers,       to: '/manager/users',                    style: 'border border-gray-200 hover:bg-gray-50 text-gray-700'  },
+              { label: 'View All Listings',      icon: BiList,        to: '/manager/products',                 style: 'border border-gray-200 hover:bg-gray-50 text-gray-700 dark:border-slate-700 dark:text-gray-200'  },
+              { label: 'Manage Users',           icon: BiUsers,       to: '/manager/users',                    style: 'border border-gray-200 hover:bg-gray-50 text-gray-700 dark:border-slate-700 dark:text-gray-200'  },
             ].map(({ label, icon: Icon, to, style }) => (
               <Link
                 key={to}
@@ -127,10 +127,10 @@ export default function ManagerOverviewPage() {
         </div>
 
         {/* Activity trend chart */}
-        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-100">
-            <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Activity — Last 30 Days</h3>
-            <p className="text-xs text-gray-400 mt-0.5">New listings and new user signups per day</p>
+        <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+          <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800">
+            <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide dark:text-gray-100">Activity — Last 30 Days</h3>
+            <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">New listings and new user signups per day</p>
           </div>
 
           <div className="p-4">
@@ -174,20 +174,20 @@ export default function ManagerOverviewPage() {
       </div>
 
       {/* Listings by status */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Listings by Status</h3>
-          <Link to="/manager/products" className="text-orange-500 text-xs hover:underline font-medium">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
+        <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center dark:border-slate-800">
+          <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide dark:text-gray-100">Listings by Status</h3>
+          <Link to="/manager/products" className="text-orange-500 text-xs hover:underline font-medium dark:text-orange-400">
             View all →
           </Link>
         </div>
 
         {loading ? (
           <div className="p-6 flex items-center justify-center h-56">
-            <div className="w-40 h-40 rounded-full border-8 border-gray-100 animate-pulse" />
+            <div className="w-40 h-40 rounded-full border-8 border-gray-100 animate-pulse dark:border-slate-800" />
           </div>
         ) : statusTotal === 0 ? (
-          <div className="text-center py-12 text-gray-400">
+          <div className="text-center py-12 text-gray-400 dark:text-gray-500">
             <BiInbox size={40} className="mx-auto mb-3 text-gray-300" />
             <p className="text-sm">No listings yet</p>
           </div>
@@ -213,8 +213,8 @@ export default function ManagerOverviewPage() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                <p className="text-3xl font-bold text-gray-800">{statusTotal}</p>
-                <p className="text-xs text-gray-400">Total listings</p>
+                <p className="text-3xl font-bold text-gray-800 dark:text-gray-100">{statusTotal}</p>
+                <p className="text-xs text-gray-400 dark:text-gray-500">Total listings</p>
               </div>
             </div>
 
@@ -224,13 +224,13 @@ export default function ManagerOverviewPage() {
                 return (
                   <div key={name}>
                     <div className="flex items-center justify-between text-sm mb-1.5">
-                      <span className="flex items-center gap-2 text-gray-600 font-medium">
+                      <span className="flex items-center gap-2 text-gray-600 font-medium dark:text-gray-300">
                         <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: STATUS_COLORS[name] }} />
                         {name}
                       </span>
-                      <span className="text-gray-400">{value} listings ({pct}%)</span>
+                      <span className="text-gray-400 dark:text-gray-500">{value} listings ({pct}%)</span>
                     </div>
-                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
+                    <div className="h-2 bg-gray-100 rounded-full overflow-hidden dark:bg-slate-800">
                       <div
                         className="h-full rounded-full transition-all duration-500"
                         style={{ width: `${pct}%`, backgroundColor: STATUS_COLORS[name] }}

@@ -12,10 +12,10 @@ import {
 } from '../components/icons';
 
 const VALUES = [
-  { Icon: Shield,   color: 'text-blue-600',    title: 'Trust & Verification',  desc: 'Every listing is reviewed by our team before it goes live, so buyers know what they\'re getting.' },
-  { Icon: Tag,      color: 'text-green-600',   title: 'Fair, Transparent Pricing', desc: 'Sellers set their own prices — no hidden fees, no middlemen taking a cut.' },
-  { Icon: Recycle,  color: 'text-emerald-600', title: 'Circular Economy',      desc: 'Every part reused is one less item in a landfill and one less new part manufactured.' },
-  { Icon: Chat,     color: 'text-sky-600',     title: 'Direct Connection',     desc: 'Buyers and sellers message each other directly — no waiting on a call center.' },
+  { Icon: Shield,   color: 'text-blue-600 dark:text-blue-400',    title: 'Trust & Verification',  desc: 'Every listing is reviewed by our team before it goes live, so buyers know what they\'re getting.' },
+  { Icon: Tag,      color: 'text-green-600 dark:text-green-400',   title: 'Fair, Transparent Pricing', desc: 'Sellers set their own prices — no hidden fees, no middlemen taking a cut.' },
+  { Icon: Recycle,  color: 'text-emerald-600 dark:text-emerald-400', title: 'Circular Economy',      desc: 'Every part reused is one less item in a landfill and one less new part manufactured.' },
+  { Icon: Chat,     color: 'text-sky-600 dark:text-sky-400',     title: 'Direct Connection',     desc: 'Buyers and sellers message each other directly — no waiting on a call center.' },
 ];
 
 const STEPS = [
@@ -31,7 +31,7 @@ export default function AboutPage() {
   });
 
   return (
-    <div className="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <div className="min-h-screen bg-gray-50 font-sans text-gray-800 dark:bg-slate-800/60 dark:text-gray-100">
       <PublicNavbar />
 
       {/* ── Header ──────────────────────────────────────────── */}
@@ -49,13 +49,13 @@ export default function AboutPage() {
       </section>
 
       {/* ── Mission ─────────────────────────────────────────── */}
-      <section className="py-16 px-4 bg-white">
+      <section className="py-16 px-4 bg-white dark:bg-slate-900">
         <Reveal className="max-w-3xl mx-auto text-center">
-          <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-5">
+          <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-5 dark:bg-blue-950/40 dark:text-blue-400">
             <Target width={26} height={26} />
           </div>
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Our Mission</h2>
-          <p className="text-gray-600 leading-relaxed">
+          <h2 className="text-2xl font-bold text-gray-800 mb-4 dark:text-gray-100">Our Mission</h2>
+          <p className="text-gray-600 leading-relaxed dark:text-gray-300">
             Every year, mountains of usable electronic components — RAM sticks, motherboards, screens,
             power supplies — end up discarded simply because their owners don't know anyone who needs them.
             Meanwhile, students, technicians, and small repair shops across Uganda struggle to find affordable
@@ -67,21 +67,21 @@ export default function AboutPage() {
       </section>
 
       {/* ── What we do / How it works ──────────────────────── */}
-      <section className="py-16 px-4 bg-gray-50 border-t border-gray-100">
+      <section className="py-16 px-4 bg-gray-50 border-t border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
         <div className="max-w-5xl mx-auto">
           <Reveal className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">How It Works</h2>
-            <p className="text-gray-500 text-sm">Three simple steps to buy or sell e-waste</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2 dark:text-gray-100">How It Works</h2>
+            <p className="text-gray-500 text-sm dark:text-gray-400">Three simple steps to buy or sell e-waste</p>
           </Reveal>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {STEPS.map(({ step, Icon, title, desc }, i) => (
               <Reveal key={step} delay={i * 120} className="text-center">
-                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4">
+                <div className="grid place-items-center w-14 h-14 rounded-2xl bg-blue-50 text-blue-600 mx-auto mb-4 dark:bg-blue-950/40 dark:text-blue-400">
                   <Icon width={24} height={24} />
                 </div>
-                <div className="text-xs font-bold text-blue-600 mb-1">STEP {step}</div>
-                <h3 className="font-bold text-gray-800 mb-2">{title}</h3>
-                <p className="text-gray-500 text-sm">{desc}</p>
+                <div className="text-xs font-bold text-blue-600 mb-1 dark:text-blue-400">STEP {step}</div>
+                <h3 className="font-bold text-gray-800 mb-2 dark:text-gray-100">{title}</h3>
+                <p className="text-gray-500 text-sm dark:text-gray-400">{desc}</p>
               </Reveal>
             ))}
           </div>
@@ -89,22 +89,22 @@ export default function AboutPage() {
       </section>
 
       {/* ── Values ──────────────────────────────────────────── */}
-      <section className="py-16 px-4 bg-white border-t border-gray-100">
+      <section className="py-16 px-4 bg-white border-t border-gray-100 dark:bg-slate-900 dark:border-slate-800">
         <div className="max-w-5xl mx-auto">
           <Reveal className="text-center mb-10">
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">What We Stand For</h2>
-            <p className="text-gray-500 text-sm">The principles behind every listing on the platform</p>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2 dark:text-gray-100">What We Stand For</h2>
+            <p className="text-gray-500 text-sm dark:text-gray-400">The principles behind every listing on the platform</p>
           </Reveal>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
             {VALUES.map(({ Icon, color, title, desc }, i) => (
               <Reveal key={title} delay={i * 100}>
-                <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 h-full flex gap-4">
-                  <div className={`shrink-0 w-11 h-11 rounded-xl bg-white shadow-sm flex items-center justify-center ${color}`}>
+                <div className="bg-gray-50 rounded-2xl border border-gray-100 p-6 h-full flex gap-4 dark:bg-slate-800/60 dark:border-slate-800">
+                  <div className={`shrink-0 w-11 h-11 rounded-xl bg-white dark:bg-slate-900 shadow-sm flex items-center justify-center ${color}`}>
                     <Icon width={20} height={20} />
                   </div>
                   <div>
-                    <h3 className="font-bold text-gray-800 mb-1.5">{title}</h3>
-                    <p className="text-gray-500 text-sm leading-relaxed">{desc}</p>
+                    <h3 className="font-bold text-gray-800 mb-1.5 dark:text-gray-100">{title}</h3>
+                    <p className="text-gray-500 text-sm leading-relaxed dark:text-gray-400">{desc}</p>
                   </div>
                 </div>
               </Reveal>
@@ -138,7 +138,7 @@ export default function AboutPage() {
           <p className="text-blue-100 mb-8 text-sm">Join buyers and sellers across Uganda today.</p>
           <div className="flex justify-center gap-4 flex-wrap">
             <Link to="/register"
-              className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow">
+              className="btn-lift bg-white text-blue-700 hover:bg-blue-50 px-8 py-3 rounded-xl font-semibold text-sm shadow dark:bg-slate-900 dark:text-blue-400">
               Create Free Account
             </Link>
             <Link to="/contact"

@@ -84,6 +84,9 @@ class DatabaseSeeder extends Seeder
 
             // Dashboard
             'dashboard-view',
+
+            // Seller ratings (Regular User)
+            'rating-create',
         ];
 
         foreach ($permissions as $permission) {
@@ -167,6 +170,7 @@ class DatabaseSeeder extends Seeder
             'notification-mark-read',
             'notification-delete',
             'dashboard-view',
+            'rating-create',
         ]);
 
         // ── USERS ─────────────────────────────────────────────

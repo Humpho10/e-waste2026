@@ -7,9 +7,9 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
-  pending:  { label: 'Pending',  color: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400', icon: 'bi-hourglass-split' },
-  approved: { label: 'Approved', color: 'bg-green-100 text-green-700',   dot: 'bg-green-400',  icon: 'bi-check-circle'    },
-  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700',       dot: 'bg-red-400',    icon: 'bi-x-circle'        },
+  pending:  { label: 'Pending',  color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400', dot: 'bg-yellow-400', icon: 'bi-hourglass-split' },
+  approved: { label: 'Approved', color: 'bg-green-100 text-green-700 dark:bg-green-900/40 dark:text-green-400',   dot: 'bg-green-400',  icon: 'bi-check-circle'    },
+  rejected: { label: 'Rejected', color: 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-400',       dot: 'bg-red-400',    icon: 'bi-x-circle'        },
 };
 
 const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
@@ -41,15 +41,15 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden dark:bg-slate-900">
+        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 dark:border-slate-800">
           <div className="min-w-0">
-            <h3 className="font-bold text-gray-800 text-lg truncate">{product.title}</h3>
-            <p className="text-gray-400 text-xs mt-0.5">
+            <h3 className="font-bold text-gray-800 text-lg truncate dark:text-gray-100">{product.title}</h3>
+            <p className="text-gray-400 text-xs mt-0.5 dark:text-gray-500">
               Submitted by {product.seller?.name} · {new Date(product.created_at).toLocaleDateString()}
             </p>
           </div>
-          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition shrink-0">
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition shrink-0 dark:bg-slate-800 dark:text-gray-400">
             <i className="bi bi-x-lg" />
           </button>
         </div>
@@ -113,8 +113,8 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
                 { label: 'Submitted', value: new Date(product.created_at).toLocaleString() },
               ].map(({ label, value }) => (
                 <div key={label} className="flex justify-between py-2 border-b border-gray-50 gap-4">
-                  <span className="text-sm text-gray-500 font-medium shrink-0">{label}</span>
-                  <span className="text-sm font-semibold text-gray-800 text-right">{value}</span>
+                  <span className="text-sm text-gray-500 font-medium shrink-0 dark:text-gray-400">{label}</span>
+                  <span className="text-sm font-semibold text-gray-800 text-right dark:text-gray-100">{value}</span>
                 </div>
               ))}
               <div>
@@ -129,8 +129,8 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
               )}
               {product.status === 'rejected' && product.rejection_reason && (
                 <div>
-                  <p className="text-sm text-red-500 font-medium mb-1">Rejection reason</p>
-                  <p className="text-sm text-red-700 leading-relaxed bg-red-50 border border-red-100 rounded-xl p-3">{product.rejection_reason}</p>
+                  <p className="text-sm text-red-500 font-medium mb-1 dark:text-red-400">Rejection reason</p>
+                  <p className="text-sm text-red-700 leading-relaxed bg-red-50 border border-red-100 rounded-xl p-3 dark:text-red-400 dark:bg-red-950/40">{product.rejection_reason}</p>
                 </div>
               )}
             </div>
@@ -161,12 +161,12 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
             </>
           )}
           {product.status === 'approved' && (
-            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center">
+            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-green-50 border border-green-200 text-green-700 py-2.5 rounded-xl text-sm font-semibold text-center dark:bg-green-950/40 dark:border-green-800/50 dark:text-green-400">
               <i className="bi bi-check-circle-fill" /> This listing is approved and live
             </div>
           )}
           {product.status === 'rejected' && (
-            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center">
+            <div className="flex-1 inline-flex items-center justify-center gap-2 bg-red-50 border border-red-200 text-red-600 py-2.5 rounded-xl text-sm font-semibold text-center dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
               <i className="bi bi-x-circle-fill" /> This listing has been rejected
             </div>
           )}
@@ -219,7 +219,7 @@ function RejectModal({ product, onClose, onRejected, toast }) {
         </div>
         <div className="p-6">
           {error && (
-            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2">
+            <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex items-center gap-2 dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
               <i className="bi bi-exclamation-triangle" /> {error}
             </div>
           )}
@@ -255,18 +255,18 @@ function RowActions({ product, canApprove, canReject, approving, onView, onAppro
   return (
     <div className="flex gap-2 items-center">
       <button onClick={() => onView(product)}
-        className="inline-flex items-center gap-1.5 text-xs bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg font-medium transition">
+        className="inline-flex items-center gap-1.5 text-xs bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg font-medium transition dark:bg-slate-800/60 dark:border-slate-700 dark:text-gray-300">
         <i className="bi bi-eye" /> View
       </button>
       {product.status === 'pending' && canApprove && (
         <button onClick={() => onApprove(product)} disabled={approving === product.product_id} title="Approve"
-          className="inline-flex items-center justify-center text-xs bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 w-8 h-8 rounded-lg font-medium transition disabled:opacity-50">
+          className="inline-flex items-center justify-center text-xs bg-green-50 text-green-600 hover:bg-green-100 border border-green-200 w-8 h-8 rounded-lg font-medium transition disabled:opacity-50 dark:bg-green-950/40 dark:text-green-400 dark:border-green-800/50">
           <i className={`bi ${approving === product.product_id ? 'bi-arrow-repeat animate-spin' : 'bi-check-lg'}`} />
         </button>
       )}
       {product.status === 'pending' && canReject && (
         <button onClick={() => onReject(product)} title="Reject"
-          className="inline-flex items-center justify-center text-xs bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 w-8 h-8 rounded-lg font-medium transition">
+          className="inline-flex items-center justify-center text-xs bg-red-50 text-red-500 hover:bg-red-100 border border-red-200 w-8 h-8 rounded-lg font-medium transition dark:bg-red-950/40 dark:text-red-400 dark:border-red-800/50">
           <i className="bi bi-x-lg" />
         </button>
       )}
@@ -357,11 +357,11 @@ export default function WorkspaceProductsPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Listings</h2>
-          <p className="text-gray-500 text-sm mt-1">
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Listings</h2>
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
             {counts.all} listing{counts.all === 1 ? '' : 's'} in your assigned categories
             {counts.pending > 0 && (
-              <span className="ml-2 inline-flex items-center gap-1 text-amber-600 font-medium">
+              <span className="ml-2 inline-flex items-center gap-1 text-amber-600 font-medium dark:text-amber-400">
                 <i className="bi bi-hourglass-split" /> {counts.pending} awaiting review
               </span>
             )}
@@ -370,9 +370,9 @@ export default function WorkspaceProductsPage() {
       </div>
 
       {/* Toolbar */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 mb-6 flex flex-col lg:flex-row lg:items-center gap-3">
+      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-3 mb-6 flex flex-col lg:flex-row lg:items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
         {/* Segmented status tabs with counts */}
-        <div className="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-xl">
+        <div className="flex flex-wrap gap-1 bg-gray-50 p-1 rounded-xl dark:bg-slate-800/60">
           {tabs.map(t => {
             const active = status === t.key;
             return (
@@ -380,11 +380,11 @@ export default function WorkspaceProductsPage() {
                 key={t.key}
                 onClick={() => setStatus(t.key)}
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition
-                  ${active ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}
+                  ${active ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'}`}
               >
                 <i className={`bi ${t.icon}`} />
                 {t.label}
-                <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-semibold ${active ? 'bg-teal-100 text-teal-700' : 'bg-gray-200 text-gray-500'}`}>
+                <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-semibold ${active ? 'bg-teal-100 text-teal-700 dark:bg-teal-900/40 dark:text-teal-400' : 'bg-gray-200 text-gray-500 dark:bg-slate-700 dark:text-gray-400'}`}>
                   {counts[t.key]}
                 </span>
               </button>
@@ -395,29 +395,29 @@ export default function WorkspaceProductsPage() {
         <div className="flex items-center gap-2 lg:ml-auto">
           {/* Search */}
           <div className="relative flex-1 lg:flex-none">
-            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm" />
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm dark:text-gray-500" />
             <input
               type="text" placeholder="Search title, seller or category..."
               value={search} onChange={e => setSearch(e.target.value)}
-              className="w-full lg:w-72 pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white"
+              className="w-full lg:w-72 pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:border-slate-700 dark:bg-slate-900"
             />
             {search && (
               <button onClick={() => setSearch('')} title="Clear"
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500">
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 dark:bg-slate-800 dark:text-gray-400">
                 <i className="bi bi-x-lg text-[10px]" />
               </button>
             )}
           </div>
 
           {/* View toggle */}
-          <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0">
+          <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 shrink-0 dark:bg-slate-800/60 dark:border-slate-800">
             {[
               { key: 'table', icon: 'bi-list-ul', label: 'Table view' },
               { key: 'grid',  icon: 'bi-grid-3x3-gap-fill', label: 'Grid view' },
             ].map(v => (
               <button key={v.key} onClick={() => setView(v.key)} title={v.label}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition
-                  ${view === v.key ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-400 hover:text-gray-700'}`}>
+                  ${view === v.key ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-400 hover:text-gray-700 dark:text-gray-500'}`}>
                 <i className={`bi ${v.icon}`} />
               </button>
             ))}
@@ -427,7 +427,7 @@ export default function WorkspaceProductsPage() {
 
       {/* Content */}
       {loading ? (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse">
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden animate-pulse dark:bg-slate-900 dark:border-slate-800">
           {Array(6).fill(0).map((_, i) => (
             <div key={i} className="flex gap-4 px-6 py-4 border-b border-gray-50 items-center">
               <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800 shrink-0" />
@@ -441,14 +441,14 @@ export default function WorkspaceProductsPage() {
           ))}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-gray-50 text-gray-300 text-3xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-gray-50 text-gray-300 text-3xl flex items-center justify-center mx-auto mb-4 dark:bg-slate-800/60">
             <i className={`bi ${search ? 'bi-search' : 'bi-inbox'}`} />
           </div>
-          <h3 className="font-bold text-gray-700 mb-2">No listings found</h3>
-          <p className="text-gray-400 text-sm">
+          <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No listings found</h3>
+          <p className="text-gray-400 text-sm dark:text-gray-500">
             {search
-              ? <>Nothing matches “{search}”. <button onClick={() => setSearch('')} className="text-teal-600 underline">Clear search</button></>
+              ? <>Nothing matches “{search}”. <button onClick={() => setSearch('')} className="text-teal-600 underline dark:text-teal-400">Clear search</button></>
               : status !== 'all'
                 ? `No ${status} listings in your categories.`
                 : 'No listings have been submitted in your categories yet.'}
@@ -458,8 +458,8 @@ export default function WorkspaceProductsPage() {
         /* ── Grid view ───────────────────────────────────── */
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.map(product => (
-            <div key={product.product_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col">
-              <div className="relative aspect-video bg-gray-50 flex items-center justify-center overflow-hidden">
+            <div key={product.product_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col dark:bg-slate-900 dark:border-slate-800">
+              <div className="relative aspect-video bg-gray-50 flex items-center justify-center overflow-hidden dark:bg-slate-800/60">
                 {product.images?.[0]
                   ? <img src={getImageUrl(product.images[0]) || ''} alt="" className="w-full h-full object-cover" />
                   : <i className="bi bi-box-seam text-4xl text-gray-300" />}
@@ -467,14 +467,14 @@ export default function WorkspaceProductsPage() {
               </div>
               <div className="p-4 flex flex-col flex-1">
                 <div className="flex items-start justify-between gap-2">
-                  <h3 className="font-semibold text-gray-800 truncate">{product.title}</h3>
+                  <h3 className="font-semibold text-gray-800 truncate dark:text-gray-100">{product.title}</h3>
                 </div>
                 <div className="flex items-center gap-2 mt-1 mb-3">
-                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">{product.category?.name}</span>
-                  <span className="text-xs text-gray-400">· {product.condition}</span>
+                  <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full dark:bg-slate-800 dark:text-gray-300">{product.category?.name}</span>
+                  <span className="text-xs text-gray-400 dark:text-gray-500">· {product.condition}</span>
                 </div>
-                <p className="text-lg font-bold text-gray-800">{ugx(product.price)}</p>
-                <div className="flex items-center gap-2 mt-1 text-xs text-gray-400">
+                <p className="text-lg font-bold text-gray-800 dark:text-gray-100">{ugx(product.price)}</p>
+                <div className="flex items-center gap-2 mt-1 text-xs text-gray-400 dark:text-gray-500">
                   <i className="bi bi-person" /> {product.seller?.name}
                 </div>
                 <div className="mt-4 pt-3 border-t border-gray-50">
@@ -486,7 +486,7 @@ export default function WorkspaceProductsPage() {
         </div>
       ) : (
         /* ── Table view ──────────────────────────────────── */
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
@@ -500,27 +500,27 @@ export default function WorkspaceProductsPage() {
                 <tr key={product.product_id} className="border-t border-gray-50 hover:bg-gray-50 transition">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center text-gray-300">
+                      <div className="w-10 h-10 rounded-xl overflow-hidden bg-gray-100 shrink-0 flex items-center justify-center text-gray-300 dark:bg-slate-800">
                         {product.images?.[0]
                           ? <img src={getImageUrl(product.images[0]) || ''} alt="" className="w-full h-full object-cover" />
                           : <i className="bi bi-box-seam" />}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-800 max-w-[180px] truncate">{product.title}</p>
-                        <p className="text-xs text-gray-400 mt-0.5">
+                        <p className="font-medium text-gray-800 max-w-[180px] truncate dark:text-gray-100">{product.title}</p>
+                        <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">
                           {new Date(product.created_at).toLocaleDateString('en-UG', { day: 'numeric', month: 'short' })}
                         </p>
                       </div>
                     </div>
                   </td>
                   <td className="px-4 py-3">
-                    <p className="text-gray-700 font-medium">{product.seller?.name}</p>
-                    <p className="text-xs text-gray-400">{product.seller?.phone}</p>
+                    <p className="text-gray-700 font-medium dark:text-gray-200">{product.seller?.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500">{product.seller?.phone}</p>
                   </td>
                   <td className="px-4 py-3">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full">{product.category?.name}</span>
+                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-1 rounded-full dark:bg-slate-800 dark:text-gray-300">{product.category?.name}</span>
                   </td>
-                  <td className="px-4 py-3 font-semibold text-gray-800">{ugx(product.price)}</td>
+                  <td className="px-4 py-3 font-semibold text-gray-800 dark:text-gray-100">{ugx(product.price)}</td>
                   <td className="px-4 py-3"><StatusBadge status={product.status} /></td>
                   <td className="px-4 py-3"><RowActions product={product} {...actionProps} /></td>
                 </tr>

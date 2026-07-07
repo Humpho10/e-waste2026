@@ -9,9 +9,9 @@ const typeConfig = {
   product_approved:    { icon: '✅', color: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'   },
   product_rejected:    { icon: '❌', color: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50'       },
   new_message:         { icon: '💬', color: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50'     },
-  account_created:     { icon: '🎉', color: 'bg-purple-50 border-purple-200' },
+  account_created:     { icon: '🎉', color: 'bg-purple-50 border-purple-200 dark:bg-purple-950/40' },
   listing_resubmitted: { icon: '🔄', color: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50' },
-  new_listing:         { icon: '📦', color: 'bg-teal-50 border-teal-200'     },
+  new_listing:         { icon: '📦', color: 'bg-teal-50 border-teal-200 dark:bg-teal-950/40'     },
 };
 
 export default function NotificationsContent() {

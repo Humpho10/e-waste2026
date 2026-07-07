@@ -81,7 +81,7 @@ export default function Browse() {
         {/* Search bar */}
         <form onSubmit={applyFilters} className="flex gap-2 mb-4">
           <div className="relative flex-1">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 dark:text-gray-500" />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
@@ -92,7 +92,7 @@ export default function Browse() {
           <button
             type="button"
             onClick={() => setFiltersOpen((o) => !o)}
-            className="flex items-center gap-1.5 border border-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 text-sm font-medium text-slate-700 rounded-lg px-4 py-2.5 transition-colors"
+            className="flex items-center gap-1.5 border border-slate-300 bg-white dark:bg-slate-900 hover:bg-slate-50 text-sm font-medium text-slate-700 rounded-lg px-4 py-2.5 transition-colors dark:text-gray-200"
           >
             <SlidersHorizontal size={15} />
             Filters
@@ -112,9 +112,9 @@ export default function Browse() {
 
         {/* Filter panel */}
         {filtersOpen && (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl p-4 mb-4 grid grid-cols-2 sm:grid-cols-4 gap-3 dark:border-slate-700">
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Category</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-gray-400">Category</label>
               <select
                 value={categoryId}
                 onChange={(e) => setCategoryId(e.target.value)}
@@ -127,7 +127,7 @@ export default function Browse() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Condition</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-gray-400">Condition</label>
               <select
                 value={condition}
                 onChange={(e) => setCondition(e.target.value)}
@@ -140,7 +140,7 @@ export default function Browse() {
               </select>
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Min price (UGX)</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-gray-400">Min price (UGX)</label>
               <input
                 type="number"
                 value={minPrice}
@@ -150,7 +150,7 @@ export default function Browse() {
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-500 mb-1">Max price (UGX)</label>
+              <label className="block text-xs font-medium text-slate-500 mb-1 dark:text-gray-400">Max price (UGX)</label>
               <input
                 type="number"
                 value={maxPrice}
@@ -163,7 +163,7 @@ export default function Browse() {
               <button
                 type="button"
                 onClick={clearFilters}
-                className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700"
+                className="flex items-center gap-1 text-xs text-slate-500 hover:text-slate-700 dark:text-gray-400"
               >
                 <X size={13} /> Clear all filters
               </button>
@@ -179,7 +179,7 @@ export default function Browse() {
 
         {/* Result header */}
         <div className="flex items-center justify-between mb-4">
-          <p className="text-sm text-slate-500">
+          <p className="text-sm text-slate-500 dark:text-gray-400">
             {loading ? 'Searching…' : `${result?.total ?? 0} item${result?.total === 1 ? '' : 's'} found`}
           </p>
           <select
@@ -198,13 +198,13 @@ export default function Browse() {
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
             {Array.from({ length: 8 }).map((_, i) => (
-              <div key={i} className="aspect-[4/3] bg-white dark:bg-slate-900 border border-slate-200 rounded-xl animate-pulse" />
+              <div key={i} className="aspect-[4/3] bg-white dark:bg-slate-900 border border-slate-200 rounded-xl animate-pulse dark:border-slate-700" />
             ))}
           </div>
         ) : result?.data?.length === 0 ? (
-          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl py-20 text-center">
-            <p className="text-slate-500 text-sm mb-1">No matching listings.</p>
-            <p className="text-slate-400 text-xs">Try a different search or clear your filters.</p>
+          <div className="bg-white dark:bg-slate-900 border border-slate-200 rounded-xl py-20 text-center dark:border-slate-700">
+            <p className="text-slate-500 text-sm mb-1 dark:text-gray-400">No matching listings.</p>
+            <p className="text-slate-400 text-xs dark:text-gray-500">Try a different search or clear your filters.</p>
           </div>
         ) : (
           <>
@@ -231,7 +231,7 @@ export default function Browse() {
                     className={`w-9 h-9 rounded-lg text-sm font-medium transition-colors ${
                       page === i + 1
                         ? 'bg-blue-500 text-white'
-                        : 'border border-slate-300 text-slate-600 hover:bg-white'
+                        : 'border border-slate-300 text-slate-600 hover:bg-white dark:text-gray-300'
                     }`}
                   >
                     {i + 1}

@@ -59,7 +59,7 @@ function StatCard({ icon, label, value, to, accent, sub, loading }) {
   return (
     <Link
       to={to}
-      className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200"
+      className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 dark:bg-slate-900 dark:border-slate-800"
     >
       <div className="flex items-center justify-between mb-3">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${accent.chip}`}>
@@ -68,9 +68,9 @@ function StatCard({ icon, label, value, to, accent, sub, loading }) {
         <i className="bi bi-arrow-up-right text-gray-300 group-hover:text-gray-400 transition" />
       </div>
       {loading ? (
-        <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mb-1" />
+        <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mb-1 dark:bg-slate-800" />
       ) : (
-        <p className="text-2xl font-bold text-gray-800 mb-0.5">{value}</p>
+        <p className="text-2xl font-bold text-gray-800 mb-0.5 dark:text-gray-100">{value}</p>
       )}
       <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
@@ -80,10 +80,10 @@ function StatCard({ icon, label, value, to, accent, sub, loading }) {
 
 function ChartCard({ title, icon, action, children, className = '' }) {
   return (
-    <div className={`bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden ${className}`}>
-      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-        <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
-          <i className={`bi ${icon} text-teal-600`} />
+    <div className={`bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden ${className}`}>
+      <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center dark:border-slate-800">
+        <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2 dark:text-gray-200">
+          <i className={`bi ${icon} text-teal-600 dark:text-teal-400`} />
           {title}
         </h3>
         {action}
@@ -121,11 +121,11 @@ export default function WorkspaceOverviewPage() {
   const noCategories = !isLoading && (stats.assigned_categories ?? 0) === 0;
 
   const kpis = [
-    { icon: 'bi-folder2-open',   label: 'My Categories',  value: stats.assigned_categories, to: '/workspace/products',                accent: { chip: 'bg-teal-50 text-teal-600' },      sub: 'Assigned to you' },
-    { icon: 'bi-box-seam',       label: 'Total Listings', value: stats.total_products,      to: '/workspace/products',                accent: { chip: 'bg-indigo-50 text-indigo-600' },  sub: 'In your categories' },
-    { icon: 'bi-check2-circle',  label: 'Approved',       value: stats.approved_products,   to: '/workspace/products?status=approved', accent: { chip: 'bg-emerald-50 text-emerald-600' }, sub: 'Live on marketplace' },
-    { icon: 'bi-x-circle',       label: 'Rejected',       value: stats.rejected_products,   to: '/workspace/products?status=rejected', accent: { chip: 'bg-red-50 text-red-500' },        sub: 'Sent back' },
-    { icon: 'bi-cash-coin',      label: 'Inventory Value',value: ugx(stats.inventory_value), to: '/workspace/products?status=approved', accent: { chip: 'bg-amber-50 text-amber-600' },   sub: 'Approved listings' },
+    { icon: 'bi-folder2-open',   label: 'My Categories',  value: stats.assigned_categories, to: '/workspace/products',                accent: { chip: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400' },      sub: 'Assigned to you' },
+    { icon: 'bi-box-seam',       label: 'Total Listings', value: stats.total_products,      to: '/workspace/products',                accent: { chip: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400' },  sub: 'In your categories' },
+    { icon: 'bi-check2-circle',  label: 'Approved',       value: stats.approved_products,   to: '/workspace/products?status=approved', accent: { chip: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' }, sub: 'Live on marketplace' },
+    { icon: 'bi-x-circle',       label: 'Rejected',       value: stats.rejected_products,   to: '/workspace/products?status=rejected', accent: { chip: 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400' },        sub: 'Sent back' },
+    { icon: 'bi-cash-coin',      label: 'Inventory Value',value: ugx(stats.inventory_value), to: '/workspace/products?status=approved', accent: { chip: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' },   sub: 'Approved listings' },
   ];
 
   /* ── Chart option builders ──────────────────────────────── */
@@ -207,7 +207,7 @@ export default function WorkspaceOverviewPage() {
             </p>
             <Link
               to="/workspace/products?status=pending"
-              className="inline-flex items-center gap-2 mt-4 bg-white text-teal-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-teal-50 transition shadow"
+              className="inline-flex items-center gap-2 mt-4 bg-white text-teal-700 font-semibold text-sm px-4 py-2.5 rounded-xl hover:bg-teal-50 transition shadow dark:bg-slate-900 dark:text-teal-400"
             >
               <i className="bi bi-clipboard-check" /> Review pending listings
             </Link>
@@ -229,19 +229,19 @@ export default function WorkspaceOverviewPage() {
       </div>
 
       {isError && (
-        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-center gap-2">
+        <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-6 flex items-center gap-2 dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
           <i className="bi bi-exclamation-triangle" /> Failed to load stats —
           <button onClick={() => refetch()} className="underline font-medium">Retry</button>
         </div>
       )}
 
       {noCategories ? (
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-600 text-3xl flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-12 text-center dark:bg-slate-900 dark:border-slate-800">
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-600 text-3xl flex items-center justify-center mx-auto mb-4 dark:bg-teal-950/40 dark:text-teal-400">
             <i className="bi bi-folder-x" />
           </div>
-          <h3 className="font-bold text-gray-700">No categories assigned yet</h3>
-          <p className="text-gray-400 text-sm mt-1 max-w-sm mx-auto">
+          <h3 className="font-bold text-gray-700 dark:text-gray-200">No categories assigned yet</h3>
+          <p className="text-gray-400 text-sm mt-1 max-w-sm mx-auto dark:text-gray-500">
             Once a manager assigns categories to you, your listings, charts and review queue will appear here.
           </p>
         </div>
@@ -253,27 +253,27 @@ export default function WorkspaceOverviewPage() {
           </div>
 
           {/* ── Performance panel (period accountability) ─── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6">
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-6 dark:bg-slate-900 dark:border-slate-800">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 mb-5">
               <div>
-                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
-                  <i className="bi bi-graph-up-arrow text-teal-600" /> Performance
+                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2 dark:text-gray-200">
+                  <i className="bi bi-graph-up-arrow text-teal-600 dark:text-teal-400" /> Performance
                 </h3>
-                <p className="text-xs text-gray-400 mt-0.5">
+                <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">
                   {period.from && period.to ? `${period.from} → ${period.to}` : '—'} · value of listings approved in your categories
                 </p>
               </div>
               {/* Period selector */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100">
+                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
                   {PERIOD_PRESETS.map((p) => (
                     <button key={p.key} onClick={() => setPreset(p.key)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === p.key ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                      className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === p.key ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'}`}>
                       {p.label}
                     </button>
                   ))}
                   <button onClick={() => setPreset('custom')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === 'custom' ? 'bg-white text-teal-700 shadow-sm' : 'text-gray-500 hover:text-gray-800'}`}>
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === 'custom' ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'}`}>
                     Custom
                   </button>
                 </div>
@@ -281,11 +281,11 @@ export default function WorkspaceOverviewPage() {
                   <div className="flex items-center gap-1.5">
                     <input type="date" value={custom.from} max={custom.to || undefined}
                       onChange={(e) => setCustom((c) => ({ ...c, from: e.target.value }))}
-                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500" />
-                    <span className="text-gray-400 text-xs">→</span>
+                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700" />
+                    <span className="text-gray-400 text-xs dark:text-gray-500">→</span>
                     <input type="date" value={custom.to} min={custom.from || undefined}
                       onChange={(e) => setCustom((c) => ({ ...c, to: e.target.value }))}
-                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500" />
+                      className="border border-gray-200 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500 dark:border-slate-700" />
                   </div>
                 )}
               </div>
@@ -294,25 +294,25 @@ export default function WorkspaceOverviewPage() {
             {/* Period KPI strip */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
               {[
-                { icon: 'bi-cash-stack',         tint: 'text-teal-600 bg-teal-50',       label: 'Value approved',   value: ugx(period.approved_value) },
-                { icon: 'bi-inbox',              tint: 'text-indigo-600 bg-indigo-50',   label: 'Submitted',        value: period.submitted ?? 0 },
-                { icon: 'bi-check2-circle',      tint: 'text-emerald-600 bg-emerald-50', label: 'Approved',         value: period.approved ?? 0 },
-                { icon: 'bi-x-circle',           tint: 'text-red-500 bg-red-50',         label: 'Rejected',         value: period.rejected ?? 0 },
-                { icon: 'bi-lightning-charge',   tint: 'text-amber-600 bg-amber-50',     label: 'Reviewed by you',  value: period.reviewed ?? 0 },
+                { icon: 'bi-cash-stack',         tint: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/40',       label: 'Value approved',   value: ugx(period.approved_value) },
+                { icon: 'bi-inbox',              tint: 'text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/40',   label: 'Submitted',        value: period.submitted ?? 0 },
+                { icon: 'bi-check2-circle',      tint: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40', label: 'Approved',         value: period.approved ?? 0 },
+                { icon: 'bi-x-circle',           tint: 'text-red-500 bg-red-50 dark:text-red-400 dark:bg-red-950/40',         label: 'Rejected',         value: period.rejected ?? 0 },
+                { icon: 'bi-lightning-charge',   tint: 'text-amber-600 bg-amber-50 dark:text-amber-400 dark:bg-amber-950/40',     label: 'Reviewed by you',  value: period.reviewed ?? 0 },
               ].map((m) => (
-                <div key={m.label} className="rounded-xl border border-gray-100 p-3">
+                <div key={m.label} className="rounded-xl border border-gray-100 p-3 dark:border-slate-800">
                   <div className={`w-8 h-8 rounded-lg flex items-center justify-center mb-2 ${m.tint}`}><i className={`bi ${m.icon}`} /></div>
                   {isLoading
-                    ? <div className="h-6 w-14 bg-gray-100 rounded animate-pulse" />
-                    : <p className="text-lg font-bold text-gray-800 leading-tight break-words">{m.value}</p>}
-                  <p className="text-xs text-gray-500 mt-0.5">{m.label}</p>
+                    ? <div className="h-6 w-14 bg-gray-100 rounded animate-pulse dark:bg-slate-800" />
+                    : <p className="text-lg font-bold text-gray-800 leading-tight break-words dark:text-gray-100">{m.value}</p>}
+                  <p className="text-xs text-gray-500 mt-0.5 dark:text-gray-400">{m.label}</p>
                 </div>
               ))}
             </div>
 
             {/* Period chart */}
             {isLoading ? (
-              <div className="h-[260px] bg-gray-50 rounded-xl animate-pulse" />
+              <div className="h-[260px] bg-gray-50 rounded-xl animate-pulse dark:bg-slate-800/60" />
             ) : perfSeries.length ? (
               <Chart options={perfOptions} />
             ) : (
@@ -323,9 +323,9 @@ export default function WorkspaceOverviewPage() {
             )}
 
             {period.revenue > 0 && (
-              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5">
+              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5 dark:text-gray-400">
                 <i className="bi bi-cash-coin text-emerald-500" /> Recorded sales revenue this period:
-                <span className="font-semibold text-gray-700">{ugx(period.revenue)}</span>
+                <span className="font-semibold text-gray-700 dark:text-gray-200">{ugx(period.revenue)}</span>
               </p>
             )}
           </div>
@@ -334,17 +334,17 @@ export default function WorkspaceOverviewPage() {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
             <ChartCard title="Listings by status" icon="bi-pie-chart-fill">
               {isLoading
-                ? <div className="h-[250px] bg-gray-50 rounded-xl animate-pulse" />
+                ? <div className="h-[250px] bg-gray-50 rounded-xl animate-pulse dark:bg-slate-800/60" />
                 : <Chart options={donutOptions} />}
             </ChartCard>
             <ChartCard
               title="Listings by category"
               icon="bi-bar-chart-line-fill"
               className="lg:col-span-2"
-              action={<Link to="/workspace/products" className="text-teal-600 text-xs hover:underline font-medium">View all →</Link>}
+              action={<Link to="/workspace/products" className="text-teal-600 text-xs hover:underline font-medium dark:text-teal-400">View all →</Link>}
             >
               {isLoading ? (
-                <div className="h-[300px] bg-gray-50 rounded-xl animate-pulse" />
+                <div className="h-[300px] bg-gray-50 rounded-xl animate-pulse dark:bg-slate-800/60" />
               ) : byCategory.length ? (
                 <Chart options={categoryOptions} />
               ) : (
@@ -357,13 +357,13 @@ export default function WorkspaceOverviewPage() {
           </div>
 
           {/* ── Review queue ──────────────────────────────── */}
-          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2">
-                  <i className="bi bi-clipboard-check text-teal-600" /> Review queue
+          <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden flex flex-col dark:bg-slate-900 dark:border-slate-800">
+              <div className="px-6 py-4 border-b border-gray-100 flex justify-between items-center dark:border-slate-800">
+                <h3 className="font-bold text-gray-700 text-sm flex items-center gap-2 dark:text-gray-200">
+                  <i className="bi bi-clipboard-check text-teal-600 dark:text-teal-400" /> Review queue
                 </h3>
                 {stats.pending_products > 0 && (
-                  <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
+                  <span className="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full dark:bg-amber-900/40 dark:text-amber-400">
                     {stats.pending_products} waiting
                   </span>
                 )}
@@ -373,10 +373,10 @@ export default function WorkspaceOverviewPage() {
                 {isLoading ? (
                   Array(4).fill(0).map((_, i) => (
                     <div key={i} className="flex items-center gap-3 px-5 py-3 animate-pulse">
-                      <div className="w-11 h-11 rounded-lg bg-gray-100 shrink-0" />
+                      <div className="w-11 h-11 rounded-lg bg-gray-100 shrink-0 dark:bg-slate-800" />
                       <div className="flex-1 space-y-2">
-                        <div className="h-3 w-3/4 bg-gray-100 rounded" />
-                        <div className="h-2.5 w-1/2 bg-gray-100 rounded" />
+                        <div className="h-3 w-3/4 bg-gray-100 rounded dark:bg-slate-800" />
+                        <div className="h-2.5 w-1/2 bg-gray-100 rounded dark:bg-slate-800" />
                       </div>
                     </div>
                   ))
@@ -387,22 +387,22 @@ export default function WorkspaceOverviewPage() {
                       to="/workspace/products?status=pending"
                       className="flex items-center gap-3 px-5 py-3 hover:bg-teal-50/40 transition group"
                     >
-                      <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300">
+                      <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300 dark:bg-slate-800">
                         {p.image
                           ? <img src={`${STORAGE}/${p.image}`} alt="" className="w-full h-full object-cover" />
                           : <i className="bi bi-image" />}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-700">{p.title}</p>
-                        <p className="text-xs text-gray-400 truncate">
+                        <p className="text-sm font-semibold text-gray-700 truncate group-hover:text-teal-700 dark:text-gray-200">{p.title}</p>
+                        <p className="text-xs text-gray-400 truncate dark:text-gray-500">
                           {p.category} · {ugx(p.price)}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="text-[11px] text-gray-400 flex items-center gap-1 justify-end">
+                        <span className="text-[11px] text-gray-400 flex items-center gap-1 justify-end dark:text-gray-500">
                           <i className="bi bi-clock" />{timeAgo(p.created_at)}
                         </span>
-                        <span className="text-[11px] text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition">
+                        <span className="text-[11px] text-teal-600 font-medium opacity-0 group-hover:opacity-100 transition dark:text-teal-400">
                           Review →
                         </span>
                       </div>
@@ -411,7 +411,7 @@ export default function WorkspaceOverviewPage() {
                 ) : (
                   <div className="flex flex-col items-center justify-center text-center py-12 text-gray-300">
                     <i className="bi bi-check2-all text-4xl mb-2 text-emerald-300" />
-                    <p className="text-sm text-gray-400">All caught up — nothing pending!</p>
+                    <p className="text-sm text-gray-400 dark:text-gray-500">All caught up — nothing pending!</p>
                   </div>
                 )}
               </div>
@@ -419,7 +419,7 @@ export default function WorkspaceOverviewPage() {
               {recentPending.length > 0 && (
                 <Link
                   to="/workspace/products?status=pending"
-                  className="block text-center text-teal-600 text-xs font-semibold py-3 border-t border-gray-50 hover:bg-teal-50/40 transition"
+                  className="block text-center text-teal-600 text-xs font-semibold py-3 border-t border-gray-50 hover:bg-teal-50/40 transition dark:text-teal-400"
                 >
                   Go to review queue →
                 </Link>

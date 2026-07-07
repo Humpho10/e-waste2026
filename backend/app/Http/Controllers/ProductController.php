@@ -77,20 +77,54 @@ class ProductController extends Controller
 
         $products = $query->latest()->paginate(12);
 
+        // Attach seller rating summaries (avoids N+1)
+        $ratingMap = SellerRatingController::summariesFor(
+            $products->getCollection()->pluck('seller_id')
+        );
+        $products->getCollection()->each(function ($product) use ($ratingMap) {
+            if ($product->seller) {
+                $summary = $ratingMap[(int) $product->seller_id] ?? ['average' => 0, 'count' => 0];
+                $product->seller->rating_average = $summary['average'];
+                $product->seller->rating_count   = $summary['count'];
+            }
+        });
+
         return response()->json($products, 200);
     }
 
     // ── PUBLIC — View single approved listing ──────────────────
     // No permission check – public route
-    public function show(int $id)
+    public function show($slugHash)
     {
+        // "slug-hashId" combined into a single route segment; split on the
+        // LAST hyphen since the slug itself may contain hyphens.
+        $lastDash = strrpos($slugHash, '-');
+        $slug     = $lastDash !== false ? substr($slugHash, 0, $lastDash) : '';
+        $hashId   = $lastDash !== false ? substr($slugHash, $lastDash + 1) : $slugHash;
+
         $product = Product::with([
             'seller:id,name,location,phone',
             'category:category_id,name',
             'subCategory:subcategory_id,sub_category_name',
             'images',
         ])->where('status', 'approved')
-          ->findOrFail($id);
+          ->where('hash_id', $hashId)
+          ->firstOrFail();
+
+        // If the slug is stale (title changed since the link was shared),
+        // redirect to the canonical URL.
+        if ($slug !== $product->slug) {
+            return redirect()->route('product.show', [
+                'slugHash' => "{$product->slug}-{$product->hash_id}",
+            ], 301);
+        }
+
+        // Attach the seller's rating summary
+        if ($product->seller) {
+            $summary = SellerRatingController::summaryFor($product->seller_id);
+            $product->seller->rating_average = $summary['average'];
+            $product->seller->rating_count   = $summary['count'];
+        }
 
         return response()->json([
             'product' => $product
@@ -210,13 +244,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER — Edit own listing ──────────────────────────────
-    public function update(Request $request, int $id)
+    public function update(Request $request, string $hashId)
     {
         if (!$this->user->can('product-edit')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to edit products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can edit their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -254,13 +288,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER — Delete own listing ────────────────────────────
-    public function destroy(int $id)
+    public function destroy(string $hashId)
     {
         if (!$this->user->can('product-delete')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to delete products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can delete their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -286,7 +320,7 @@ class ProductController extends Controller
 
         $product->delete();
 
-        AuditLogger::log('products', $id, 'deleted', $oldValue, null);
+        AuditLogger::log('products', $product->product_id, 'deleted', $oldValue, null);
 
         return response()->json([
             'message' => 'Listing deleted successfully.'
@@ -320,13 +354,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER — Resubmit after rejection ─────────────────────
-    public function resubmit(Request $request, int $id)
+    public function resubmit(Request $request, string $hashId)
     {
         if (!$this->user->can('product-create')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to resubmit products.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         // Business rule: Only the seller can resubmit their own listing
         if ($product->seller_id !== Auth::id()) {
@@ -431,13 +465,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER/BUYER — Send a message about a product ─────────
-    public function sendMessage(Request $request, int $id)
+    public function sendMessage(Request $request, string $hashId)
     {
         if (!$this->user->can('message-send')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to send messages.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         $validated = $request->validate([
             'recipient_id' => 'required|exists:users,id',
@@ -475,13 +509,13 @@ class ProductController extends Controller
     }
 
     // ── SELLER/BUYER — View messages on a product ──────────────
-    public function getMessages(int $id)
+    public function getMessages(string $hashId)
     {
         if (!$this->user->can('message-view')) {
             return response()->json(['message' => 'Unauthorized. You do not have permission to view messages.'], 403);
         }
 
-        $product = Product::findOrFail($id);
+        $product = Product::where('hash_id', $hashId)->firstOrFail();
 
         $messages = Message::with([
             'sender:id,name',

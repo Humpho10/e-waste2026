@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { FiStar } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { browseProducts, getCategories } from '../../api/products';
 
@@ -10,7 +11,7 @@ function ProductCard({ product }) {
 
   return (
     <div
-      onClick={() => navigate(`/dashboard/product/${product.product_id}`)}
+      onClick={() => navigate(`/dashboard/product/${product.slug}-${product.hash_id}`)}
       className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md hover:border-blue-200 dark:hover:border-blue-800 cursor-pointer transition group"
     >
       <div className="aspect-video rounded-t-2xl overflow-hidden bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center">
@@ -40,6 +41,13 @@ function ProductCard({ product }) {
           <span className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{product.condition}</span>
           <span className="text-xs text-gray-400 dark:text-gray-500">📍 {product.seller?.location || 'Uganda'}</span>
         </div>
+        {product.seller?.rating_count > 0 && (
+          <div className="flex items-center gap-1 mt-1.5">
+            <FiStar className="w-3 h-3 text-amber-400" fill="currentColor" />
+            <span className="text-xs text-gray-500 dark:text-gray-400 font-medium">{Number(product.seller.rating_average).toFixed(1)}</span>
+            <span className="text-xs text-gray-400 dark:text-gray-500">({product.seller.rating_count})</span>
+          </div>
+        )}
       </div>
     </div>
   );

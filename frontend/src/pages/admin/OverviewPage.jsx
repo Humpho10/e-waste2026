@@ -144,7 +144,7 @@ function PipelineGauge({ label, value, target, color, isDark }) {
 
 const activityIcon = (action) => {
   if (action === 'created') return { icon: 'plus-circle-fill', tone: 'text-green-500 bg-green-50 dark:bg-green-950/40' };
-  if (action === 'deleted') return { icon: 'x-circle-fill', tone: 'text-red-500 bg-red-50 dark:bg-red-950/40' };
+  if (action === 'deleted') return { icon: 'x-circle-fill', tone: 'text-red-500 bg-red-50 dark:bg-red-950/40 dark:text-red-400' };
   return { icon: 'activity', tone: 'text-blue-500 bg-blue-50 dark:bg-blue-950/40' };
 };
 
@@ -292,7 +292,7 @@ export default function OverviewPage() {
           </p>
           <Link
             to={listingStats?.pending > 0 ? '/manager/products?status=pending' : '/manager/products'}
-            className="mt-4 inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
+            className="mt-4 inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-black/10 transition hover:-translate-y-0.5 dark:bg-slate-900 dark:text-blue-400"
           >
             <Bi name="clipboard2-check-fill" size={16} />
             {listingStats?.pending > 0 ? 'Review pending listings' : 'View all listings'}
@@ -533,28 +533,28 @@ export default function OverviewPage() {
         {/* System Info Bar — background is a fixed dark gradient in both themes, so its own text stays fixed too */}
         <div className="animate-fade-in-up bg-gradient-to-br from-gray-900 to-gray-800 rounded-2xl p-6 text-white flex flex-col justify-between">
           <div>
-            <h3 className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-2 mb-4">
+            <h3 className="text-xs uppercase tracking-wide text-gray-400 flex items-center gap-2 mb-4 dark:text-gray-500">
               <Bi name="hdd-network-fill" size={15} /> System Status
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Platform</span>
+                <span className="text-gray-400 dark:text-gray-500">Platform</span>
                 <span className="font-semibold">E-Waste Mart</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Backend</span>
+                <span className="text-gray-400 dark:text-gray-500">Backend</span>
                 <span className="font-semibold">Laravel 11</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Auth</span>
+                <span className="text-gray-400 dark:text-gray-500">Auth</span>
                 <span className="font-semibold">Sanctum</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Roles</span>
+                <span className="text-gray-400 dark:text-gray-500">Roles</span>
                 <span className="font-semibold">Spatie</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Environment</span>
+                <span className="text-gray-400 dark:text-gray-500">Environment</span>
                 <span className="font-semibold text-green-400 flex items-center gap-1.5">
                   <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-dot" /> Development
                 </span>
@@ -563,7 +563,7 @@ export default function OverviewPage() {
           </div>
           <Link
             to="/admin/settings"
-            className="mt-5 bg-white text-gray-900 hover:bg-gray-100 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-center flex items-center justify-center gap-2"
+            className="mt-5 bg-white text-gray-900 hover:bg-gray-100 px-4 py-2.5 rounded-xl text-sm font-semibold transition text-center flex items-center justify-center gap-2 dark:bg-slate-900 dark:text-gray-100"
           >
             <Bi name="gear-fill" size={15} /> Settings
           </Link>
