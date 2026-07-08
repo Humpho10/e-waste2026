@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getRoles, createRole, updateRole, deleteRole, getPermissions } from '../../api/admin';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function RolesPage() {
@@ -16,6 +17,7 @@ function RolesPage() {
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
@@ -99,8 +101,13 @@ function RolesPage() {
     saveMutation.mutate({ editing, form });
   };
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Delete role "${name}"?`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Delete role "${name}"?`, {
+      title: 'Delete role?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 

@@ -5,6 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, deleteProduct } from '../../api/products';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 
 const statusConfig = {
   pending:     { label: 'Pending Review', color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
@@ -20,6 +21,7 @@ export default function MyListingsPage() {
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canEdit = permissions?.includes('product-edit') || false;
@@ -42,7 +44,12 @@ export default function MyListingsPage() {
   });
 
   const handleDelete = async (hashId, title) => {
-    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    const ok = await confirm(`Delete "${title}"? This cannot be undone.`, {
+      title: 'Delete listing?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     setDeleting(hashId);
     try {
       await deleteMutation.mutateAsync(hashId);

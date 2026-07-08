@@ -10,6 +10,7 @@ import {
   removeSubcategory,
 } from '../../api/manager';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 
 export default function CategoriesContent() {
@@ -23,6 +24,7 @@ export default function CategoriesContent() {
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canCreateCategory = permissions?.includes('category-create') || false;
@@ -133,8 +135,13 @@ export default function CategoriesContent() {
     },
   });
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Delete category "${name}"? This cannot be undone.`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Delete category "${name}"? This cannot be undone.`, {
+      title: 'Delete category?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 
