@@ -38,6 +38,7 @@ Route::get('/products/{slugHash}', [ProductController::class, 'show'])
     ->where('slugHash', '.*-[A-Za-z0-9]+');
 
 Route::get('/stats', [StatsController::class, 'index']); // ← new public stats
+Route::get('/sellers/top-rated', [SellerRatingController::class, 'topRated']);
 Route::get('/settings/public', [StatsController::class, 'publicSettings']);
 
 // Contact page — rate-limited (5/min per IP) since it's unauthenticated.
