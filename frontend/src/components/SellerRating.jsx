@@ -106,7 +106,7 @@ export default function SellerRating({ sellerId, isSeller = false, initialAverag
           </div>
         ) : (
           <p className="text-xs text-slate-400 dark:text-gray-500">
-            Message this seller about a listing to rate them.
+            This account isn't rateable.
           </p>
         )
       )}

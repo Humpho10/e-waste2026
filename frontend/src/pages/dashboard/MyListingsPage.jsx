@@ -163,14 +163,6 @@ export default function MyListingsPage() {
                   </span>
 
                   <div className="flex gap-2">
-                    {canEdit && ['pending', 'rejected'].includes(listing.status) && (
-                      <Link
-                        to={`/dashboard/edit/${listing.product_id}`}
-                        className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                      >
-                        Edit
-                      </Link>
-                    )}
                     {canResubmit && listing.status === 'rejected' && (
                       <Link
                         to={`/dashboard/resubmit/${listing.hash_id}`}

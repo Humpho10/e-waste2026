@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Models\SellerRating;
-use App\Models\Message;
+use App\Models\Product;
 use App\Models\User;
 use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Auth;
@@ -22,16 +22,11 @@ class SellerRatingController extends Controller
             return response()->json(['error' => 'You cannot rate yourself.'], 400);
         }
 
-        // Seller must exist
-        if (!User::where('id', $sellerId)->exists()) {
+        // Target must actually be a seller (has at least one listing) — buyers
+        // aren't required to have messaged them first, since many deals close
+        // over a phone call instead of the in-app messaging system.
+        if (!$this->isSeller($sellerId)) {
             return response()->json(['error' => 'Seller not found.'], 404);
-        }
-
-        // Business rule: only buyers who have contacted the seller may rate them
-        if (!$this->hasContactedSeller($buyerId, $sellerId)) {
-            return response()->json([
-                'error' => 'You can only rate a seller you have contacted about a listing.',
-            ], 403);
         }
 
         $validated = $request->validate([
@@ -58,7 +53,7 @@ class SellerRatingController extends Controller
         $buyerId = Auth::id();
 
         $canRate = (int) $sellerId !== (int) $buyerId
-            && $this->hasContactedSeller($buyerId, $sellerId);
+            && $this->isSeller($sellerId);
 
         $myRating = SellerRating::where('seller_id', $sellerId)
             ->where('buyer_id', $buyerId)
@@ -71,12 +66,53 @@ class SellerRatingController extends Controller
         ], 200);
     }
 
-    // Has the buyer sent at least one message to this seller?
-    private function hasContactedSeller($buyerId, $sellerId): bool
+    // Does this user have at least one listing (i.e. are they actually a seller)?
+    private function isSeller($sellerId): bool
     {
-        return Message::where('sender_id', $buyerId)
-            ->where('recipient_id', $sellerId)
-            ->exists();
+        return Product::where('seller_id', $sellerId)->exists();
+    }
+
+    // ── PUBLIC — Top 5 most-rated sellers, for the homepage ────
+    public function topRated()
+    {
+        $limit   = 5;
+        $minimum = 2; // ratings needed to qualify for the "confident" ranking
+
+        $baseQuery = fn () => SellerRating::selectRaw('seller_id, AVG(rating) as average, COUNT(*) as count')
+            ->groupBy('seller_id')
+            ->orderByDesc('average')
+            ->orderByDesc('count');
+
+        $top = $baseQuery()->havingRaw('COUNT(*) >= ?', [$minimum])->limit($limit)->get();
+
+        // Not enough well-established sellers yet — fill remaining spots with
+        // whoever else has ratings, same ordering.
+        if ($top->count() < $limit) {
+            $excludeIds = $top->pluck('seller_id');
+            $fallback = $baseQuery()
+                ->when($excludeIds->isNotEmpty(), fn ($q) => $q->whereNotIn('seller_id', $excludeIds))
+                ->limit($limit - $top->count())
+                ->get();
+            $top = $top->concat($fallback);
+        }
+
+        $sellers = User::whereIn('id', $top->pluck('seller_id'))
+            ->get(['id', 'name', 'location', 'avatar'])
+            ->keyBy('id');
+
+        $result = $top->map(function ($row) use ($sellers) {
+            $seller = $sellers->get($row->seller_id);
+            return [
+                'id'             => $row->seller_id,
+                'name'           => $seller?->name,
+                'location'       => $seller?->location,
+                'avatar'         => $seller?->avatar,
+                'rating_average' => round((float) $row->average, 1),
+                'rating_count'   => (int) $row->count,
+            ];
+        })->values();
+
+        return response()->json(['sellers' => $result], 200);
     }
 
     // Aggregate rating for a single seller

@@ -3,6 +3,7 @@ import { useQuery, useMutation } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage, getPublicSettings } from '../api/products';
+import { getTopRatedSellers } from '../api/ratings';
 import { logoutUser } from '../api/auth';
 import ThemeToggle from '../components/ThemeToggle';
 import PublicNavbar from '../components/PublicNavbar';
@@ -146,7 +147,7 @@ function categoryThumb(categoryName, products) {
 }
 
 // ── Testimonials — fictional, representative sample content ──
-const TESTIMONIALS = [
+{/*const TESTIMONIALS = [
   {
     name: 'Grace N.', role: 'Buyer · Kampala', rating: 5,
     quote: 'Found a replacement laptop screen in minutes for way less than the repair shop wanted. The seller replied fast and the part worked first try.',
@@ -159,7 +160,7 @@ const TESTIMONIALS = [
     name: 'Aisha B.', role: 'Buyer · Wandegeya', rating: 4,
     quote: 'The photo search actually works — snapped a picture of a broken power supply and found a close match nearby.',
   },
-];
+];*/}
 
 // ── HomePage ──────────────────────────────────────────────────
 export default function HomePage() {
@@ -213,6 +214,11 @@ export default function HomePage() {
     queryKey: ['public-settings'],
     queryFn: () => getPublicSettings().then(res => res.data),
     staleTime: 30_000,
+  });
+
+  const { data: topSellers = [] } = useQuery({
+    queryKey: ['top-rated-sellers'],
+    queryFn: () => getTopRatedSellers().then(res => res.data.sellers || []),
   });
 
   // Rotate the hero background photo on a timer — pure crossfade via opacity,
@@ -668,8 +674,49 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* ── Top Rated Sellers ───────────────────────────────── */}
+      {topSellers.length > 0 && (
+        <section className="bg-white dark:bg-slate-900 border-t border-gray-100 dark:border-slate-800 py-14 px-4">
+          <div className="max-w-5xl mx-auto">
+            <Reveal className="text-center mb-10">
+              <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Top Rated Sellers</h2>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">The most trusted sellers on E-Waste Mart, rated by real buyers</p>
+            </Reveal>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+              {topSellers.map((seller, i) => (
+                <Reveal key={seller.id} delay={i * 100}>
+                  <div className="bg-gray-50 dark:bg-slate-800/60 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 text-center h-full flex flex-col items-center">
+                    <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg mb-3 shrink-0">
+                      {seller.avatar ? (
+                        <img src={`http://localhost:8000/storage/${seller.avatar}`} alt={seller.name} className="w-full h-full object-cover rounded-2xl" />
+                      ) : (
+                        seller.name?.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <p className="font-bold text-gray-800 dark:text-gray-100 text-sm truncate w-full">{seller.name}</p>
+                    {seller.location && (
+                      <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center justify-center gap-1 mt-0.5">
+                        <MapPin width={11} height={11} /> {seller.location}
+                      </p>
+                    )}
+                    <div className="flex gap-0.5 mt-2">
+                      {Array(5).fill(0).map((_, j) => (
+                        <Star key={j} width={13} height={13} className={j < Math.round(seller.rating_average) ? 'text-amber-400' : 'text-gray-200 dark:text-slate-700'} />
+                      ))}
+                    </div>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                      {Number(seller.rating_average).toFixed(1)} · {seller.rating_count} rating{seller.rating_count !== 1 ? 's' : ''}
+                    </p>
+                  </div>
+                </Reveal>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* ── Testimonials ────────────────────────────────────── */}
-      <section className="bg-gray-50 dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800 py-14 px-4">
+      {/*<section className="bg-gray-50 dark:bg-slate-950 border-t border-gray-100 dark:border-slate-800 py-14 px-4">
         <div className="max-w-5xl mx-auto">
           <Reveal className="text-center mb-10">
             <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">What people are saying</h2>
@@ -694,7 +741,7 @@ export default function HomePage() {
             ))}
           </div>
         </div>
-      </section>
+      </section>*/}
 
       {/* ── CTA ─────────────────────────────────────────────── */}
       {!token && (
@@ -772,8 +819,8 @@ export default function HomePage() {
             <div>
               <p className="font-semibold text-white mb-3 text-xs">Company</p>
               <ul className="space-y-2 text-xs">
-                <li><button onClick={() => howRef.current?.scrollIntoView({ behavior: 'smooth' })} className="hover:text-white transition">About</button></li>
-                <li><a href={`mailto:${siteSettings?.support_email || 'hello@ewastemart.ug'}`} className="hover:text-white transition">Contact</a></li>
+                <li><Link to="/about" className="hover:text-white transition">About</Link></li>
+                <li><Link to="/contact" className="hover:text-white transition">Contact</Link></li>
               </ul>
             </div>
           </div>
