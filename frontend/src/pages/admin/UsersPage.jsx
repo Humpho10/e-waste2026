@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getUsers, createUser, updateUser, deleteUser, getRoles } from '../../api/admin';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 import Bi from '../../components/BsIcon';
 
@@ -29,6 +30,7 @@ function UsersPage() {
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
@@ -93,8 +95,13 @@ function UsersPage() {
     },
   });
 
-  const handleDelete = (id) => {
-    if (!window.confirm('Are you sure you want to delete this user?')) return;
+  const handleDelete = async (id) => {
+    const ok = await confirm('Are you sure you want to delete this user?', {
+      title: 'Delete user?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 

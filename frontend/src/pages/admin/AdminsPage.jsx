@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getAdmins, createAdmin, deleteAdmin } from '../../api/admin';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function SkeletonCard() {
@@ -191,6 +192,7 @@ export default function AdminsPage() {
   const { permissions } = useAuth();
 
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
@@ -216,8 +218,13 @@ export default function AdminsPage() {
     },
   });
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Remove ${name} as Admin? This cannot be undone.`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Remove ${name} as Admin? This cannot be undone.`, {
+      title: 'Remove admin?',
+      tone: 'danger',
+      confirmLabel: 'Remove',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 

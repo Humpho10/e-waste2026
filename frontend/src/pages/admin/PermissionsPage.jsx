@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getPermissions, createPermission, deletePermission } from '../../api/admin';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function PermissionsPage() {
@@ -16,6 +17,7 @@ function PermissionsPage() {
 
   // 👇 Get toast function
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   // 👇 Check if user has the required permissions
@@ -65,8 +67,13 @@ function PermissionsPage() {
     },
   });
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Delete permission "${name}"?`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Delete permission "${name}"?`, {
+      title: 'Delete permission?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 
