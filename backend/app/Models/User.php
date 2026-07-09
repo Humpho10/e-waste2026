@@ -27,4 +27,12 @@ class User extends Authenticatable
         'password',
         'remember_token',
     ];
+
+    // Categories a Product-Manager has been assigned to review — empty for
+    // every other role. Used to surface "which categories does this PM
+    // cover?" in the Super Admin's Users list.
+    public function productManagerAssignments()
+    {
+        return $this->hasMany(ProductManagerAssignment::class, 'product_manager_id');
+    }
 }

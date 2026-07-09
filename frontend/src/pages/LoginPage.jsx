@@ -7,6 +7,7 @@ import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast'; // adjust path if needed
 import GoogleAuthButton from '../components/GoogleAuthButton';
 import ThemeToggle from '../components/ThemeToggle';
+import MaintenanceNotice from '../components/MaintenanceNotice';
 import { Recycle, Eye, EyeOff, Shield, Tag, Chat, ArrowLeft } from '../components/icons';
 
 const REDIRECT_MAP = {
@@ -76,6 +77,11 @@ export default function LoginPage() {
   const [showPw, setShowPw]   = useState(false);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
+  // Set instead of `error` when the server rejects a sign-in specifically
+  // because maintenance mode blocks this person's role — swaps the whole
+  // page for the same "under maintenance" screen visitors see, rather than
+  // a plain inline error.
+  const [maintenanceBlock, setMaintenanceBlock] = useState(null);
 
   // Same cache key as MaintenanceGate/HomePage — hides "Continue with
   // Google" if the Super Admin has switched it off in Settings.
@@ -100,13 +106,38 @@ export default function LoginPage() {
       const res = await loginUser(form);
       finish(res.data);
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Invalid email or password.';
-      setError(errorMsg);
-      toast(errorMsg, 'error');
+      if (err.response?.data?.maintenance_mode) {
+        setMaintenanceBlock(err.response.data.message);
+      } else {
+        const errorMsg = err.response?.data?.message || 'Invalid email or password.';
+        setError(errorMsg);
+        toast(errorMsg, 'error');
+      }
     } finally {
       setLoading(false);
     }
   };
+
+  const handleGoogleError = (message, data) => {
+    setLoading(false);
+    if (data?.maintenance_mode) {
+      setMaintenanceBlock(message);
+      return;
+    }
+    setError(message);
+    toast(message, 'error');
+  };
+
+  if (maintenanceBlock) {
+    return (
+      <MaintenanceNotice
+        platformName={siteSettings?.platform_name}
+        message={maintenanceBlock}
+        supportEmail={siteSettings?.support_email}
+        showStaffSignIn={false}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen flex bg-gray-50 dark:bg-slate-800/60">
@@ -146,7 +177,7 @@ export default function LoginPage() {
                   label="Continue with Google"
                   onStart={() => setLoading(true)}
                   onSuccess={finish}
-                  onError={(m) => { setError(m); toast(m, 'error'); setLoading(false); }}
+                  onError={handleGoogleError}
                 />
                 <div className="flex items-center gap-3 my-6">
                   <span className="h-px bg-gray-200 dark:bg-slate-700 flex-1" />

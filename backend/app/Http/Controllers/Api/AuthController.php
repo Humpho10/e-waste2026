@@ -108,10 +108,15 @@ class AuthController extends Controller
         }
 
         $user->load('roles');
+        $role = $user->roles->first()?->name ?? 'user';
+
+        if ($blocked = $this->maintenanceBlockMessage($settings, $role)) {
+            return response()->json(['message' => $blocked, 'maintenance_mode' => true], 503);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $permissions = $user->getAllPermissions()->pluck('name');
-        $role = $user->roles->first()?->name ?? 'user';
 
         return response()->json([
             'message'     => 'Login successful',
@@ -120,6 +125,33 @@ class AuthController extends Controller
             'role'        => $role,
             'permissions' => $permissions,
         ]);
+    }
+
+    /**
+     * When maintenance mode is on, only the Super Admin can always sign in.
+     * Every other role is blocked unless the Super Admin has explicitly
+     * re-opened sign-in for that specific role from Settings > Maintenance.
+     * Returns a user-facing message when the login should be blocked, or
+     * null when it's fine to proceed.
+     */
+    private function maintenanceBlockMessage(Settings $settings, string $role): ?string
+    {
+        if (!$settings->maintenance_mode || $role === 'Super-Admin') {
+            return null;
+        }
+
+        $allowed = match ($role) {
+            'Admin'            => $settings->maintenance_allow_admin_login,
+            'Product-Manager'  => $settings->maintenance_allow_pm_login,
+            default            => $settings->maintenance_allow_user_login,
+        };
+
+        if ($allowed) {
+            return null;
+        }
+
+        return $settings->maintenance_message
+            ?: "{$settings->platform_name} is currently down for maintenance. Please try again shortly.";
     }
 
     // Sign in / sign up with a Google ID token from Google Identity Services (GSI).
@@ -204,10 +236,15 @@ class AuthController extends Controller
         }
 
         $user->load('roles');
+        $role = $user->roles->first()?->name ?? 'user';
+
+        if ($blocked = $this->maintenanceBlockMessage(Settings::current(), $role)) {
+            return response()->json(['message' => $blocked, 'maintenance_mode' => true], 503);
+        }
+
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $permissions = $user->getAllPermissions()->pluck('name');
-        $role = $user->roles->first()?->name ?? 'user';
 
         return response()->json([
             'message'     => 'Login successful',

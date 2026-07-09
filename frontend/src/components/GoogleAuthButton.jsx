@@ -81,7 +81,8 @@ export default function GoogleAuthButton({ label = 'Continue with Google', onSuc
             } catch (err) {
               onErrorRef.current?.(
                 err.response?.data?.message ||
-                'Google sign-in failed. The server may not support it yet.'
+                'Google sign-in failed. The server may not support it yet.',
+                err.response?.data
               );
             }
           },
