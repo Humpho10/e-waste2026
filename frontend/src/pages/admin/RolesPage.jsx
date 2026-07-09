@@ -46,7 +46,6 @@ const getGroupIcon = (permName) => {
   return PERMISSION_ICONS[group] || PERMISSION_ICONS['default'];
 };
 import { useConfirm } from '../../components/ConfirmDialog';
-import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function RolesPage() {
   const [showModal, setShowModal] = useState(false);

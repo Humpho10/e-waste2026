@@ -97,7 +97,6 @@ const getGroupStyle = (group) => {
   return PERMISSION_COLORS[group] || PERMISSION_COLORS['default'];
 };
 import { useConfirm } from '../../components/ConfirmDialog';
-import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function PermissionsPage() {
   const [search, setSearch] = useState('');
