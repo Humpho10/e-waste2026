@@ -26,6 +26,7 @@ import UserNotificationsPage from './pages/dashboard/NotificationsPage';
 // ─── Super Admin Pages ──────────────────────────────────────
 import OverviewPage from './pages/admin/OverviewPage';
 import AdminsPage from './pages/admin/AdminsPage';
+import AdminProductManagersPage from './pages/admin/ProductManagersPage';
 import UsersPage from './pages/admin/UsersPage';
 import RolesPage from './pages/admin/RolesPage';
 import PermissionsPage from './pages/admin/PermissionsPage';
@@ -110,6 +111,11 @@ function App() {
         <Route path="/admin/admins" element={
           <PermissionRoute requiredPermissions={['admin-list']}>
             <AdminsPage />
+          </PermissionRoute>
+        } />
+        <Route path="/admin/product-managers" element={
+          <PermissionRoute requiredPermissions={['pm-list']}>
+            <AdminProductManagersPage />
           </PermissionRoute>
         } />
         <Route path="/admin/users" element={

@@ -120,10 +120,10 @@ function PipelineGauge({ label, value, target, color, isDark }) {
     plotOptions: {
       solidgauge: {
         dataLabels: {
-          y: -34,
+          y: -6,
           borderWidth: 0,
           useHTML: true,
-          format: `<div style="text-align:center"><span style="font-size:22px;font-weight:800;color:${isDark ? '#f1f5f9' : '#1f2937'}">${pct}%</span></div>`,
+          format: `<div style="text-align:center"><span style="font-size:20px;font-weight:800;line-height:1;color:${isDark ? '#f1f5f9' : '#1f2937'}">${pct}%</span></div>`,
         },
       },
     },
@@ -133,7 +133,7 @@ function PipelineGauge({ label, value, target, color, isDark }) {
 
   return (
     <div className="animate-fade-in-up flex flex-col items-center">
-      <HighchartsChart options={options} height={128} />
+      <HighchartsChart options={options} height={136} />
       <p className="text-sm font-semibold text-gray-700 dark:text-gray-200 -mt-2">{label}</p>
       <p className="text-xs text-gray-400 dark:text-gray-500">
         {value.toLocaleString()} · <span className="text-gray-500 dark:text-gray-400">Target: {target.toLocaleString()}</span>
@@ -253,7 +253,7 @@ export default function OverviewPage() {
   const statCards = [
     { icon: 'people-fill',        label: 'Total Users',     value: stats?.total_users,       tone: { bg: 'bg-blue-50 dark:bg-blue-950/40', text: 'text-blue-600 dark:text-blue-400', hex: '#2563eb' },     to: '/admin/users',       trend: weekTrend, sparklineOptions },
     { icon: 'person-badge-fill',  label: 'Total Admins',     value: stats?.total_admins,      tone: { bg: 'bg-orange-50 dark:bg-orange-950/40', text: 'text-orange-600 dark:text-orange-400', hex: '#f97316' }, to: '/admin/admins' },
-    { icon: 'kanban-fill',        label: 'Product Managers', value: stats?.total_managers,    tone: { bg: 'bg-teal-50 dark:bg-teal-950/40', text: 'text-teal-600 dark:text-teal-400', hex: '#14b8a6' },     to: '/admin/users' },
+    { icon: 'kanban-fill',        label: 'Product Managers', value: stats?.total_managers,    tone: { bg: 'bg-teal-50 dark:bg-teal-950/40', text: 'text-teal-600 dark:text-teal-400', hex: '#14b8a6' },     to: '/admin/product-managers' },
     { icon: 'shield-lock-fill',   label: 'Roles',            value: stats?.total_roles,       tone: { bg: 'bg-green-50 dark:bg-green-950/40', text: 'text-green-600 dark:text-green-400', hex: '#22c55e' },   to: '/admin/roles' },
     { icon: 'sliders',            label: 'Permissions',      value: stats?.total_permissions, tone: { bg: 'bg-purple-50 dark:bg-purple-950/40', text: 'text-purple-600 dark:text-purple-400', hex: '#a855f7' }, to: '/admin/permissions' },
   ];
@@ -287,19 +287,21 @@ export default function OverviewPage() {
           </h2>
           <p className="text-blue-100/90 text-sm mt-1.5 max-w-md">
             {listingStats?.pending > 0
-              ? `${listingStats.pending} listing${listingStats.pending === 1 ? '' : 's'} across the platform ${listingStats.pending === 1 ? 'is' : 'are'} waiting for review.`
+              ? `${listingStats.pending} listing${listingStats.pending === 1 ? '' : 's'} across the platform ${listingStats.pending === 1 ? 'is' : 'are'} waiting for review by your Admins and Product Managers.`
               : 'All listings are reviewed — the queue is clear.'}
           </p>
-          <Link
-            to={listingStats?.pending > 0 ? '/manager/products?status=pending' : '/manager/products'}
-            className="mt-4 inline-flex items-center gap-2 bg-white text-blue-700 hover:bg-blue-50 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-lg shadow-black/10 transition hover:-translate-y-0.5"
-          >
-            <Bi name="clipboard2-check-fill" size={16} />
-            {listingStats?.pending > 0 ? 'Review pending listings' : 'View all listings'}
-          </Link>
+          <p className="mt-4 inline-flex items-center gap-2 text-blue-100/70 text-xs">
+            <Bi name="info-circle-fill" size={13} />
+            Listing review is handled by Admins &amp; Product Managers — this overview shows platform-wide totals only.
+          </p>
         </div>
 
         <div className="relative z-[1] flex gap-3 shrink-0">
+          <div className="bg-white/10 backdrop-blur border border-white/10 rounded-xl px-5 py-3 text-center min-w-[110px]">
+            <Bi name="box-seam-fill" size={17} className="text-white/80 mx-auto mb-1" />
+            <p className="text-xl font-bold text-white tabular-nums">{listingStats?.total ?? 0}</p>
+            <p className="text-[10px] text-blue-100/80 uppercase tracking-wide font-medium">Total Listings</p>
+          </div>
           <div className="bg-white/10 backdrop-blur border border-white/10 rounded-xl px-5 py-3 text-center min-w-[110px]">
             <Bi name="hourglass-split" size={17} className="text-white/80 mx-auto mb-1" />
             <p className="text-xl font-bold text-white tabular-nums">{listingStats?.pending ?? 0}</p>
@@ -538,25 +540,25 @@ export default function OverviewPage() {
             </h3>
             <div className="space-y-3 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Platform</span>
-                <span className="font-semibold">E-Waste Mart</span>
+                <span className="text-gray-400">Active Users</span>
+                <span className="font-semibold text-emerald-400">{loading ? '...' : (stats?.total_users ?? 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Backend</span>
-                <span className="font-semibold">Laravel 11</span>
+                <span className="text-gray-400">E-Waste Listings</span>
+                <span className="font-semibold">{loading ? '...' : (listingStats?.total ?? 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Auth</span>
-                <span className="font-semibold">Sanctum</span>
+                <span className="text-gray-400">Pending Approvals</span>
+                <span className={`font-semibold ${(listingStats?.pending ?? 0) > 0 ? 'text-amber-400' : ''}`}>{loading ? '...' : (listingStats?.pending ?? 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Roles</span>
-                <span className="font-semibold">Spatie</span>
+                <span className="text-gray-400">Recycling Partners</span>
+                <span className="font-semibold">{loading ? '...' : (stats?.total_managers ?? 0).toLocaleString()}</span>
               </div>
               <div className="flex items-center justify-between">
-                <span className="text-gray-400">Environment</span>
+                <span className="text-gray-400">CO₂ Offset</span>
                 <span className="font-semibold text-green-400 flex items-center gap-1.5">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse-dot" /> Development
+                  <Bi name="tree-fill" size={12} /> {loading ? '...' : `${stats?.co2_offset ?? 0}`} kg
                 </span>
               </div>
             </div>

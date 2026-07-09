@@ -29,12 +29,14 @@ export default function WorkspaceLayout({ children }) {
   const [collapsed, setCollapsed]     = useState(false);
   const [loggingOut, setLoggingOut]   = useState(false);
 
-  const handleLogout = async () => {
+  // Instant logout — clear client-side session right away instead of
+  // waiting on the network round trip; revoke the token in the background.
+  const handleLogout = () => {
     setLoggingOut(true);
-    try { await logoutUser(); } catch {}
     logout();
     queryClient.clear(); // wipe cached data so it doesn't leak into the next session
     navigate('/');
+    logoutUser().catch(() => {});
   };
 
   const currentLabel = navItems.find(n => location.pathname === n.path)?.label || 'Workspace';

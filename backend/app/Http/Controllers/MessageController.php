@@ -161,10 +161,12 @@ class MessageController extends Controller
             'is_read'      => false,
         ]);
 
-        // Optional oversight ping — lets Admins/Super Admins keep an eye on
-        // buyer-seller conversations without joining every thread.
+        // Optional oversight ping — lets Admins keep an eye on buyer-seller
+        // conversations without joining every thread. Super Admin is
+        // deliberately excluded: they don't message or monitor buyers/
+        // sellers at all, only staff (see StaffMessageController).
         if (Settings::current()->notify_admins_on_new_message) {
-            User::role(['Admin', 'Super-Admin'])->get()->each(function ($admin) use ($product) {
+            User::role('Admin')->get()->each(function ($admin) use ($product) {
                 Notification::create([
                     'user_id'      => $admin->id,
                     'type'         => 'new_message_oversight',

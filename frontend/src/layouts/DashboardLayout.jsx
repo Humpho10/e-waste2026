@@ -34,12 +34,14 @@ export default function DashboardLayout({ children }) {
   // 👇 Get badge counts from context
   const { notifCount, msgCount } = useBadge();
 
-  const handleLogout = async () => {
+  // Instant logout — clear client-side session right away instead of
+  // waiting on the network round trip; revoke the token in the background.
+  const handleLogout = () => {
     setLoggingOut(true);
-    try { await logoutUser(); } catch {}
     logout();
     queryClient.clear(); // wipe cached data so it doesn't leak into the next session
     navigate('/');
+    logoutUser().catch(() => {});
   };
 
   const currentLabel = navItems.find(n => location.pathname === n.path)?.label || 'Dashboard';

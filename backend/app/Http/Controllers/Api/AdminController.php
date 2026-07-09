@@ -10,6 +10,7 @@ use App\Models\Category;
 use App\Models\AuditTrail;
 use App\Models\Message;
 use App\Models\Settings;
+use App\Models\ProductManagerAssignment;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
@@ -89,19 +90,24 @@ class AdminController extends Controller
             $newUsersThisWeek = User::where('created_at', '>=', $now->copy()->subDays(7))->count();
             $newUsersPrevWeek = User::whereBetween('created_at', [$now->copy()->subDays(14), $now->copy()->subDays(7)])->count();
 
+            // CO2 offset estimation (0.5kg per approved product, average e-waste weight ~5kg)
+            $approvedProducts = Product::where('status', 'approved')->count();
+            $co2Offset = round($approvedProducts * 5 * 0.5, 1); // kg of CO2 saved
+
             return response()->json([
                 'total_users'         => User::count(),
                 'total_admins'        => User::role('Admin')->count(),
                 'total_managers'      => User::role('Product-Manager')->count(),
                 'total_roles'         => Role::count(),
                 'total_permissions'   => Permission::count(),
+                'listing_stats'       => $listingStats,
+                'co2_offset'          => $co2Offset,
                 'recent_users'        => User::with('roles')
                                             ->latest()
                                             ->take(5)
                                             ->get(),
                 'user_growth'         => $userGrowth,
                 'role_distribution'   => $roleDistribution,
-                'listing_stats'       => $listingStats,
                 'category_breakdown'  => $categoryBreakdown,
                 'new_users_this_week' => $newUsersThisWeek,
                 'new_users_prev_week' => $newUsersPrevWeek,
@@ -129,7 +135,10 @@ class AdminController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view users.'], 403);
         }
 
-        $query = User::with('roles');
+        // Product-Manager accounts also carry their assigned categories, so
+        // the Super Admin can see at a glance which categories each PM
+        // covers — every other role just gets an empty relation.
+        $query = User::with(['roles', 'productManagerAssignments.category']);
 
         if ($request->has('role') && $request->role !== 'all') {
             $query->role($request->role);
@@ -262,6 +271,36 @@ class AdminController extends Controller
         try {
             $admins = User::role('Admin')->with('roles')->latest()->get();
             return response()->json(['admins' => $admins]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+            ], 500);
+        }
+    }
+
+    // ── Product Managers (read-only oversight) ─────────────
+    // Super Admin can see every Product-Manager account and which
+    // categories they're assigned to, but creating/editing/removing PMs
+    // and their category assignments stays an Admin-only responsibility
+    // (see ManagerController) — this endpoint is deliberately list-only.
+    public function getProductManagers()
+    {
+        if (!$this->user->can('pm-list')) {
+            return response()->json(['message' => 'Unauthorized. You do not have permission to view product managers.'], 403);
+        }
+
+        try {
+            $productManagers = User::role('Product-Manager')->latest()->get();
+
+            foreach ($productManagers as $pm) {
+                $pm->assignments = ProductManagerAssignment::where('product_manager_id', $pm->id)
+                    ->with('category:category_id,name')
+                    ->get();
+            }
+
+            return response()->json(['product_managers' => $productManagers]);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
@@ -779,6 +818,9 @@ class AdminController extends Controller
             'notify_admins_on_new_message'  => 'sometimes|boolean',
             'maintenance_mode'              => 'sometimes|boolean',
             'maintenance_message'           => 'nullable|string|max:1000',
+            'maintenance_allow_admin_login' => 'sometimes|boolean',
+            'maintenance_allow_pm_login'    => 'sometimes|boolean',
+            'maintenance_allow_user_login'  => 'sometimes|boolean',
         ]);
 
         $settings = Settings::current();

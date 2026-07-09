@@ -187,9 +187,11 @@ class ProductController extends Controller
             ]);
         }
 
-        // Notify Admins/Super Admins too, if the Super Admin has that setting on.
+        // Notify Admins too, if the Super Admin has that setting on. Super
+        // Admin is deliberately excluded — they only see system/user-level
+        // notifications, never per-listing activity.
         if ($settings->notify_admins_on_new_listing) {
-            $admins = \App\Models\User::role(['Admin', 'Super-Admin'])->get();
+            $admins = \App\Models\User::role('Admin')->get();
             foreach ($admins as $admin) {
                 Notification::create([
                     'user_id'      => $admin->id,

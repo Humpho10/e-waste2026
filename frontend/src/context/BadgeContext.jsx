@@ -5,25 +5,24 @@ import { useAuth } from './AuthContext';
 const BadgeContext = createContext();
 
 const fetchUnreadCounts = async (token) => {
-  // Both endpoints work for every role since they're in auth:sanctum group
-  const [notifRes, msgRes] = await Promise.all([
-    fetch('http://localhost:8000/api/notifications/unread-count', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-      }
-    }),
-    fetch('http://localhost:8000/api/messages/unread-count', {
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Accept': 'application/json',
-      }
-    }),
+  // All three endpoints work for every role since they're in the
+  // auth:sanctum group — staff-messages simply returns 0 for anyone who
+  // isn't part of a Super Admin <-> staff conversation (e.g. buyers/sellers).
+  const authHeaders = {
+    'Authorization': `Bearer ${token}`,
+    'Accept': 'application/json',
+  };
+
+  const [notifRes, msgRes, staffMsgRes] = await Promise.all([
+    fetch('http://localhost:8000/api/notifications/unread-count', { headers: authHeaders }),
+    fetch('http://localhost:8000/api/messages/unread-count', { headers: authHeaders }),
+    fetch('http://localhost:8000/api/staff-messages/unread-count', { headers: authHeaders }),
   ]);
 
   const notifCount = notifRes.ok ? (await notifRes.json()).unread_count ?? 0 : 0;
-  const msgCount = msgRes.ok ? (await msgRes.json()).unread_count ?? 0 : 0;
-  return { notifCount, msgCount };
+  const listingMsgCount = msgRes.ok ? (await msgRes.json()).unread_count ?? 0 : 0;
+  const staffMsgCount = staffMsgRes.ok ? (await staffMsgRes.json()).unread_count ?? 0 : 0;
+  return { notifCount, msgCount: listingMsgCount + staffMsgCount };
 };
 
 export function BadgeProvider({ children }) {

@@ -14,6 +14,9 @@ export const getAdmins         = ()          => api.get('/admin/admins');
 export const createAdmin       = (data)      => api.post('/admin/admins', data);
 export const deleteAdmin       = (id)        => api.delete(`/admin/admins/${id}`);
 
+// Product Managers (read-only oversight — Admin owns creation/editing)
+export const getProductManagersOverview = () => api.get('/admin/product-managers');
+
 // Roles
 export const getRoles          = ()          => api.get('/admin/roles');
 export const createRole        = (data)      => api.post('/admin/roles', data);
@@ -27,11 +30,9 @@ export const deletePermission  = (id)        => api.delete(`/admin/permissions/$
 
 // Audit
 export const getAuditTrail     = (params)    => api.get('/admin/audit', { params });
-export const exportAuditTrail  = (params)    => api.get('/admin/audit/export', { params, responseType: 'blob' });
+export const exportAuditTrail  = (params)    => api.get('/admin/audit/export', { params, responseType: 'arraybuffer' });
 
-// Messages (platform-wide oversight — read-only for Super Admin)
-export const getAdminMessages       = (params)    => api.get('/admin/messages', { params });
-export const getAdminMessageThread  = (productId) => api.get(`/admin/messages/${productId}`);
+// Messages — Super Admin now messages staff only, see api/staffMessages.js
 
 // System settings
 export const getSettings    = ()     => api.get('/admin/settings');
