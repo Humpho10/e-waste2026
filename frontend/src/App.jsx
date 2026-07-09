@@ -241,7 +241,7 @@ function App() {
             <CreateListingPage />
           </PermissionRoute>
         } />
-        <Route path="/dashboard/product/:id" element={
+        <Route path="/dashboard/product/:slugId" element={
           <ProtectedRoute><ProductDetailPage /></ProtectedRoute>
         } />
         <Route path="/dashboard/messages" element={
@@ -257,7 +257,7 @@ function App() {
         <Route path="/dashboard/profile" element={
           <ProtectedRoute><UserProfilePage /></ProtectedRoute>
         } />
-        <Route path="/dashboard/resubmit/:id" element={
+        <Route path="/dashboard/resubmit/:hashId" element={
           <PermissionRoute requiredPermissions={['product-create']}>
             <ResubmitListingPage />
           </PermissionRoute>

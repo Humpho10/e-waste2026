@@ -4,6 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { getManagerProducts, approveProduct, rejectProduct } from '../../api/manager';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
 
 const statusConfig = {
@@ -22,6 +23,7 @@ export default function ProductsContent() {
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canApprove = permissions?.includes('product-approve') || false;
@@ -45,7 +47,12 @@ export default function ProductsContent() {
   });
 
   const handleApprove = async (product) => {
-    if (!window.confirm(`Approve "${product.title}"?`)) return;
+    const ok = await confirm(`This will publish "${product.title}" on the marketplace.`, {
+      title: 'Approve listing?',
+      tone: 'success',
+      confirmLabel: 'Approve',
+    });
+    if (!ok) return;
     setApproving(product.product_id);
     try {
       await approveMutation.mutateAsync(product.product_id);

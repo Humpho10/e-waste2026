@@ -96,6 +96,8 @@ const getPermissionStyle = (permName) => {
 const getGroupStyle = (group) => {
   return PERMISSION_COLORS[group] || PERMISSION_COLORS['default'];
 };
+import { useConfirm } from '../../components/ConfirmDialog';
+import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function PermissionsPage() {
   const [search, setSearch] = useState('');
@@ -106,6 +108,7 @@ function PermissionsPage() {
 
   const { permissions: userPermissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canCreatePermission = userPermissions?.includes('permission-create') || false;
@@ -154,8 +157,13 @@ function PermissionsPage() {
     },
   });
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Delete permission "${name}"?`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Delete permission "${name}"?`, {
+      title: 'Delete permission?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 

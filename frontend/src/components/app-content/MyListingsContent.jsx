@@ -5,12 +5,13 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { myListings, deleteProduct } from '../../api/products';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
+import { useConfirm } from '../../components/ConfirmDialog';
 
 const statusConfig = {
   pending:     { label: 'Pending Review', color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
   approved:    { label: 'Approved — Live', color: 'bg-green-100 dark:bg-green-900/40 text-green-700 dark:text-green-400',  dot: 'bg-green-400'  },
   rejected:    { label: 'Rejected',        color: 'bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-400',      dot: 'bg-red-400'    },
-  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400',    dot: 'bg-blue-400'   },
+  resubmitted: { label: 'Resubmitted',     color: 'bg-blue-100 text-blue-700 dark:text-blue-400 dark:bg-blue-900/40',    dot: 'bg-blue-400'   },
 };
 
 export default function MyListingsContent() {
@@ -20,6 +21,7 @@ export default function MyListingsContent() {
 
   const { permissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canEdit = permissions?.includes('product-edit') || false;
@@ -43,7 +45,12 @@ export default function MyListingsContent() {
   });
 
   const handleDelete = async (id, title) => {
-    if (!window.confirm(`Delete "${title}"? This cannot be undone.`)) return;
+    const ok = await confirm(`Delete "${title}"? This cannot be undone.`, {
+      title: 'Delete listing?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     setDeleting(id);
     try {
       await deleteMutation.mutateAsync(id);

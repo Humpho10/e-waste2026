@@ -1,14 +1,40 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  FiArrowLeft,
+  FiMapPin,
+  FiTag,
+  FiPackage,
+  FiUser,
+  FiPhone,
+  FiMail, 
+  FiMessageCircle,
+  FiSend,
+  FiCheckCircle,
+  FiAlertCircle,
+  FiHeart,
+  FiShare2,
+  FiEye,
+  FiCalendar,
+  FiDollarSign,
+  FiSearch
+} from 'react-icons/fi';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getProduct } from '../../api/products';
 import { sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
+import SellerRating from '../../components/SellerRating';
 
 export default function ProductDetailPage() {
-  const { id }     = useParams();
+  // Route param is a single "slug-hashId" string; split on the LAST hyphen
+  // so the slug itself may contain hyphens (e.g. "dell-laptop-AbC123xyz").
+  const { slugId } = useParams();
+  const lastDash = slugId?.lastIndexOf('-') ?? -1;
+  const slug   = lastDash > -1 ? slugId.slice(0, lastDash) : (slugId || '');
+  const hashId = lastDash > -1 ? slugId.slice(lastDash + 1) : '';
   const { user, permissions } = useAuth();
   const navigate   = useNavigate();
   const [activeImg, setActiveImg] = useState(0);
@@ -21,8 +47,8 @@ export default function ProductDetailPage() {
   const canSendMessage = permissions?.includes('message-send') || false;
 
   const { data: product, isLoading: loading } = useQuery({
-    queryKey: ['product', id],
-    queryFn: () => getProduct(id).then(res => res.data.product),
+    queryKey: ['product', slug, hashId],
+    queryFn: () => getProduct(slug, hashId).then(res => res.data.product),
   });
 
   const sendMutation = useMutation({
@@ -201,7 +227,7 @@ export default function ProductDetailPage() {
               </div>
             )}
 
-            <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-4 border border-slate-100">
+            <div className="bg-slate-50 dark:bg-slate-950 rounded-2xl p-4 border border-slate-100 dark:border-slate-800">
               <h3 className="font-semibold text-gray-700 dark:text-gray-200 mb-3 text-sm uppercase tracking-wide">Seller Info</h3>
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold">
@@ -224,6 +250,13 @@ export default function ProductDetailPage() {
                   )}
                 </div>
               )}
+
+              <SellerRating
+                sellerId={product.seller_id}
+                isSeller={isSeller}
+                initialAverage={product.seller?.rating_average}
+                initialCount={product.seller?.rating_count}
+              />
             </div>
           </div>
         </div>

@@ -178,6 +178,9 @@ function AuditDetailModal({ entry, onClose }) {
               <Bi name="x-lg" size={14} />
             </button>
           </div>
+          <button onClick={onClose} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200 shrink-0 dark:text-gray-500">
+            <Bi name="x-lg" size={16} />
+          </button>
         </div>
         <div className="px-6 py-4 overflow-y-auto flex-1 space-y-4">
           <div className="flex items-center gap-3 bg-gray-50 dark:bg-slate-800/60 rounded-xl px-4 py-3">

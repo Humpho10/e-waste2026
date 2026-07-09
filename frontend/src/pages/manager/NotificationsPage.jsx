@@ -9,13 +9,13 @@ import { useBadge } from '../../context/BadgeContext';
 import { useToast } from '../../components/Toast';
 
 const typeConfig = {
-  product_approved: { icon: BiCheckCircle,  color: 'bg-green-50 border-green-200',   iconColor: 'text-green-600'  },
-  product_rejected: { icon: BiXCircle,      color: 'bg-red-50 border-red-200',       iconColor: 'text-red-500'    },
-  new_message:      { icon: BiMessageSquare, color: 'bg-blue-50 border-blue-200',    iconColor: 'text-blue-600'   },
-  account_created:  { icon: BiUserPlus,     color: 'bg-purple-50 border-purple-200', iconColor: 'text-purple-600' },
-  new_listing:      { icon: BiPackage,      color: 'bg-gray-50 border-gray-200',     iconColor: 'text-gray-500'   },
+  product_approved: { icon: BiCheckCircle,  color: 'bg-green-50 border-green-200 dark:bg-green-950/40 dark:border-green-800/50',   iconColor: 'text-green-600 dark:text-green-400'  },
+  product_rejected: { icon: BiXCircle,      color: 'bg-red-50 border-red-200 dark:bg-red-950/40 dark:border-red-800/50',       iconColor: 'text-red-500 dark:text-red-400'    },
+  new_message:      { icon: BiMessageSquare, color: 'bg-blue-50 border-blue-200 dark:bg-blue-950/40 dark:border-blue-800/50',    iconColor: 'text-blue-600 dark:text-blue-400'   },
+  account_created:  { icon: BiUserPlus,     color: 'bg-purple-50 border-purple-200 dark:bg-purple-950/40', iconColor: 'text-purple-600 dark:text-purple-400' },
+  new_listing:      { icon: BiPackage,      color: 'bg-gray-50 border-gray-200 dark:bg-slate-800/60 dark:border-slate-700',     iconColor: 'text-gray-500 dark:text-gray-400'   },
 };
-const defaultCfg = { icon: BiBell, color: 'bg-gray-50 border-gray-200', iconColor: 'text-gray-400' };
+const defaultCfg = { icon: BiBell, color: 'bg-gray-50 border-gray-200 dark:bg-slate-800/60 dark:border-slate-700', iconColor: 'text-gray-400 dark:text-gray-500' };
 
 export default function ManagerNotificationsPage() {
   const { refresh } = useBadge();
@@ -65,13 +65,13 @@ export default function ManagerNotificationsPage() {
     <ManagerLayout>
       <div className="flex items-center justify-between mb-8">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BiBell className="text-orange-500" size={22} /> Notifications
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+            <BiBell className="text-orange-500 dark:text-orange-400" size={22} /> Notifications
           </h2>
-          <p className="text-gray-500 text-sm mt-1">{unread > 0 ? `${unread} unread` : 'All caught up!'}</p>
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">{unread > 0 ? `${unread} unread` : 'All caught up!'}</p>
         </div>
         {unread > 0 && (
-          <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium">
+          <button onClick={handleMarkAllRead} className="flex items-center gap-1.5 text-sm text-blue-600 hover:underline font-medium dark:text-blue-400">
             <BiCheckSquare size={14} /> Mark all as read
           </button>
         )}
@@ -90,11 +90,11 @@ export default function ManagerNotificationsPage() {
           ))}
         </div>
       ) : notifications.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiBell size={28} className="text-orange-400" />
           </div>
-          <h3 className="font-bold text-gray-700 mb-2">No notifications yet</h3>
+          <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No notifications yet</h3>
         </div>
       ) : (
         <div className="space-y-3">
@@ -103,7 +103,7 @@ export default function ManagerNotificationsPage() {
             const Icon = cfg.icon;
             return (
               <div key={notif.notification_id} className={`rounded-2xl border p-5 flex gap-4 items-start ${cfg.color} ${!notif.is_read ? 'shadow-sm' : 'opacity-75'}`}>
-                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-white flex items-center justify-center shrink-0 shadow-sm dark:bg-slate-900">
                   <Icon size={18} className={cfg.iconColor} />
                 </div>
                 <div className="flex-1">

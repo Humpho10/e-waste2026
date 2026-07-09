@@ -45,6 +45,8 @@ const getGroupIcon = (permName) => {
   const group = permName.split('-')[0];
   return PERMISSION_ICONS[group] || PERMISSION_ICONS['default'];
 };
+import { useConfirm } from '../../components/ConfirmDialog';
+import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 function RolesPage() {
   const [showModal, setShowModal] = useState(false);
@@ -57,6 +59,7 @@ function RolesPage() {
 
   const { permissions: userPermissions } = useAuth();
   const { toast } = useToast();
+  const confirm = useConfirm();
   const queryClient = useQueryClient();
 
   const canCreateRole = userPermissions?.includes('role-create') || false;
@@ -139,8 +142,13 @@ function RolesPage() {
     saveMutation.mutate({ editing, form });
   };
 
-  const handleDelete = (id, name) => {
-    if (!window.confirm(`Delete role "${name}"?`)) return;
+  const handleDelete = async (id, name) => {
+    const ok = await confirm(`Delete role "${name}"?`, {
+      title: 'Delete role?',
+      tone: 'danger',
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     deleteMutation.mutate(id);
   };
 

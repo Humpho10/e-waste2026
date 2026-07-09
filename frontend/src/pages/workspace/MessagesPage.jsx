@@ -99,7 +99,7 @@ export default function WorkspaceMessagesPage() {
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-teal-50' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm shrink-0">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}

@@ -6,6 +6,7 @@ import { AuthProvider } from './context/AuthContext';
 import { BadgeProvider } from './context/BadgeContext';
 import { ThemeProvider } from './context/ThemeContext';
 import { ToastProvider } from './components/Toast';
+import { ConfirmProvider } from './components/ConfirmDialog';
 import 'bootstrap-icons/font/bootstrap-icons.css';
 import './index.css';
 
@@ -18,7 +19,9 @@ ReactDOM.createRoot(document.getElementById('root')).render(
         <AuthProvider>
           <BadgeProvider>
             <ToastProvider>
-              <App />
+              <ConfirmProvider>
+                <App />
+              </ConfirmProvider>
             </ToastProvider>
           </BadgeProvider>
         </AuthProvider>

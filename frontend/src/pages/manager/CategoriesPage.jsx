@@ -35,15 +35,15 @@ function CategoryCard({ cat, canEdit, canDelete, onEdit, onDelete }) {
   const hasProducts = (cat.products_count ?? 0) > 0;
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all p-6">
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-md hover:border-orange-100 transition-all p-6 dark:bg-slate-900 dark:border-slate-800">
       <div className="flex items-start justify-between mb-4">
         <div className="flex items-center gap-3">
-          <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-            <Icon size={20} className="text-orange-500" />
+          <div className="w-11 h-11 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 dark:bg-orange-950/40">
+            <Icon size={20} className="text-orange-500 dark:text-orange-400" />
           </div>
           <div>
-            <h3 className="font-bold text-gray-800">{cat.name}</h3>
-            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5">
+            <h3 className="font-bold text-gray-800 dark:text-gray-100">{cat.name}</h3>
+            <p className="text-xs text-gray-400 flex items-center gap-1 mt-0.5 dark:text-gray-500">
               <BiBox size={11} /> {cat.products_count ?? 0} listing{cat.products_count === 1 ? '' : 's'}
             </p>
           </div>
@@ -55,7 +55,7 @@ function CategoryCard({ cat, canEdit, canDelete, onEdit, onDelete }) {
               <button
                 onClick={() => onEdit(cat)}
                 title="Edit category"
-                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition"
+                className="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-blue-600 hover:bg-blue-50 transition dark:text-gray-500"
               >
                 <BiEdit2 size={14} />
               </button>
@@ -68,7 +68,7 @@ function CategoryCard({ cat, canEdit, canDelete, onEdit, onDelete }) {
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition ${
                   hasProducts
                     ? 'text-gray-300 cursor-not-allowed'
-                    : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                    : 'text-gray-400 hover:text-red-500 hover:bg-red-50 dark:text-gray-500'
                 }`}
               >
                 <BiTrash2 size={14} />
@@ -79,18 +79,18 @@ function CategoryCard({ cat, canEdit, canDelete, onEdit, onDelete }) {
       </div>
 
       <div className="pt-4 border-t border-gray-50">
-        <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide flex items-center gap-1.5">
+        <p className="text-xs text-gray-400 font-medium mb-2 uppercase tracking-wide flex items-center gap-1.5 dark:text-gray-500">
           <BiLayers size={12} /> Subcategories ({subcats.length})
         </p>
         {subcats.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {shown.map(s => (
-              <span key={s.subcategory_id} className="bg-gray-50 text-gray-600 border border-gray-100 text-xs px-2 py-0.5 rounded-full">
+              <span key={s.subcategory_id} className="bg-gray-50 text-gray-600 border border-gray-100 text-xs px-2 py-0.5 rounded-full dark:bg-slate-800/60 dark:text-gray-300 dark:border-slate-800">
                 {s.sub_category_name}
               </span>
             ))}
             {overflow > 0 && (
-              <span className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full font-medium">
+              <span className="bg-orange-50 text-orange-600 text-xs px-2 py-0.5 rounded-full font-medium dark:bg-orange-950/40 dark:text-orange-400">
                 +{overflow} more
               </span>
             )}
@@ -123,13 +123,13 @@ function DeleteConfirmModal({ cat, onClose, onConfirmed }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden">
+      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden dark:bg-slate-900">
         <div className="p-6">
-          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-4">
+          <div className="w-12 h-12 rounded-2xl bg-red-50 text-red-500 flex items-center justify-center mb-4 dark:bg-red-950/40 dark:text-red-400">
             <BiTrash2 size={20} />
           </div>
-          <h3 className="text-lg font-bold text-gray-800 mb-1">Delete "{cat.name}"?</h3>
-          <p className="text-sm text-gray-500 mb-6">
+          <h3 className="text-lg font-bold text-gray-800 mb-1 dark:text-gray-100">Delete "{cat.name}"?</h3>
+          <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">
             This removes the category and all {cat.subcategories?.length || 0} of its subcategories. This can't be undone.
           </p>
           <div className="flex gap-3">
@@ -143,7 +143,7 @@ function DeleteConfirmModal({ cat, onClose, onConfirmed }) {
             <button
               onClick={onClose}
               disabled={deleteMutation.isPending}
-              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition"
+              className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-xl text-sm font-medium transition dark:border-slate-700 dark:text-gray-300"
             >
               Cancel
             </button>
@@ -279,10 +279,10 @@ export default function CategoriesPage() {
     <ManagerLayout>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
-            <BiFolder className="text-orange-500" size={22} /> Categories
+          <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
+            <BiFolder className="text-orange-500 dark:text-orange-400" size={22} /> Categories
           </h2>
-          <p className="text-gray-500 text-sm mt-1">{categories.length} categories defined</p>
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">{categories.length} categories defined</p>
         </div>
         {canCreateCategory && (
           <button
@@ -297,31 +297,31 @@ export default function CategoriesPage() {
       {/* Summary row */}
       {categories.length > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0">
-              <BiFolder size={16} className="text-orange-500" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 dark:bg-orange-950/40">
+              <BiFolder size={16} className="text-orange-500 dark:text-orange-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{categories.length}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Categories</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{categories.length}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Categories</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center shrink-0 dark:bg-blue-950/40">
               <BiLayers size={16} className="text-blue-500" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{totalSubcategories}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Subcategories</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{totalSubcategories}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Subcategories</p>
             </div>
           </div>
-          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center shrink-0">
-              <BiBox size={16} className="text-gray-400" />
+          <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
+            <div className="w-9 h-9 rounded-xl bg-gray-50 flex items-center justify-center shrink-0 dark:bg-slate-800/60">
+              <BiBox size={16} className="text-gray-400 dark:text-gray-500" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none">{emptyCategories}</p>
-              <p className="text-xs text-gray-400 mt-0.5">Without listings</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{emptyCategories}</p>
+              <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Without listings</p>
             </div>
           </div>
         </div>
@@ -330,7 +330,7 @@ export default function CategoriesPage() {
       {categories.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+            <BiSearch size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
             <input
               type="text"
               placeholder="Search categories..."
@@ -345,22 +345,22 @@ export default function CategoriesPage() {
       {loading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
           {Array(6).fill(0).map((_, i) => (
-            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6">
+            <div key={i} className="bg-white rounded-2xl border border-gray-100 p-6 dark:bg-slate-900 dark:border-slate-800">
               <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-xl bg-gray-100" />
-                <div className="h-4 bg-gray-100 rounded w-28" />
+                <div className="w-10 h-10 rounded-xl bg-gray-100 dark:bg-slate-800" />
+                <div className="h-4 bg-gray-100 rounded w-28 dark:bg-slate-800" />
               </div>
-              <div className="h-3 bg-gray-100 rounded w-20" />
+              <div className="h-3 bg-gray-100 rounded w-20 dark:bg-slate-800" />
             </div>
           ))}
         </div>
       ) : categories.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4">
+        <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiFolder size={28} className="text-orange-400" />
           </div>
-          <h3 className="text-lg font-bold text-gray-700 mb-2">No categories yet</h3>
-          <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto">
+          <h3 className="text-lg font-bold text-gray-700 mb-2 dark:text-gray-200">No categories yet</h3>
+          <p className="text-gray-400 text-sm mb-6 max-w-xs mx-auto dark:text-gray-500">
             Add categories to organize listings and assign product managers to review them.
           </p>
           {canCreateCategory && (
@@ -373,7 +373,7 @@ export default function CategoriesPage() {
           )}
         </div>
       ) : filtered.length === 0 ? (
-        <div className="text-center py-12 text-gray-400">
+        <div className="text-center py-12 text-gray-400 dark:text-gray-500">
           <p className="mb-1">No categories match "{search}"</p>
           <button onClick={() => setSearch('')} className="text-orange-500 dark:text-orange-400 text-sm hover:underline">
             Clear
@@ -397,7 +397,7 @@ export default function CategoriesPage() {
       {/* Create / Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden max-h-[90vh] flex flex-col dark:bg-slate-900">
             <div className="bg-gradient-to-r from-orange-500 to-orange-600 px-6 py-5 shrink-0">
               <div className="flex items-center justify-between">
                 <div>
@@ -416,7 +416,7 @@ export default function CategoriesPage() {
             </div>
             <div className="p-6 overflow-y-auto flex-1">
               {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2 items-start">
+                <div className="bg-red-50 border border-red-200 text-red-700 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2 items-start dark:bg-red-950/40 dark:border-red-800/50 dark:text-red-400">
                   <BiAlertCircle size={16} className="shrink-0 mt-0.5" />
                   <span>{error}</span>
                 </div>
@@ -438,9 +438,9 @@ export default function CategoriesPage() {
 
                 {/* -- Subcategories section -- */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5">
+                  <label className="block text-sm font-semibold text-gray-700 mb-2 flex items-center gap-1.5 dark:text-gray-200">
                     <BiLayers size={14} /> Subcategories
-                    <span className="text-gray-400 font-normal ml-1">
+                    <span className="text-gray-400 font-normal ml-1 dark:text-gray-500">
                       ({editingSubcats.length})
                     </span>
                   </label>

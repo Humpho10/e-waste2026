@@ -7,7 +7,7 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 
 export default function ResubmitListingPage() {
-  const { id }     = useParams();
+  const { hashId } = useParams();
   const navigate   = useNavigate();
   const { toast }  = useToast();
   const { permissions } = useAuth(); // 👈 Get permissions
@@ -33,7 +33,7 @@ export default function ResubmitListingPage() {
     enabled: canResubmit,
   });
 
-  const product = listings?.find(p => p.product_id == id);
+  const product = listings?.find(p => p.hash_id == hashId);
 
   // Seed the editable form once the listing is found — render-time pattern
   // (not a useEffect) for the same reason as ProfileForm.jsx: TanStack
@@ -69,8 +69,7 @@ export default function ResubmitListingPage() {
       toast('Only rejected listings can be resubmitted', 'warning');
       navigate('/dashboard/listings');
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id, canResubmit, loading, product]);
+  }, [hashId, canResubmit, loading, product]);
 
   const remainingSlots = 5 - (existingImages.length - removedImageIds.length) - newImages.length;
 
@@ -93,7 +92,7 @@ export default function ResubmitListingPage() {
   };
 
   const resubmitMutation = useMutation({
-    mutationFn: (data) => resubmitProduct(id, data),
+    mutationFn: (data) => resubmitProduct(hashId, data),
     onSuccess: () => {
       toast('Listing resubmitted successfully — no additional fee required', 'success');
       queryClient.invalidateQueries({ queryKey: ['my-listings'] });
