@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getAdmins, createAdmin, deleteAdmin } from '../../api/admin';
+import { sendMessage } from '../../api/messages';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
@@ -24,7 +25,7 @@ function SkeletonCard() {
   );
 }
 
-function AdminCard({ admin, onDelete, canDelete }) {
+function AdminCard({ admin, onDelete, canDelete, canMessage, onMessage }) {
   const initials = admin.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
@@ -58,15 +59,25 @@ function AdminCard({ admin, onDelete, canDelete }) {
             day: 'numeric', month: 'short', year: 'numeric'
           })}
         </span>
-        {/* 👇 Only show "Remove" if user has admin-delete permission */}
-        {canDelete && (
-          <button
-            onClick={() => onDelete(admin.id, admin.name)}
-            className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition font-medium"
-          >
-            Remove
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {canMessage && (
+            <button
+              onClick={() => onMessage(admin)}
+              className="text-xs text-blue-500 dark:text-blue-400 hover:underline transition font-medium"
+            >
+              Message
+            </button>
+          )}
+          {/* 👇 Only show "Remove" if user has admin-delete permission */}
+          {canDelete && (
+            <button
+              onClick={() => onDelete(admin.id, admin.name)}
+              className="text-xs text-gray-400 dark:text-gray-500 hover:text-red-500 transition font-medium"
+            >
+              Remove
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -183,10 +194,84 @@ function CreateAdminModal({ onClose, onCreated }) {
   );
 }
 
+// ---------- Message Modal ----------
+function MessageModal({ admin, onClose }) {
+  const [text, setText] = useState('');
+  const { toast } = useToast();
+
+  const sendMutation = useMutation({
+    mutationFn: () => sendMessage({ recipient_id: admin.id, message_text: text }),
+    onSuccess: () => {
+      toast('Message sent', 'success');
+      onClose();
+    },
+    onError: (err) => toast(err.response?.data?.error || err.response?.data?.message || 'Failed to send message', 'error'),
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    sendMutation.mutate();
+  };
+
+  const sending = sendMutation.isPending;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => !sending && onClose()}>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-5">
+          <div className="flex items-center justify-between">
+            <h3 className="text-white font-bold text-lg">Message {admin.name}</h3>
+            <button
+              onClick={onClose}
+              className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={4}
+            required
+            autoFocus
+            placeholder="Write a message..."
+            className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 bg-gray-50 dark:bg-slate-800/60 resize-none"
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2.5 rounded-xl text-sm font-medium transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={sending || !text.trim()}
+              className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2.5 rounded-xl text-sm font-semibold disabled:opacity-50 transition"
+            >
+              {sending ? (
+                <span className="flex items-center justify-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Sending...
+                </span>
+              ) : 'Send'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Main Page ----------
 export default function AdminsPage() {
   const [showModal, setShowModal]   = useState(false);
   const [search, setSearch]         = useState('');
+  const [messagingAdmin, setMessagingAdmin] = useState(null);
 
   // 👇 Get permissions from auth context
   const { permissions } = useAuth();
@@ -198,6 +283,7 @@ export default function AdminsPage() {
   // 👇 Check if user has the required permissions
   const canCreateAdmin = permissions?.includes('admin-create') || false;
   const canDeleteAdmin = permissions?.includes('admin-delete') || false;
+  const canMessageAdmin = permissions?.includes('message-send') || false;
 
   const { data: admins = [], isLoading: loading } = useQuery({
     queryKey: ['admins'],
@@ -310,6 +396,8 @@ export default function AdminsPage() {
               admin={admin}
               onDelete={handleDelete}
               canDelete={canDeleteAdmin} // 👈 Pass permission to the card
+              canMessage={canMessageAdmin}
+              onMessage={setMessagingAdmin}
             />
           ))}
         </div>
@@ -321,6 +409,10 @@ export default function AdminsPage() {
           onClose={() => setShowModal(false)}
           onCreated={invalidateAdmins}
         />
+      )}
+
+      {messagingAdmin && (
+        <MessageModal admin={messagingAdmin} onClose={() => setMessagingAdmin(null)} />
       )}
     </AdminLayout>
   );

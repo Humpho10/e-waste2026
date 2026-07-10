@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { FiMessageCircle, FiSend, FiX } from 'react-icons/fi';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, deleteProduct } from '../../api/products';
+import { sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
@@ -18,6 +20,8 @@ export default function MyListingsPage() {
   const [searchParams]            = useSearchParams();
   const [status, setStatus]       = useState(searchParams.get('status') || 'all');
   const [deleting, setDeleting]   = useState(null);
+  const [messagingListing, setMessagingListing] = useState(null);
+  const [pmMessage, setPmMessage] = useState('');
 
   const { permissions } = useAuth();
   const { toast } = useToast();
@@ -28,6 +32,7 @@ export default function MyListingsPage() {
   const canDelete = permissions?.includes('product-delete') || false;
   const canResubmit = permissions?.includes('product-create') || false;
   const canCreate = permissions?.includes('product-create') || false;
+  const canMessage = permissions?.includes('message-send') || false;
 
   const { data: listings = [], isLoading: loading } = useQuery({
     queryKey: ['my-listings', status],
@@ -58,6 +63,26 @@ export default function MyListingsPage() {
     } finally {
       setDeleting(null);
     }
+  };
+
+  const sendPmMutation = useMutation({
+    mutationFn: (text) => sendMessage({
+      product_id: messagingListing.product_id,
+      recipient_id: messagingListing.assigned_pm.id,
+      message_text: text,
+    }),
+    onSuccess: () => {
+      toast('Message sent to the Product Manager', 'success');
+      setMessagingListing(null);
+      setPmMessage('');
+    },
+    onError: (err) => toast(err.response?.data?.message || 'Failed to send message.', 'error'),
+  });
+
+  const handleSendPmMessage = (e) => {
+    e.preventDefault();
+    if (!pmMessage.trim()) return;
+    sendPmMutation.mutate(pmMessage);
   };
 
   return (
@@ -170,6 +195,21 @@ export default function MyListingsPage() {
                   </span>
 
                   <div className="flex gap-2">
+                    <Link
+                      to={`/dashboard/product/${listing.slug}-${listing.hash_id}`}
+                      className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
+                    >
+                      View
+                    </Link>
+                    {canMessage && listing.assigned_pm && ['pending', 'rejected'].includes(listing.status) && (
+                      <button
+                        onClick={() => setMessagingListing(listing)}
+                        className="text-xs text-teal-600 dark:text-teal-400 hover:underline flex items-center gap-1"
+                      >
+                        <FiMessageCircle className="w-3 h-3" />
+                        Message PM
+                      </button>
+                    )}
                     {canResubmit && listing.status === 'rejected' && (
                       <Link
                         to={`/dashboard/resubmit/${listing.hash_id}`}
@@ -192,6 +232,74 @@ export default function MyListingsPage() {
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Message Product Manager modal */}
+      {messagingListing && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
+          onClick={() => !sendPmMutation.isPending && setMessagingListing(null)}
+        >
+          <div
+            className="bg-white dark:bg-slate-900 rounded-3xl shadow-2xl max-w-md w-full overflow-hidden"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+                  <FiMessageCircle className="w-4 h-4 text-teal-600 dark:text-teal-400" />
+                  Message Product Manager
+                </h3>
+                <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                  Re: {messagingListing.title}
+                  {messagingListing.assigned_pm?.name ? ` · ${messagingListing.assigned_pm.name}` : ''}
+                </p>
+              </div>
+              <button
+                onClick={() => setMessagingListing(null)}
+                className="w-8 h-8 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center text-gray-400 dark:text-gray-500 transition"
+              >
+                <FiX className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleSendPmMessage} className="p-6 space-y-4">
+              <textarea
+                value={pmMessage}
+                onChange={e => setPmMessage(e.target.value)}
+                rows={4}
+                required
+                autoFocus
+                placeholder={
+                  messagingListing.status === 'rejected'
+                    ? 'Ask why this listing was rejected, or check on your resubmission...'
+                    : 'Ask about the status of this listing...'
+                }
+                className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 dark:bg-slate-800/60 resize-none"
+              />
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setMessagingListing(null)}
+                  className="flex-1 border-2 border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2.5 rounded-xl text-sm font-medium transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={sendPmMutation.isPending || !pmMessage.trim()}
+                  className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {sendPmMutation.isPending ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <FiSend className="w-4 h-4" />
+                  )}
+                  Send
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </DashboardLayout>

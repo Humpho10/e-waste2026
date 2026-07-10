@@ -1,22 +1,21 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import WorkspaceLayout from '../../layouts/WorkspaceLayout';
+import { FiMessageCircle } from 'react-icons/fi';
+import AdminLayout from '../../layouts/AdminLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';
 import { useBadge } from '../../context/BadgeContext';
 import { useToast } from '../../components/Toast';
-import StaffAdminChat from '../../components/StaffAdminChat';
 
-export default function WorkspaceMessagesPage() {
-  const { user, permissions } = useAuth(); // 👈 Get permissions
-  const [active, setActive]               = useState(null);
-  const [newMsg, setNewMsg]               = useState('');
+export default function MyMessagesPage() {
+  const { user, permissions } = useAuth();
+  const [active, setActive]   = useState(null);
+  const [newMsg, setNewMsg]   = useState('');
 
   const { refresh } = useBadge();
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // 👈 Check if user has permission to send messages
   const canSend = permissions?.includes('message-send') || false;
 
   const { data: conversations = [], isLoading: loading } = useQuery({
@@ -51,23 +50,17 @@ export default function WorkspaceMessagesPage() {
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!newMsg.trim() || !active || !canSend) return; // 👈 Check permission here too
+    if (!newMsg.trim() || !active || !canSend) return;
     sendMutation.mutate(newMsg);
   };
 
   const sending = sendMutation.isPending;
 
   return (
-    <WorkspaceLayout>
+    <AdminLayout>
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Messages</h2>
-        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Communications regarding listings in your categories</p>
-      </div>
-
-      <StaffAdminChat accent="teal" />
-
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Listing conversations</p>
+        <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">My Messages</h2>
+        <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Your direct conversations with Admins</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
@@ -91,7 +84,7 @@ export default function WorkspaceMessagesPage() {
               </div>
             ) : conversations.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-3xl mb-2">💬</p>
+                <FiMessageCircle className="w-8 h-8 text-gray-300 dark:text-slate-700 mx-auto mb-2" />
                 <p className="text-sm text-gray-400 dark:text-gray-500">No conversations yet</p>
               </div>
             ) : (
@@ -99,9 +92,9 @@ export default function WorkspaceMessagesPage() {
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id && active?.other_person?.id === conv.other_person?.id ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id && active?.other_person?.id === conv.other_person?.id ? 'bg-purple-50 dark:bg-purple-950/40' : ''}`}
                 >
-                  <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm shrink-0">
+                  <div className="w-10 h-10 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 flex items-center justify-center font-bold text-sm shrink-0">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
@@ -110,7 +103,7 @@ export default function WorkspaceMessagesPage() {
                     <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{conv.last_message}</p>
                   </div>
                   {conv.unread_count > 0 && (
-                    <span className="w-5 h-5 rounded-full bg-teal-600 text-white text-xs flex items-center justify-center shrink-0 mt-1">
+                    <span className="w-5 h-5 rounded-full bg-purple-600 text-white text-xs flex items-center justify-center shrink-0 mt-1">
                       {conv.unread_count}
                     </span>
                   )}
@@ -125,7 +118,7 @@ export default function WorkspaceMessagesPage() {
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
-                <p className="text-5xl mb-4">💬</p>
+                <FiMessageCircle className="w-14 h-14 text-gray-300 dark:text-slate-700 mx-auto mb-4" />
                 <p className="font-bold text-gray-700 dark:text-gray-200 mb-1">Select a conversation</p>
                 <p className="text-gray-400 dark:text-gray-500 text-sm">Choose a conversation from the left</p>
               </div>
@@ -133,7 +126,7 @@ export default function WorkspaceMessagesPage() {
           ) : (
             <>
               <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
+                <div className="w-9 h-9 rounded-xl bg-purple-100 dark:bg-purple-900/40 text-purple-700 dark:text-purple-400 flex items-center justify-center font-bold text-sm">
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
                 <div>
@@ -146,9 +139,9 @@ export default function WorkspaceMessagesPage() {
                   const isMe = msg.sender_id === user?.id;
                   return (
                     <div key={msg.message_id} className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}>
-                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-teal-600 text-white rounded-br-sm' : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-bl-sm'}`}>
+                      <div className={`max-w-xs lg:max-w-md px-4 py-3 rounded-2xl text-sm ${isMe ? 'bg-purple-600 text-white rounded-br-sm' : 'bg-gray-100 dark:bg-slate-800 text-gray-800 dark:text-gray-100 rounded-bl-sm'}`}>
                         <p className="leading-relaxed">{msg.message_text}</p>
-                        <p className={`text-xs mt-1 ${isMe ? 'text-teal-200' : 'text-gray-400 dark:text-gray-500'}`}>
+                        <p className={`text-xs mt-1 ${isMe ? 'text-purple-200' : 'text-gray-400 dark:text-gray-500'}`}>
                           {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                         </p>
                       </div>
@@ -156,18 +149,17 @@ export default function WorkspaceMessagesPage() {
                   );
                 })}
               </div>
-              {/* 👇 Only show the send form if user has permission to send messages */}
               {canSend ? (
                 <form onSubmit={handleSend} className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex gap-3">
                   <input
                     type="text" value={newMsg}
                     onChange={e => setNewMsg(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    className="flex-1 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
                   />
                   <button
                     type="submit" disabled={sending || !newMsg.trim()}
-                    className="bg-teal-600 hover:bg-teal-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
+                    className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50"
                   >
                     {sending ? '...' : 'Send'}
                   </button>
@@ -181,6 +173,6 @@ export default function WorkspaceMessagesPage() {
           )}
         </div>
       </div>
-    </WorkspaceLayout>
+    </AdminLayout>
   );
 }

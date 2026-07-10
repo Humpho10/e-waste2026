@@ -2,20 +2,16 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  FiPackage, 
-  FiClock, 
-  FiCheckCircle, 
+  FiPackage,
+  FiClock,
+  FiCheckCircle,
   FiXCircle,
   FiPlus,
-  FiSearch,
   FiList,
-  FiMessageCircle,
-  FiUser,
   FiBell,
   FiArrowRight,
   FiTrendingUp,
   FiActivity,
-  FiBarChart2,
   FiZap,
   FiRefreshCw,
   FiInbox,
@@ -179,45 +175,6 @@ export default function DashboardPage() {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening';
 
-  // Quick Actions with enhanced styling (MY VERSION)
-  const quickActions = [
-    { 
-      label: 'Post a New Listing', 
-      to: '/dashboard/create', 
-      icon: FiPlus,
-      style: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-blue-100',
-      description: 'Sell your e-waste'
-    },
-    { 
-      label: 'Browse Marketplace', 
-      to: '/dashboard/browse', 
-      icon: FiSearch,
-      style: 'bg-gradient-to-r from-slate-800 to-slate-900 hover:from-slate-900 hover:to-slate-950 text-white',
-      description: 'Find what you need'
-    },
-    { 
-      label: 'My Listings', 
-      to: '/dashboard/listings', 
-      icon: FiList,
-      style: 'border-2 border-gray-200 hover:border-blue-500 hover:bg-blue-50 text-gray-700 hover:text-blue-600 dark:border-slate-700 dark:text-gray-200',
-      description: 'Manage your items'
-    },
-    { 
-      label: 'Messages', 
-      to: '/dashboard/messages', 
-      icon: FiMessageCircle,
-      style: 'border-2 border-gray-200 hover:border-purple-500 hover:bg-purple-50 text-gray-700 hover:text-purple-600 dark:border-slate-700 dark:text-gray-200',
-      description: 'Chat with buyers'
-    },
-    { 
-      label: 'Edit Profile', 
-      to: '/dashboard/profile', 
-      icon: FiUser,
-      style: 'border-2 border-gray-200 hover:border-emerald-500 hover:bg-emerald-50 text-gray-700 hover:text-emerald-600 dark:border-slate-700 dark:text-gray-200',
-      description: 'Update your info'
-    },
-  ];
-
   return (
     <DashboardLayout>
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -301,56 +258,10 @@ export default function DashboardPage() {
           />
         </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Quick Actions - MY ENHANCED VERSION */}
-          <motion.div 
-            className="bg-white rounded-2xl border border-slate-200 shadow-sm p-6 hover:shadow-lg transition-shadow duration-300 dark:bg-slate-900 dark:border-slate-700"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-bold text-gray-800 text-sm uppercase tracking-wide flex items-center gap-2 dark:text-gray-100">
-                <span className="w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full" />
-                Quick Actions
-              </h3>
-              <FiZap className="w-4 h-4 text-gray-400 dark:text-gray-500" />
-            </div>
-            
-            <div className="space-y-2.5">
-              {quickActions.map(({ label, to, icon: Icon, style, description }) => (
-                <motion.div
-                  key={to}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                >
-                  <Link 
-                    to={to} 
-                    className={`flex items-center gap-3 w-full p-3 rounded-xl text-sm font-medium transition-all duration-300 ${style} group`}
-                  >
-                    <Icon className="w-5 h-5 opacity-80 shrink-0" />
-                    <div className="flex-1 text-left">
-                      <p className="font-semibold">{label}</p>
-                      {description && (
-                        <p className="text-xs opacity-80 font-normal">{description}</p>
-                      )}
-                    </div>
-                    <FiArrowRight className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-all group-hover:translate-x-1" />
-                  </Link>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Quick Tip */}
-            <div className="mt-6 p-4 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/40 dark:to-indigo-950/40 rounded-xl border border-blue-100 dark:border-blue-800/50">
-              <p className="text-xs font-medium text-blue-700 flex items-center gap-1 dark:text-blue-400"><FiZap className="w-3.5 h-3.5" /> Pro Tip</p>
-              <p className="text-xs text-blue-600 mt-1 dark:text-blue-400">List items with clear photos to get approved faster!</p>
-            </div>
-          </motion.div>
-
+        <div>
           {/* Recent Listings */}
-          <motion.div 
-            className="lg:col-span-2 bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700"
+          <motion.div
+            className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-700"
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.3 }}
