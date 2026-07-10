@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMProducts, approvePMProduct, rejectPMProduct } from '../../api/productManager';
+import { storageUrl } from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
@@ -33,7 +34,7 @@ const getImageUrl = (image) => {
   const path = image.image_path || image.path || image.url || '';
   if (!path) return null;
   if (path.startsWith('http')) return path;
-  return `http://localhost:8000/storage/${path}`;
+  return storageUrl(path);
 };
 
 function StatusBadge({ status }) {

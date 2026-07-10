@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { myListings, deleteProduct } from '../../api/products';
+import { storageUrl } from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
@@ -128,7 +129,7 @@ export default function MyListingsContent() {
                 <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
                   {listing.images?.[0] ? (
                     <img
-                      src={`http://localhost:8000/storage/${listing.images[0].image_path}`}
+                      src={storageUrl(listing.images[0].image_path)}
                       alt=""
                       className="w-full h-full object-cover"
                     />

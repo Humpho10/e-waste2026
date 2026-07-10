@@ -4,7 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
-import { setIntentionalLogout } from '../api/axios';
+import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import Bi from '../components/BsIcon';
 
@@ -71,7 +71,7 @@ export default function AdminLayout({ children }) {
   const currentItem  = navItems.find(n => location.pathname === n.path);
   const currentLabel = currentItem?.label || 'Admin Panel';
 
-  const avatarUrl = user?.avatar ? `http://localhost:8000/storage/${user.avatar}` : null;
+  const avatarUrl = storageUrl(user?.avatar);
 
   const getBadgeCount = (badge) => {
     if (badge === 'notif') return notifCount;

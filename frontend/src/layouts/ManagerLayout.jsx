@@ -8,6 +8,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext'; // 👈 For badge counts
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 import { Recycle } from '../components/icons';
@@ -52,7 +53,7 @@ export default function ManagerLayout({ children }) {
   const currentLabel = navItems.find(n => location.pathname === n.path)?.label || 'Manager Panel';
 
   // 👇 Avatar helper
-  const avatarUrl = user?.avatar ? `http://localhost:8000/storage/${user.avatar}` : null;
+  const avatarUrl = storageUrl(user?.avatar);
 
   // 👇 Helper to get badge count for a nav item
   const getBadgeCount = (badge) => {

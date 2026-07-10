@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage, getPublicSettings } from '../api/products';
 import { getTopRatedSellers } from '../api/ratings';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import PublicNavbar from '../components/PublicNavbar';
 import PublicFooter from '../components/PublicFooter';
@@ -66,6 +67,15 @@ const conditionStyle = (c = '') => {
   return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
 };
 */
+
+const conditionStyle = (c = '') => {
+  const k = c.toLowerCase();
+  if (k.includes('excellent')) return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
+  if (k.includes('good'))      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400';
+  if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
+  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
+};
+
 // ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
   const { token } = useAuth();
@@ -89,7 +99,7 @@ function ProductCard({ product }) {
       {/* Icon / image tile */}
       <div className="w-full h-28 bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-950/40 dark:to-sky-950/40 rounded-xl mb-3 flex items-center justify-center overflow-hidden text-blue-500 dark:text-blue-400">
         {img && !imgError ? (
-          <img src={`http://localhost:8000/storage/${img}`} alt={product.title}
+          <img src={storageUrl(img)} alt={product.title}
             onError={() => setImgError(true)}
             className="w-full h-full object-cover rounded-xl" />
         ) : (
@@ -421,7 +431,7 @@ export default function HomePage() {
               >
                 <span className={`w-6 h-6 rounded-full overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
                   {thumb ? (
-                    <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
+                    <img src={storageUrl(thumb)} alt="" className="w-full h-full object-cover" />
                   ) : (
                     <Icon width={13} height={13} className={active ? 'text-white' : 'text-blue-500'} />
                   )}
@@ -458,7 +468,7 @@ export default function HomePage() {
                       <span className="flex items-center gap-2.5">
                         <span className={`w-7 h-7 rounded-lg overflow-hidden flex items-center justify-center shrink-0 ${active ? 'bg-white/20' : 'bg-blue-50 dark:bg-blue-950/40'}`}>
                           {thumb ? (
-                            <img src={`http://localhost:8000/storage/${thumb}`} alt="" className="w-full h-full object-cover" />
+                            <img src={storageUrl(thumb)} alt="" className="w-full h-full object-cover" />
                           ) : (
                             <Icon width={16} height={16} className={active ? 'text-white' : 'text-blue-500'} />
                           )}
@@ -689,7 +699,7 @@ export default function HomePage() {
                   <div className="bg-gray-50 dark:bg-slate-800/60 rounded-2xl border border-gray-100 dark:border-slate-800 p-5 text-center h-full flex flex-col items-center">
                     <div className="w-14 h-14 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg mb-3 shrink-0">
                       {seller.avatar ? (
-                        <img src={`http://localhost:8000/storage/${seller.avatar}`} alt={seller.name} className="w-full h-full object-cover rounded-2xl" />
+                        <img src={storageUrl(seller.avatar)} alt={seller.name} className="w-full h-full object-cover rounded-2xl" />
                       ) : (
                         seller.name?.charAt(0).toUpperCase()
                       )}

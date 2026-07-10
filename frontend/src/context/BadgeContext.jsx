@@ -1,28 +1,24 @@
 import { createContext, useContext } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import api from '../api/axios';
 import { useAuth } from './AuthContext';
 
 const BadgeContext = createContext();
 
-const fetchUnreadCounts = async (token) => {
-  // All three endpoints work for every role since they're in the
-  // auth:sanctum group — staff-messages simply returns 0 for anyone who
-  // isn't part of a Super Admin <-> staff conversation (e.g. buyers/sellers).
-  const authHeaders = {
-    'Authorization': `Bearer ${token}`,
-    'Accept': 'application/json',
-  };
-
-  const [notifRes, msgRes, staffMsgRes] = await Promise.all([
-    fetch('http://localhost:8000/api/notifications/unread-count', { headers: authHeaders }),
-    fetch('http://localhost:8000/api/messages/unread-count', { headers: authHeaders }),
-    fetch('http://localhost:8000/api/staff-messages/unread-count', { headers: authHeaders }),
+// Both endpoints work for every role since they're in the auth:sanctum
+// group. Messages already covers staff-to-staff conversations too (they're
+// just messages with no product attached), so there's no separate count to
+// add on top.
+const fetchUnreadCounts = async () => {
+  const [notifRes, msgRes] = await Promise.all([
+    api.get('/notifications/unread-count'),
+    api.get('/messages/unread-count'),
   ]);
 
-  const notifCount = notifRes.ok ? (await notifRes.json()).unread_count ?? 0 : 0;
-  const listingMsgCount = msgRes.ok ? (await msgRes.json()).unread_count ?? 0 : 0;
-  const staffMsgCount = staffMsgRes.ok ? (await staffMsgRes.json()).unread_count ?? 0 : 0;
-  return { notifCount, msgCount: listingMsgCount + staffMsgCount };
+  return {
+    notifCount: notifRes.data?.unread_count ?? 0,
+    msgCount: msgRes.data?.unread_count ?? 0,
+  };
 };
 
 export function BadgeProvider({ children }) {
@@ -31,7 +27,7 @@ export function BadgeProvider({ children }) {
 
   const { data } = useQuery({
     queryKey: ['unread-counts'],
-    queryFn: () => fetchUnreadCounts(token),
+    queryFn: fetchUnreadCounts,
     enabled: !!token,
     refetchInterval: token ? 15000 : false, // poll every 15 seconds
   });
