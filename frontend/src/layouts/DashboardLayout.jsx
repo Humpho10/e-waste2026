@@ -31,6 +31,7 @@ import { FaRecycle, FaShoppingBag } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 
@@ -72,7 +73,7 @@ export default function DashboardLayout({ children }) {
 
   const currentLabel = navItems.find(n => location.pathname === n.path)?.label || 'Dashboard';
 
-  const avatarUrl = user?.avatar ? `http://localhost:8000/storage/${user.avatar}` : null;
+  const avatarUrl = storageUrl(user?.avatar);
 
   const getBadgeCount = (badge) => {
     if (badge === 'notif') return notifCount;

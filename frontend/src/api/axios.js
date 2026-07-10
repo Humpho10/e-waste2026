@@ -9,6 +9,13 @@ const api = axios.create({
   }
 });
 
+// The backend's public origin (no trailing /api), for building URLs to
+// storage/uploaded files — e.g. "https://host/backend/public/api" ->
+// "https://host/backend/public". Derived from the same env var as the API
+// client so there's one place to change per environment.
+export const STORAGE_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
+export const storageUrl = (path) => path ? `${STORAGE_BASE_URL}/storage/${path}` : null;
+
 // Automatically attach the token to every request if it exists
 api.interceptors.request.use(config => {
   const token = localStorage.getItem('token');

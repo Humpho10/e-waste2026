@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 
@@ -47,9 +48,7 @@ export default function WorkspaceLayout({ children }) {
     return 0;
   };
 
-  const avatarUrl = user?.avatar
-    ? `http://localhost:8000/storage/${user.avatar}`
-    : null;
+  const avatarUrl = storageUrl(user?.avatar);
 
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">

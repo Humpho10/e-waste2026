@@ -19,6 +19,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
+import { storageUrl } from '../api/axios';
 
 export default function ProfileForm({ getProfile, updateProfile, accentColor = 'blue' }) {
   const { user, login, token, role } = useAuth();
@@ -77,7 +78,7 @@ export default function ProfileForm({ getProfile, updateProfile, accentColor = '
       .then(res => {
         const u = res.data.user;
         setForm(f => ({ ...f, name: u.name || '', phone: u.phone || '', location: u.location || '' }));
-        if (u.avatar) setPreview(`http://localhost:8000/storage/${u.avatar}`);
+        if (u.avatar) setPreview(storageUrl(u.avatar));
       })
       .finally(() => setLoading(false));
   }, []);

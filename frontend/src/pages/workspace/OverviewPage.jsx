@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMStats } from '../../api/productManager';
+import { storageUrl } from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Chart from '../../components/Chart';
 import { CHART_COLORS } from '../../lib/chartTheme';
 
-const STORAGE = 'http://localhost:8000/storage';
 const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
 const ugxShort = (n) => {
   const v = Number(n || 0);
@@ -389,7 +389,7 @@ export default function WorkspaceOverviewPage() {
                     >
                       <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300 dark:bg-slate-800">
                         {p.image
-                          ? <img src={`${STORAGE}/${p.image}`} alt="" className="w-full h-full object-cover" />
+                          ? <img src={storageUrl(p.image)} alt="" className="w-full h-full object-cover" />
                           : <i className="bi bi-image" />}
                       </div>
                       <div className="flex-1 min-w-0">
