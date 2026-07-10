@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
 import ThemeToggle from '../components/ThemeToggle';
-import QuickSearch from '../components/QuickSearch';
 
 const navItems = [
   { path: '/workspace',               icon: 'bi-grid-1x2-fill', label: 'Overview',       group: 'main',  badge: null       },
@@ -168,14 +167,6 @@ export default function WorkspaceLayout({ children }) {
 
         {/* Bottom */}
         <div className="px-2 py-3 border-t border-slate-800 space-y-0.5 shrink-0">
-          <Link
-            to="/"
-            title={collapsed ? 'Back to Site' : ''}
-            className={`flex items-center rounded-xl text-sm text-slate-400 hover:bg-slate-800 hover:text-white transition-all ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}`}
-          >
-            <i className="bi bi-house-door text-base" />
-            {!collapsed && <span className="font-medium">Back to Site</span>}
-          </Link>
           <button
             onClick={handleLogout}
             disabled={loggingOut}
@@ -207,8 +198,6 @@ export default function WorkspaceLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <QuickSearch items={navItems} placeholder="Quick search..." />
-
             <ThemeToggle />
 
             {/* Message bell */}
