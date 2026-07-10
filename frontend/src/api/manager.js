@@ -5,8 +5,8 @@ export const getManagerStats = () => api.get('/manager/stats');
 export const getManagerTrends = () => api.get('/manager/stats/trends');
 
 // Users
-export const getManagerUsers = () => api.get('/manager/users');
-export const listUsers = () => api.get('/manager/users');
+export const getManagerUsers = (params) => api.get('/manager/users', { params });
+export const listUsers = (params) => api.get('/manager/users', { params });
 export const activateUser = (id) => api.patch(`/manager/users/${id}/activate`);
 export const deactivateUser = (id) => api.patch(`/manager/users/${id}/deactivate`);
 

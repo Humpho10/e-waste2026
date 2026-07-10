@@ -1,12 +1,24 @@
-import { useState } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useEffect, useMemo, useState } from 'react';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   BiUsers, BiSearch, BiUserCheck, BiUserX, BiUser, BiMail, BiPhone, BiMapPin,
+  BiChevronLeft, BiChevronRight,
 } from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import { listUsers, deactivateUser, activateUser } from '../../api/manager';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
+
+// Debounces a fast-changing value (e.g. search input) so we don't fire a
+// network request on every keystroke.
+function useDebouncedValue(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 function SkeletonRow() {
   return (
@@ -29,7 +41,7 @@ function ToggleStatusModal({ user, onClose, onConfirmed }) {
   const mutation = useMutation({
     mutationFn: () => activating ? activateUser(user.id) : deactivateUser(user.id),
     onSuccess: () => {
-      toast(`${user.name} has been ${activating ? 'activated' : 'deactivated'}`, 'success');
+      toast(`${user.name} has been ${activating ? 'activated' : 'deactivated'}. An email notification has been sent.`, 'success');
       onConfirmed();
       onClose();
     },
@@ -51,8 +63,8 @@ function ToggleStatusModal({ user, onClose, onConfirmed }) {
           </h3>
           <p className="text-sm text-gray-500 mb-6 dark:text-gray-400">
             {activating
-              ? 'They will regain access to their account and be able to log in again.'
-              : "They'll be signed out and won't be able to log in until reactivated."}
+              ? 'They will regain access to their account and be able to log in again. They will receive an email letting them know.'
+              : "They'll be signed out and won't be able to log in until reactivated. They will receive an email letting them know."}
           </p>
           <div className="flex gap-3">
             <button
@@ -79,7 +91,10 @@ function ToggleStatusModal({ user, onClose, onConfirmed }) {
 }
 
 export default function UsersPage() {
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebouncedValue(searchInput);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [toggleTarget, setToggleTarget] = useState(null);
 
   const { permissions } = useAuth();
@@ -88,21 +103,26 @@ export default function UsersPage() {
   const canActivate = permissions?.includes('user-activate') || false;
   const canDeactivate = permissions?.includes('user-deactivate') || false;
 
-  const { data: users = [], isLoading: loading } = useQuery({
-    queryKey: ['manager-users'],
-    queryFn: () => listUsers().then(res => res.data.users),
+  // Any search change resets pagination back to page 1.
+  useEffect(() => { setPage(1); }, [search, perPage]);
+
+  const queryParams = useMemo(() => ({
+    search: search || undefined,
+    page,
+    per_page: perPage,
+  }), [search, page, perPage]);
+
+  const { data, isLoading: loading, isFetching } = useQuery({
+    queryKey: ['manager-users', queryParams],
+    queryFn: () => listUsers(queryParams).then(res => res.data),
+    placeholderData: keepPreviousData,
   });
 
+  const users  = data?.users || [];
+  const meta   = data?.meta || { current_page: 1, last_page: 1, per_page: perPage, total: 0 };
+  const counts = data?.counts || { active: 0, inactive: 0 };
+
   const invalidateUsers = () => queryClient.invalidateQueries({ queryKey: ['manager-users'] });
-
-  const filtered = users.filter(u =>
-    u.name.toLowerCase().includes(search.toLowerCase()) ||
-    u.email.toLowerCase().includes(search.toLowerCase()) ||
-    u.phone?.toLowerCase().includes(search.toLowerCase())
-  );
-
-  const activeCount = users.filter(u => u.is_active).length;
-  const inactiveCount = users.length - activeCount;
 
   return (
     <ManagerLayout>
@@ -112,7 +132,7 @@ export default function UsersPage() {
             <BiUsers className="text-orange-500 dark:text-orange-400" size={22} /> Users
           </h2>
           <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
-            {users.length} regular user{users.length !== 1 ? 's' : ''} on the platform
+            {meta.total} regular user{meta.total !== 1 ? 's' : ''} on the platform
           </p>
         </div>
         <div className="relative max-w-sm">
@@ -120,22 +140,22 @@ export default function UsersPage() {
           <input
             type="text"
             placeholder="Search users..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
             className="w-full pl-9 pr-4 py-2.5 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900"
           />
         </div>
       </div>
 
       {/* Summary row */}
-      {users.length > 0 && (
+      {meta.total > 0 && (
         <div className="grid grid-cols-3 gap-4 mb-6">
           <div className="bg-white rounded-2xl border border-gray-100 p-4 flex items-center gap-3 dark:bg-slate-900 dark:border-slate-800">
             <div className="w-9 h-9 rounded-xl bg-orange-50 flex items-center justify-center shrink-0 dark:bg-orange-950/40">
               <BiUsers size={16} className="text-orange-500 dark:text-orange-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{users.length}</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{meta.total}</p>
               <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Total</p>
             </div>
           </div>
@@ -144,7 +164,7 @@ export default function UsersPage() {
               <BiUserCheck size={16} className="text-green-600 dark:text-green-400" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{activeCount}</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{counts.active}</p>
               <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Active</p>
             </div>
           </div>
@@ -153,7 +173,7 @@ export default function UsersPage() {
               <BiUserX size={16} className="text-gray-400 dark:text-gray-500" />
             </div>
             <div>
-              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{inactiveCount}</p>
+              <p className="text-lg font-bold text-gray-800 leading-none dark:text-gray-100">{counts.inactive}</p>
               <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">Inactive</p>
             </div>
           </div>
@@ -175,14 +195,14 @@ export default function UsersPage() {
             </tbody>
           </table>
         </div>
-      ) : filtered.length === 0 ? (
+      ) : users.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
           <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiUser size={28} className="text-orange-400" />
           </div>
           <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No users found</h3>
           <p className="text-gray-400 text-sm dark:text-gray-500">
-            {users.length === 0 ? 'No regular users have registered yet.' : `No results match "${search}"`}
+            {meta.total === 0 && !search ? 'No regular users have registered yet.' : `No results match "${search}"`}
           </p>
         </div>
       ) : (
@@ -196,7 +216,7 @@ export default function UsersPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(user => (
+              {users.map(user => (
                 <tr key={user.id} className="border-t border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 transition">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
@@ -249,6 +269,42 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span>
+                Showing {(meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)} of {meta.total}
+              </span>
+              {isFetching && <span className="w-3 h-3 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />}
+              <select
+                value={perPage}
+                onChange={e => setPerPage(Number(e.target.value))}
+                className="ml-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-100 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={meta.current_page <= 1}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <BiChevronLeft size={13} />
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                Page {meta.current_page} of {meta.last_page}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
+                disabled={meta.current_page >= meta.last_page}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <BiChevronRight size={13} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

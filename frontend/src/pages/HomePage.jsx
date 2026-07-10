@@ -48,6 +48,7 @@ const SAMPLE_CATEGORIES = [
   { category_id: 'c5', name: 'Entertainment & Audio',  subcategories: [] },
 ];
 
+/*
 const SAMPLE_PRODUCTS = [
   { product_id: 'p1', title: '8GB DDR4 Laptop RAM', price: 85000,  condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Kikuubo'    } },
   { product_id: 'p2', title: '15.6" LCD Screen',    price: 120000, condition: 'Good',           category: { name: 'Computer'  }, seller: { location: 'Nakawa'     } },
@@ -64,7 +65,7 @@ const conditionStyle = (c = '') => {
   if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
   return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
 };
-
+*/
 // ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
   const { token } = useAuth();
