@@ -169,13 +169,18 @@ function UsersPage() {
           <table className="w-full text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
-                {['#', 'Name', 'Email', 'Role', 'Joined', 'Actions'].map(h => (
+                {['#', 'Name', 'Email', 'Role', 'Categories', 'Joined', 'Actions'].map(h => (
                   <th key={h} className="text-left px-4 py-3 text-gray-500 dark:text-gray-400 font-medium">{h}</th>
                 ))}
               </tr>
             </thead>
             <tbody>
-              {filtered.map((user, i) => (
+              {filtered.map((user, i) => {
+                const isPM = user.roles?.[0]?.name === 'Product-Manager';
+                const categories = (user.product_manager_assignments || [])
+                  .map(a => a.category?.name)
+                  .filter(Boolean);
+                return (
                 <tr key={user.id} className="border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800">
                   <td className="px-4 py-3 text-gray-400 dark:text-gray-500">{i + 1}</td>
                   <td className="px-4 py-3">
@@ -191,6 +196,21 @@ function UsersPage() {
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${roleStyle(user.roles?.[0]?.name)}`}>
                       {user.roles?.[0]?.name || 'No role'}
                     </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {!isPM ? (
+                      <span className="text-gray-300 dark:text-gray-600 text-xs">—</span>
+                    ) : categories.length === 0 ? (
+                      <span className="text-gray-400 dark:text-gray-500 text-xs italic">Unassigned</span>
+                    ) : (
+                      <div className="flex flex-wrap gap-1 max-w-xs">
+                        {categories.map(name => (
+                          <span key={name} className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-teal-50 dark:bg-teal-950/40 text-teal-700 dark:text-teal-400">
+                            {name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 text-gray-400 dark:text-gray-500">
                     {new Date(user.created_at).toLocaleDateString()}
@@ -218,7 +238,8 @@ function UsersPage() {
                     </div>
                   </td>
                 </tr>
-              ))}
+                );
+              })}
             </tbody>
           </table>
         </div>

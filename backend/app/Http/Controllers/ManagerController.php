@@ -17,6 +17,8 @@ use Illuminate\Support\Facades\Auth;
 use App\Mail\ProductApprovedMail;
 use App\Mail\ProductRejectedMail;
 use App\Mail\ProductManagerCreatedMail;
+use App\Mail\UserActivatedMail;
+use App\Mail\UserDeactivatedMail;
 
 class ManagerController extends Controller
 {
@@ -35,13 +37,39 @@ class ManagerController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view users.'], 403);
         }
 
-        $users = User::role('User')
-                    ->orderBy('created_at', 'desc')
-                    ->get(['id', 'name', 'email', 'phone', 'location', 'is_active', 'created_at']);
+        $query = User::role('User');
+
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('name', 'like', "%{$search}%")
+                  ->orWhere('email', 'like', "%{$search}%")
+                  ->orWhere('phone', 'like', "%{$search}%");
+            });
+        }
+
+        // Base query (before pagination) is reused to compute active/inactive
+        // counts across the *whole* filtered set, not just the current page.
+        $activeCount   = (clone $query)->where('is_active', true)->count();
+        $inactiveCount = (clone $query)->where('is_active', false)->count();
+
+        $perPage   = min(max((int) $request->get('per_page', 10), 5), 100);
+        $paginated = $query->orderBy('created_at', 'desc')
+                    ->paginate($perPage, ['id', 'name', 'email', 'phone', 'location', 'is_active', 'created_at'])
+                    ->withQueryString();
 
         return response()->json([
-            'users' => $users,
-            'count' => $users->count(),
+            'users' => $paginated->items(),
+            'count' => $paginated->total(),
+            'meta'  => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+            ],
+            'counts' => [
+                'active'   => $activeCount,
+                'inactive' => $inactiveCount,
+            ],
         ], 200);
     }
 
@@ -69,6 +97,10 @@ class ManagerController extends Controller
 
         AuditLogger::log('users', $user->id, 'updated', $oldValue, $user->toArray());
 
+        if ($user->email) {
+            Mail::to($user->email)->send(new UserDeactivatedMail($user));
+        }
+
         return response()->json([
             'message' => "{$user->name} has been deactivated.",
         ], 200);
@@ -89,6 +121,10 @@ class ManagerController extends Controller
         $user->save();
 
         AuditLogger::log('users', $user->id, 'updated', $oldValue, $user->toArray());
+
+        if ($user->email) {
+            Mail::to($user->email)->send(new UserActivatedMail($user));
+        }
 
         return response()->json([
             'message' => "{$user->name} has been reactivated.",
@@ -481,11 +517,28 @@ class ManagerController extends Controller
             $query->where('category_id', $request->category_id);
         }
 
-        $products = $query->latest()->get();
+        if ($search = $request->get('search')) {
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('seller', function ($sq) use ($search) {
+                      $sq->where('name', 'like', "%{$search}%")
+                         ->orWhere('email', 'like', "%{$search}%");
+                  });
+            });
+        }
+
+        $perPage   = min(max((int) $request->get('per_page', 10), 5), 100);
+        $paginated = $query->latest()->paginate($perPage)->withQueryString();
 
         return response()->json([
-            'products' => $products,
-            'count'    => $products->count(),
+            'products' => $paginated->items(),
+            'count'    => $paginated->total(),
+            'meta'     => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+            ],
         ], 200);
     }
 

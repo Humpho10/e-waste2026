@@ -6,6 +6,7 @@ import { getConversations, getProductMessages, sendMessage } from '../../api/mes
 import { useAuth } from '../../context/AuthContext';
 import { useBadge } from '../../context/BadgeContext';
 import { useToast } from '../../components/Toast';
+import StaffAdminChat from '../../components/StaffAdminChat';
 
 export default function ManagerMessagesPage() {
   const { user }             = useAuth();
@@ -64,6 +65,12 @@ export default function ManagerMessagesPage() {
           <BiMessageSquare className="text-orange-500 dark:text-orange-400" size={22} /> Messages
         </h2>
         <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">Communications regarding listings in your categories</p>
+      </div>
+
+      <StaffAdminChat accent="orange" />
+
+      <div className="mb-3">
+        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Listing conversations</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">

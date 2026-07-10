@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import {
   BiBox, BiSearch, BiEye, BiCheck, BiX, BiChevronLeft, BiChevronRight,
   BiInbox, BiImage, BiCheckCircle, BiXCircle,
@@ -9,6 +9,17 @@ import ManagerLayout from '../../layouts/ManagerLayout';
 import { getManagerProducts, approveProduct, rejectProduct, getManagerStats } from '../../api/manager';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
+
+// Debounces a fast-changing value (e.g. search input) so we don't fire a
+// network request on every keystroke.
+function useDebouncedValue(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  return debounced;
+}
 
 const statusConfig = {
   pending:  { label: 'Pending',  color: 'bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-400' },
@@ -307,7 +318,10 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
 export default function ProductsPage() {
   const [searchParams] = useSearchParams();
   const [status, setStatus] = useState(searchParams.get('status') || 'all');
-  const [search, setSearch] = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const search = useDebouncedValue(searchInput);
+  const [page, setPage] = useState(1);
+  const [perPage, setPerPage] = useState(10);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [approveTarget, setApproveTarget] = useState(null);
   const [viewProduct, setViewProduct] = useState(null);
@@ -319,10 +333,24 @@ export default function ProductsPage() {
   const canApprove = permissions?.includes('product-approve') || false;
   const canReject = permissions?.includes('product-reject') || false;
 
-  const { data: products = [], isLoading: loading } = useQuery({
-    queryKey: ['manager-products', status],
-    queryFn: () => getManagerProducts(status !== 'all' ? { status } : {}).then(res => res.data.products),
+  // Any filter change resets pagination back to page 1.
+  useEffect(() => { setPage(1); }, [status, search, perPage]);
+
+  const queryParams = useMemo(() => ({
+    status: status !== 'all' ? status : undefined,
+    search: search || undefined,
+    page,
+    per_page: perPage,
+  }), [status, search, page, perPage]);
+
+  const { data, isLoading: loading, isFetching } = useQuery({
+    queryKey: ['manager-products', queryParams],
+    queryFn: () => getManagerProducts(queryParams).then(res => res.data),
+    placeholderData: keepPreviousData,
   });
+
+  const products = data?.products || [];
+  const meta     = data?.meta || { current_page: 1, last_page: 1, per_page: perPage, total: 0 };
 
   // Shared with the Overview page — reuses the cache if already fetched.
   const { data: stats } = useQuery({
@@ -331,16 +359,12 @@ export default function ProductsPage() {
   });
 
   const setProductStatus = (productId, newStatus) => {
-    queryClient.setQueryData(['manager-products', status], (old = []) =>
-      old.map(p => p.product_id === productId ? { ...p, status: newStatus } : p)
+    queryClient.setQueryData(['manager-products', queryParams], (old) =>
+      old ? { ...old, products: old.products.map(p => p.product_id === productId ? { ...p, status: newStatus } : p) } : old
     );
+    queryClient.invalidateQueries({ queryKey: ['manager-products'] });
     queryClient.invalidateQueries({ queryKey: ['manager-stats'] });
   };
-
-  const filtered = products.filter(p =>
-    p.title.toLowerCase().includes(search.toLowerCase()) ||
-    p.seller?.name.toLowerCase().includes(search.toLowerCase())
-  );
 
   const filters = [
     { key: 'all',      label: 'All Listings', count: stats?.total_products },
@@ -356,7 +380,7 @@ export default function ProductsPage() {
           <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2 dark:text-gray-100">
             <BiBox className="text-orange-500 dark:text-orange-400" size={22} /> Listings
           </h2>
-          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">{products.length} listings found</p>
+          <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">{meta.total} listings found</p>
         </div>
       </div>
 
@@ -385,8 +409,8 @@ export default function ProductsPage() {
           <input
             type="text"
             placeholder="Search listings..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={e => setSearchInput(e.target.value)}
             className="pl-9 pr-4 py-2 border border-gray-200 dark:border-slate-700 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-orange-400 bg-white dark:bg-slate-900 w-52"
           />
         </div>
@@ -407,7 +431,7 @@ export default function ProductsPage() {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
           <div className="w-16 h-16 rounded-2xl bg-orange-50 flex items-center justify-center mx-auto mb-4 dark:bg-orange-950/40">
             <BiInbox size={28} className="text-orange-400" />
@@ -430,7 +454,7 @@ export default function ProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(product => {
+              {products.map(product => {
                 const cfg = statusConfig[product.status] || statusConfig.pending;
                 const firstImage = product.images?.[0];
                 return (
@@ -514,6 +538,42 @@ export default function ProductsPage() {
               })}
             </tbody>
           </table>
+
+          {/* Pagination */}
+          <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-slate-800">
+            <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+              <span>
+                Showing {(meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)} of {meta.total}
+              </span>
+              {isFetching && <span className="w-3 h-3 border-2 border-orange-400 border-t-transparent rounded-full animate-spin" />}
+              <select
+                value={perPage}
+                onChange={e => setPerPage(Number(e.target.value))}
+                className="ml-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-800 dark:text-gray-100 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-orange-400"
+              >
+                {[10, 25, 50, 100].map(n => <option key={n} value={n}>{n} / page</option>)}
+              </select>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <button
+                onClick={() => setPage(p => Math.max(1, p - 1))}
+                disabled={meta.current_page <= 1}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <BiChevronLeft size={13} />
+              </button>
+              <span className="text-xs text-gray-500 dark:text-gray-400 px-2">
+                Page {meta.current_page} of {meta.last_page}
+              </span>
+              <button
+                onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
+                disabled={meta.current_page >= meta.last_page}
+                className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+              >
+                <BiChevronRight size={13} />
+              </button>
+            </div>
+          </div>
         </div>
       )}
 

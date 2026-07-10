@@ -14,6 +14,20 @@ class NotificationController extends Controller
      */
     protected $user;
 
+    // Super Admin only handles system maintenance/performance and staff —
+    // they never see per-listing or buyer/seller-message activity, even if
+    // a notification of this type slipped through from elsewhere. Kept as
+    // a blacklist (not a whitelist) so newly-added, non-listing notification
+    // types still reach them by default.
+    private const SUPER_ADMIN_HIDDEN_TYPES = [
+        'new_listing',
+        'listing_resubmitted',
+        'product_approved',
+        'product_rejected',
+        'new_message',
+        'new_message_oversight',
+    ];
+
     /**
      * Constructor – set the authenticated user once.
      */
@@ -26,6 +40,21 @@ class NotificationController extends Controller
         });
     }
 
+    /**
+     * Base notifications query for the current user, with the listing/
+     * message noise filtered out when they're a Super Admin.
+     */
+    private function baseQuery()
+    {
+        $query = Notification::where('user_id', Auth::id());
+
+        if ($this->user->hasRole('Super-Admin')) {
+            $query->whereNotIn('type', self::SUPER_ADMIN_HIDDEN_TYPES);
+        }
+
+        return $query;
+    }
+
     // ── All notifications for logged in user ──────────────────
     public function index()
     {
@@ -33,7 +62,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view notifications.'], 403);
         }
 
-        $notifications = Notification::where('user_id', Auth::id())
+        $notifications = $this->baseQuery()
             ->latest()
             ->get();
 
@@ -103,7 +132,7 @@ class NotificationController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view notifications.'], 403);
         }
 
-        $count = Notification::where('user_id', Auth::id())
+        $count = $this->baseQuery()
             ->where('is_read', false)
             ->count();
 

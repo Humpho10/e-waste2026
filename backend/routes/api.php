@@ -9,6 +9,7 @@ use App\Http\Controllers\ProductManagerController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\MessageController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\StaffMessageController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SellerRatingController;
@@ -64,6 +65,10 @@ Route::middleware(['auth:sanctum', 'check.permissions:user-list,role-list,permis
     Route::post('/managers',           [AdminController::class, 'createAdmin'])->middleware('can:admin-create');
     Route::delete('/managers/{id}',    [AdminController::class, 'deleteAdmin'])->middleware('can:admin-delete');
 
+    // ── Product Managers (read-only oversight — Admin still owns
+    //    creating/editing/removing PMs and their category assignments) ──
+    Route::get('/product-managers',    [AdminController::class, 'getProductManagers'])->middleware('can:pm-list');
+
     // ── Roles ──────────────────────────────────────────────
     Route::get('/roles',               [AdminController::class, 'getRoles'])->middleware('can:role-list');
     Route::post('/roles',              [AdminController::class, 'createRole'])->middleware('can:role-create');
@@ -79,9 +84,10 @@ Route::middleware(['auth:sanctum', 'check.permissions:user-list,role-list,permis
     Route::get('/audit',               [AdminController::class, 'getAuditTrail'])->middleware('can:audit-list');
     Route::get('/audit/export',        [AdminController::class, 'exportAuditTrail'])->middleware('can:audit-list');
 
-    // ── Messages (platform-wide oversight) ──────────────────
-    Route::get('/messages',            [AdminController::class, 'getMessages'])->middleware('can:message-view');
-    Route::get('/messages/{productId}',[AdminController::class, 'getMessageThread'])->middleware('can:message-view');
+    // NOTE: Super Admin no longer has read access to buyer/seller
+    // conversations — that "platform-wide oversight" endpoint was retired.
+    // Super Admin messaging is now staff-only; see the staff-messages
+    // routes below (StaffMessageController), used from /admin/messages.
 
     // ── System Settings ──────────────────────────────────────
     Route::get('/settings',  [AdminController::class, 'getSettings']);
@@ -194,6 +200,16 @@ Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
     Route::get('/thread/{otherId}',  [MessageController::class, 'show'])->middleware('can:message-view');
     Route::post('/',                 [MessageController::class, 'send'])->middleware('can:message-send');
     Route::patch('/{id}/read',       [MessageController::class, 'markRead'])->middleware('can:message-view');
+});
+
+// ── STAFF MESSAGES (Super Admin ↔ Admin / Product-Manager) ────
+// Internal chat only — never touches buyer/seller conversations.
+Route::middleware('auth:sanctum')->prefix('staff-messages')->group(function () {
+    Route::get('/contacts',      [StaffMessageController::class, 'contacts']);
+    Route::get('/conversations', [StaffMessageController::class, 'conversations']);
+    Route::get('/unread-count',  [StaffMessageController::class, 'unreadCount']);
+    Route::get('/{userId}',      [StaffMessageController::class, 'thread'])->whereNumber('userId');
+    Route::post('/',             [StaffMessageController::class, 'send']);
 });
 
 // ── NOTIFICATIONS (Authenticated Users) ──────────────────────

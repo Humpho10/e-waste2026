@@ -6,7 +6,6 @@ import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
 import { setIntentionalLogout } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
-import QuickSearch from '../components/QuickSearch';
 import Bi from '../components/BsIcon';
 
 // 🔥 Define nav items with required permissions — icon is a Bootstrap Icons
@@ -14,6 +13,7 @@ import Bi from '../components/BsIcon';
 const allNavItems = [
   { path: '/admin',              icon: 'speedometer2',          label: 'Overview',     group: 'main',   badge: null,   permission: 'dashboard-view' },
   { path: '/admin/admins',       icon: 'person-check-fill',     label: 'Admins',       group: 'main',   badge: null,   permission: 'admin-list' },
+  { path: '/admin/product-managers', icon: 'kanban-fill',       label: 'Product Managers', group: 'main', badge: null, permission: 'pm-list' },
   { path: '/admin/users',        icon: 'people-fill',           label: 'All Users',    group: 'main',   badge: null,   permission: 'user-list' },
   { path: '/admin/roles',        icon: 'shield-lock-fill',      label: 'Roles',        group: 'access', badge: null,   permission: 'role-list' },
   { path: '/admin/permissions',  icon: 'key-fill',              label: 'Permissions',  group: 'access', badge: null,   permission: 'permission-list' },
@@ -38,41 +38,26 @@ export default function AdminLayout({ children }) {
   const queryClient      = useQueryClient();
   const [collapsed, setCollapsed]   = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
-  const [showGoodbye, setShowGoodbye] = useState(false);
-  const [byeName, setByeName] = useState(''); // snapshot of the user's first name for the goodbye card
 
   const { notifCount, msgCount } = useBadge();
 
-  const handleLogout = async () => {
-    // Flag this as a deliberate logout BEFORE anything else. The real
-    // /logout call below revokes the token server-side immediately, but we
-    // keep it in the client for ~2s so the goodbye card can stay on screen
-    // without the route guard yanking us to /login. In that window,
-    // background polling (badge counts, notifications) keeps using the
-    // now-revoked token and gets 401s back — normally a global axios
-    // interceptor would hard-redirect to /login via window.location the
-    // instant that happens, hijacking our own transition. This flag tells
-    // that interceptor to stand down while we handle the redirect ourselves.
+  // The "logging out" message pops immediately, then the session actually
+  // ends exactly 2 seconds later — long enough to register on screen,
+  // never long enough to feel slow. The network call itself never blocks
+  // this: it fires right away in the background and is flagged as an
+  // intentional logout so the axios 401 interceptor doesn't race our own
+  // redirect while it's in flight.
+  const handleLogout = () => {
     setIntentionalLogout(true);
-
-    setByeName(user?.name?.split(' ')[0] || 'there'); // snapshot the name before the auth context is cleared
     setLoggingOut(true);
-    setShowGoodbye(true); // show the goodbye screen right away — feels instant
-    try { await logoutUser(); } catch {}
+    logoutUser().catch(() => {});
 
-    // Give the goodbye message a moment to actually be read before the
-    // session is torn down and we redirect away from the console.
-    //
-    // Navigate away from /admin first, then clear the auth context — if the
-    // token were cleared while still on an /admin/* route, the route guard
-    // would re-render mid-flight and could redirect to /login itself before
-    // our own navigate('/') applies.
     setTimeout(() => {
       navigate('/');
       logout();
       queryClient.clear(); // wipe cached data so it doesn't leak into the next session
-      setIntentionalLogout(false); // done — let the interceptor resume normal behavior
-    }, 1900);
+      setIntentionalLogout(false);
+    }, 2000);
   };
 
   // 🔥 Filter nav items based on permissions
@@ -214,19 +199,6 @@ export default function AdminLayout({ children }) {
 
         {/* Bottom actions */}
         <div className="px-2 py-3 border-t border-slate-800 space-y-0.5 shrink-0">
-          <Link
-            to="/"
-            title={collapsed ? 'Back to Site' : ''}
-            className={`
-              flex items-center rounded-xl text-sm text-slate-400
-              hover:bg-slate-800 hover:text-white transition-all duration-150
-              ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
-            `}
-          >
-            <Bi name="house-door-fill" size={17} className="shrink-0" />
-            {!collapsed && <span className="font-medium">Back to Site</span>}
-          </Link>
-
           <button
             onClick={handleLogout}
             disabled={loggingOut}
@@ -267,11 +239,6 @@ export default function AdminLayout({ children }) {
           </div>
 
           <div className="flex items-center gap-3">
-            <QuickSearch
-              items={navItems.map(item => ({ ...item, icon: <Bi name={item.icon} size={14} /> }))}
-              placeholder="Quick search..."
-            />
-
             <ThemeToggle />
 
             <Link
@@ -331,27 +298,16 @@ export default function AdminLayout({ children }) {
         {/* Footer */}
         <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex items-center justify-between">
           <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
-          <p className="text-xs text-gray-400 dark:text-gray-500">Laravel 11 · React · Sanctum · Spatie</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">Super Admin Console</p>
         </footer>
       </div>
 
-      {/* Goodbye screen — shown for a beat before the session actually ends */}
-      {showGoodbye && (
-        <div className="fixed inset-0 z-[200] bg-slate-900/85 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="animate-fade-in-up bg-white dark:bg-slate-900 rounded-2xl shadow-2xl p-8 max-w-sm w-full text-center">
-            <div className="w-16 h-16 rounded-full bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center mx-auto mb-4">
-              <Bi name="door-open-fill" size={28} className="text-blue-600 dark:text-blue-400" />
-            </div>
-            <h3 className="text-lg font-bold text-gray-800 dark:text-gray-100 mb-1.5">
-              Goodbye, {byeName}
-            </h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400 leading-relaxed">
-              You've been securely signed out of the E-Waste Mart admin console. Thank you for keeping the platform running smoothly.
-            </p>
-            <div className="mt-5 flex items-center justify-center gap-2 text-xs text-gray-400 dark:text-gray-500">
-              <Bi name="arrow-repeat" size={13} className="animate-spin" />
-              Redirecting you to the homepage...
-            </div>
+      {/* Signing-out overlay — brief, no goodbye copy, gone the instant the token is revoked */}
+      {loggingOut && (
+        <div className="fixed inset-0 z-[200] bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="flex items-center gap-3 bg-white dark:bg-slate-900 rounded-xl shadow-2xl px-6 py-4">
+            <span className="w-5 h-5 rounded-full border-2 border-blue-200 border-t-blue-600 animate-spin shrink-0" />
+            <p className="text-sm font-medium text-gray-700 dark:text-gray-200">Super Admin logging out…</p>
           </div>
         </div>
       )}
