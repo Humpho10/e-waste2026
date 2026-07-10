@@ -646,11 +646,13 @@ class AdminController extends Controller
             return response()->json(['message' => 'Unauthorized. You do not have permission to view messages.'], 403);
         }
 
+        // This is listing oversight specifically — staff-to-staff messages
+        // (no product_id) aren't about any listing, so they're excluded here.
         $query = Message::with([
             'sender:id,name,email',
             'recipient:id,name,email',
             'product:product_id,title,seller_id',
-        ])->latest();
+        ])->whereNotNull('product_id')->latest();
 
         if ($request->filled('search')) {
             $search = $request->search;

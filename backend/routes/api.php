@@ -191,7 +191,7 @@ Route::middleware('auth:sanctum')->group(function () {
 Route::middleware('auth:sanctum')->prefix('messages')->group(function () {
     Route::get('/unread-count',      [MessageController::class, 'unreadCount'])->middleware('can:message-view');
     Route::get('/',                  [MessageController::class, 'index'])->middleware('can:message-view');
-    Route::get('/{productId}',       [MessageController::class, 'show'])->middleware('can:message-view');
+    Route::get('/thread/{otherId}',  [MessageController::class, 'show'])->middleware('can:message-view');
     Route::post('/',                 [MessageController::class, 'send'])->middleware('can:message-send');
     Route::patch('/{id}/read',       [MessageController::class, 'markRead'])->middleware('can:message-view');
 });

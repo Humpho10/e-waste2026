@@ -24,8 +24,8 @@ export default function WorkspaceMessagesPage() {
   });
 
   const { data: messages = [] } = useQuery({
-    queryKey: ['messages', active?.product_id],
-    queryFn: () => getProductMessages(active.product_id).then(res => res.data.messages || []),
+    queryKey: ['messages', active?.product_id, active?.other_person?.id],
+    queryFn: () => getProductMessages(active.product_id, active.other_person.id).then(res => res.data.messages || []),
     enabled: !!active,
   });
 
@@ -39,11 +39,11 @@ export default function WorkspaceMessagesPage() {
   const openConversation = (conv) => setActive(conv);
 
   const sendMutation = useMutation({
-    mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
+    mutationFn: (text) => sendMessage({ product_id: active.product_id, recipient_id: active.other_person.id, message_text: text }),
     onSuccess: () => {
       toast('Message sent', 'success');
       setNewMsg('');
-      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id] });
+      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id, active?.other_person?.id] });
     },
     onError: (err) => toast(err.response?.data?.message || 'Failed to send message', 'error'),
   });
@@ -92,14 +92,14 @@ export default function WorkspaceMessagesPage() {
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id && active?.other_person?.id === conv.other_person?.id ? 'bg-teal-50 dark:bg-teal-950/40' : ''}`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm shrink-0">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{conv.other_person?.name}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.product_title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.product_title || 'Team message'}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{conv.last_message}</p>
                   </div>
                   {conv.unread_count > 0 && (
@@ -131,7 +131,7 @@ export default function WorkspaceMessagesPage() {
                 </div>
                 <div>
                   <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">{active.other_person?.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title || 'Team message'}</p>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">

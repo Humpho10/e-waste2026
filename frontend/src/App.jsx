@@ -31,6 +31,7 @@ import RolesPage from './pages/admin/RolesPage';
 import PermissionsPage from './pages/admin/PermissionsPage';
 import AuditPage from './pages/admin/AuditPage';
 import AdminMessagesPage from './pages/admin/MessagesPage';
+import MyMessagesPage from './pages/admin/MyMessagesPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminProfilePage from './pages/admin/ProfilePage';
 import AdminNotificationsPage from './pages/admin/NotificationsPage';
@@ -135,6 +136,11 @@ function App() {
         <Route path="/admin/messages" element={
           <PermissionRoute requiredPermissions={['message-view']}>
             <AdminMessagesPage />
+          </PermissionRoute>
+        } />
+        <Route path="/admin/my-messages" element={
+          <PermissionRoute requiredPermissions={['message-view']}>
+            <MyMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/admin/settings" element={

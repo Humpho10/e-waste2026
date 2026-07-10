@@ -107,9 +107,16 @@ class ProductController extends Controller
             'category:category_id,name',
             'subCategory:subcategory_id,sub_category_name',
             'images',
-        ])->where('status', 'approved')
-          ->where('hash_id', $hashId)
+        ])->where('hash_id', $hashId)
           ->firstOrFail();
+
+        // Public visitors only ever see approved listings — but the seller
+        // can view their own listing at any status (e.g. to see it as it
+        // will look once approved, or to check its rejection reason).
+        $isOwner = $this->user && $this->user->id === $product->seller_id;
+        if ($product->status !== 'approved' && !$isOwner) {
+            abort(404);
+        }
 
         // If the slug is stale (title changed since the link was shared),
         // redirect to the canonical URL.
@@ -347,10 +354,37 @@ class ProductController extends Controller
 
         $products = $query->latest()->get();
 
+        $pmMap = $this->assignedPmsFor($products->pluck('category_id'));
+        $products->each(function ($product) use ($pmMap) {
+            $product->assigned_pm = $pmMap[$product->category_id] ?? null;
+        });
+
         return response()->json([
             'products' => $products,
             'count'    => $products->count(),
         ], 200);
+    }
+
+    // Resolves the assigned Product Manager (id + name) for each given
+    // category, in one query — same "->first()"-per-category convention
+    // already used when notifying PMs of new listings.
+    private function assignedPmsFor($categoryIds): array
+    {
+        $ids = collect($categoryIds)->filter()->unique()->values();
+        if ($ids->isEmpty()) {
+            return [];
+        }
+
+        return ProductManagerAssignment::whereIn('category_id', $ids)
+            ->with('productManager:id,name')
+            ->get()
+            ->groupBy('category_id')
+            ->map(function ($group) {
+                $pm = $group->first()->productManager;
+                return $pm ? ['id' => $pm->id, 'name' => $pm->name] : null;
+            })
+            ->filter()
+            ->toArray();
     }
 
     // ── SELLER — Resubmit after rejection ─────────────────────

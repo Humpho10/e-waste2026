@@ -2,13 +2,14 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   BiBriefcase, BiSearch, BiPhone, BiMapPin, BiEdit2, BiTrash2,
-  BiX, BiAlertCircle, BiPlus, BiMail,
+  BiX, BiAlertCircle, BiPlus, BiMail, BiMessageSquare, BiSend,
 } from '../../components/bi';
 import ManagerLayout from '../../layouts/ManagerLayout';
 import {
   getProductManagers, createProductManager, updateProductManager,
   deleteProductManager, getManagerCategories,
 } from '../../api/manager';
+import { sendMessage } from '../../api/messages';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
@@ -30,7 +31,7 @@ function SkeletonCard() {
   );
 }
 
-function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
+function PMCard({ pm, canEdit, canDelete, canMessage, onEdit, onDelete, onMessage }) {
   const initials = pm.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
 
   return (
@@ -82,8 +83,16 @@ function PMCard({ pm, canEdit, canDelete, onEdit, onDelete }) {
         </span>
       </div>
 
-      {(canEdit || canDelete) && (
+      {(canMessage || canEdit || canDelete) && (
         <div className="flex gap-2 mt-4">
+          {canMessage && (
+            <button
+              onClick={() => onMessage(pm)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-teal-600 border border-teal-100 hover:bg-teal-50 py-2 rounded-lg transition dark:text-teal-400 dark:border-teal-800/50"
+            >
+              <BiMessageSquare size={13} /> Message
+            </button>
+          )}
           {canEdit && (
             <button
               onClick={() => onEdit(pm)}
@@ -326,11 +335,80 @@ function DeleteConfirmModal({ pm, onClose, onConfirmed }) {
   );
 }
 
+// ---------- Message Modal ----------
+function MessageModal({ pm, onClose }) {
+  const [text, setText] = useState('');
+  const { toast } = useToast();
+
+  const sendMutation = useMutation({
+    mutationFn: () => sendMessage({ recipient_id: pm.id, message_text: text }),
+    onSuccess: () => {
+      toast('Message sent', 'success');
+      onClose();
+    },
+    onError: (err) => toast(err.response?.data?.error || err.response?.data?.message || 'Failed to send message', 'error'),
+  });
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    sendMutation.mutate();
+  };
+
+  const sending = sendMutation.isPending;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={() => !sending && onClose()}>
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden" onClick={(e) => e.stopPropagation()}>
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between">
+          <div>
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <BiMessageSquare size={16} className="text-teal-600 dark:text-teal-400" /> Message {pm.name}
+            </h3>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl hover:bg-gray-100 dark:hover:bg-slate-800 flex items-center justify-center text-gray-400 dark:text-gray-500 transition">
+            <BiX size={16} />
+          </button>
+        </div>
+        <form onSubmit={handleSubmit} className="p-6 space-y-4">
+          <textarea
+            value={text}
+            onChange={e => setText(e.target.value)}
+            rows={4}
+            required
+            autoFocus
+            placeholder="Write a message..."
+            className="w-full border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-gray-50 dark:bg-slate-800/60 resize-none"
+          />
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex-1 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 py-2.5 rounded-xl text-sm font-medium transition"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={sending || !text.trim()}
+              className="flex-1 bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl text-sm font-semibold transition disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {sending ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <BiSend size={14} />}
+              Send
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}
+
 // ---------- Main Page ----------
 export default function ProductManagersPage() {
   const [showModal, setShowModal] = useState(false);
   const [editingPM, setEditingPM] = useState(null);
   const [deletingPM, setDeletingPM] = useState(null);
+  const [messagingPM, setMessagingPM] = useState(null);
   const [search, setSearch] = useState('');
 
   const { permissions } = useAuth();
@@ -339,6 +417,7 @@ export default function ProductManagersPage() {
   const canCreatePM = permissions?.includes('pm-create') || false;
   const canEditPM = permissions?.includes('pm-edit') || false;
   const canDeletePM = permissions?.includes('pm-delete') || false;
+  const canMessagePM = permissions?.includes('message-send') || false;
 
   const { data: pms = [], isLoading: loading } = useQuery({
     queryKey: ['product-managers'],
@@ -421,8 +500,10 @@ export default function ProductManagersPage() {
               pm={pm}
               canEdit={canEditPM}
               canDelete={canDeletePM}
+              canMessage={canMessagePM}
               onEdit={setEditingPM}
               onDelete={setDeletingPM}
+              onMessage={setMessagingPM}
             />
           ))}
         </div>
@@ -438,6 +519,10 @@ export default function ProductManagersPage() {
 
       {deletingPM && (
         <DeleteConfirmModal pm={deletingPM} onClose={() => setDeletingPM(null)} onConfirmed={invalidatePMs} />
+      )}
+
+      {messagingPM && (
+        <MessageModal pm={messagingPM} onClose={() => setMessagingPM(null)} />
       )}
     </ManagerLayout>
   );

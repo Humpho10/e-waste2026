@@ -49,8 +49,8 @@ export default function MessagesPage() {
   );
 
   const { data: messages = [] } = useQuery({
-    queryKey: ['messages', active?.product_id],
-    queryFn: () => getProductMessages(active.product_id).then(res => res.data.messages || []),
+    queryKey: ['messages', active?.product_id, active?.other_person?.id],
+    queryFn: () => getProductMessages(active.product_id, active.other_person.id).then(res => res.data.messages || []),
     enabled: !!active,
   });
 
@@ -60,11 +60,11 @@ export default function MessagesPage() {
   };
 
   const sendMutation = useMutation({
-    mutationFn: (text) => sendMessage({ product_id: active.product_id, message_text: text }),
+    mutationFn: (text) => sendMessage({ product_id: active.product_id, recipient_id: active.other_person.id, message_text: text }),
     onSuccess: () => {
       toast('Message sent', 'success');
       setNewMsg('');
-      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id] });
+      queryClient.invalidateQueries({ queryKey: ['messages', active?.product_id, active?.other_person?.id] });
     },
     onError: (err) => toast(err.response?.data?.message || 'Failed to send message', 'error'),
   });
@@ -135,7 +135,7 @@ export default function MessagesPage() {
               </div>
             ) : conversations.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-3xl mb-2">💬</p>
+                <FiMessageCircle className="w-8 h-8 text-gray-300 dark:text-slate-700 mx-auto mb-2" />
                 <p className="text-sm text-gray-400 dark:text-gray-500">No conversations yet</p>
               </div>
             ) : (
@@ -143,14 +143,14 @@ export default function MessagesPage() {
                 <button
                   key={i}
                   onClick={() => openConversation(conv)}
-                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id ? 'bg-blue-50 dark:bg-blue-950/40' : ''}`}
+                  className={`w-full flex gap-3 px-4 py-3 text-left hover:bg-gray-50 dark:hover:bg-slate-800 transition border-b border-gray-50 ${active?.product_id === conv.product_id && active?.other_person?.id === conv.other_person?.id ? 'bg-blue-50 dark:bg-blue-950/40' : ''}`}
                 >
                   <div className="w-10 h-10 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-blue-900/40">
                     {conv.other_person?.name?.charAt(0).toUpperCase()}
                   </div>
                   <div className="flex-1 overflow-hidden">
                     <p className="font-semibold text-gray-800 dark:text-gray-100 text-sm truncate">{conv.other_person?.name}</p>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.product_title}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{conv.product_title || 'Team message'}</p>
                     <p className="text-xs text-gray-400 dark:text-gray-500 truncate">{conv.last_message}</p>
                   </div>
                   {conv.unread_count > 0 && (
@@ -169,7 +169,7 @@ export default function MessagesPage() {
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
-                <p className="text-5xl mb-4">💬</p>
+                <FiMessageCircle className="w-14 h-14 text-gray-300 dark:text-slate-700 mx-auto mb-4" />
                 <p className="font-bold text-gray-700 dark:text-gray-200 mb-1">Select a conversation</p>
                 <p className="text-gray-400 dark:text-gray-500 text-sm">Choose a conversation from the left to view messages</p>
               </div>
@@ -183,7 +183,7 @@ export default function MessagesPage() {
                 </div>
                 <div>
                   <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">{active.other_person?.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title || 'Team message'}</p>
                 </div>
               </div>
 
