@@ -11,7 +11,6 @@ export const markPMNotifRead   = (id)       => api.patch(`/pm/notifications/${id
 export const markAllPMNotifsRead = ()       => api.patch('/pm/notifications/read-all');
 
 export const getPMProfile    = ()     => api.get('/pm/profile');
-export const updatePMProfile = (data) => api.post('/pm/profile', data, {
-  headers: { 'Content-Type': 'multipart/form-data' }
-});
+// Don't force Content-Type here — see api/products.js for why.
+export const updatePMProfile = (data) => api.post('/pm/profile', data);
 export const getPMMessageCount = () => api.get('/messages/unread-count');

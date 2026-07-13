@@ -38,6 +38,5 @@ export const rejectProduct = (id, data) => api.patch(`/manager/products/${id}/re
 
 // Profile
 export const getManagerProfile = () => api.get('/manager/profile');
-export const updateManagerProfile = (data) => api.post('/manager/profile', data, {
-  headers: { 'Content-Type': 'multipart/form-data' }
-});
+// Don't force Content-Type here — see api/products.js for why.
+export const updateManagerProfile = (data) => api.post('/manager/profile', data);
