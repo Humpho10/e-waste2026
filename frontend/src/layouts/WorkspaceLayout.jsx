@@ -4,6 +4,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import { storageUrl } from '../lib/urls';
 

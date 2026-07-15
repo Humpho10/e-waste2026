@@ -31,7 +31,15 @@ class ProductController extends Controller
     {
         $this->middleware(function ($request, $next) {
             /** @var \App\Models\User $user */
-            $this->user = $request->user();
+            // Explicitly query the 'sanctum' guard rather than the request's
+            // default guard. GET /products/{slugHash} is a public route (no
+            // auth:sanctum middleware), so the default guard never resolves
+            // a bearer token — asking the sanctum guard directly still parses
+            // the Authorization header if one was sent, without requiring
+            // the request to be authenticated. That's what lets a seller
+            // view their own pending/rejected listing instead of always
+            // getting a 404 "isOwner" check that could never be true.
+            $this->user = $request->user('sanctum');
             return $next($request);
         });
     }
@@ -186,7 +194,12 @@ class ProductController extends Controller
             'price'          => $priceRule,
             'specification'  => 'nullable|string',
             'images'         => 'nullable|array|max:' . $settings->max_images_per_listing,
-            'images.*'       => 'image|mimes:jpeg,png,jpg|max:' . $settings->max_image_upload_size_kb,
+            // Frontend's dropzone (CreateListingPage) accepts and advertises
+            // JPEG, PNG, and WebP — 'mimes' must list all three or WebP
+            // uploads 422 here. Before the multipart Content-Type bug was
+            // fixed, files never reached this validation at all, which is
+            // why this mismatch went unnoticed.
+            'images.*'       => 'image|mimes:jpeg,png,jpg,webp|max:' . $settings->max_image_upload_size_kb,
         ], [
             'price.max'   => 'Listing price cannot exceed ' . number_format($settings->max_listing_price ?? 0) . '.',
             'price.min'   => 'Listing price must be at least ' . number_format($settings->min_listing_price ?? 0) . '.',
@@ -427,7 +440,7 @@ class ProductController extends Controller
             'price'          => $priceRule,
             'specification'  => 'nullable|string',
             'images'         => 'nullable|array|max:' . $settings->max_images_per_listing,
-            'images.*'       => 'image|mimes:jpeg,png,jpg|max:' . $settings->max_image_upload_size_kb,
+            'images.*'       => 'image|mimes:jpeg,png,jpg,webp|max:' . $settings->max_image_upload_size_kb,
             'remove_images'  => 'nullable|array',
             'remove_images.*' => 'integer',
         ], [

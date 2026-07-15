@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage, getPublicSettings } from '../api/products';
 import { getTopRatedSellers } from '../api/ratings';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import PublicNavbar from '../components/PublicNavbar';
 import PublicFooter from '../components/PublicFooter';
@@ -65,6 +66,16 @@ const conditionStyle = (c = '') => {
   if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
   return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
 };
+*/
+
+const conditionStyle = (c = '') => {
+  const k = c.toLowerCase();
+  if (k.includes('excellent')) return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
+  if (k.includes('good'))      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400';
+  if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
+  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
+};
+
 // ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
   const { token } = useAuth();

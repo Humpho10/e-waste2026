@@ -1,13 +1,25 @@
 import axios from 'axios';
 console.log('API URL:', import.meta.env.VITE_API_URL);
 
+// Don't set a default Content-Type here. Axios already adds
+// "application/json" automatically for plain object payloads. Forcing it
+// as a blanket default instead makes axios's FormData detection think
+// every request wants JSON — including multipart FormData uploads (product
+// images, avatars) — so it JSON-stringifies the FormData and silently
+// drops any File objects inside it instead of sending real multipart data.
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   }
 });
+
+// The backend's public origin (no trailing /api), for building URLs to
+// storage/uploaded files — e.g. "https://host/backend/public/api" ->
+// "https://host/backend/public". Derived from the same env var as the API
+// client so there's one place to change per environment.
+export const STORAGE_BASE_URL = (import.meta.env.VITE_API_URL || '').replace(/\/api\/?$/, '');
+export const storageUrl = (path) => path ? `${STORAGE_BASE_URL}/storage/${path}` : null;
 
 // Automatically attach the token to every request if it exists
 api.interceptors.request.use(config => {

@@ -31,6 +31,7 @@ import { FaRecycle, FaShoppingBag } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
+import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 import { storageUrl } from '../lib/urls';

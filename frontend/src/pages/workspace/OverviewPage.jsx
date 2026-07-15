@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMStats } from '../../api/productManager';
+import { storageUrl } from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Chart from '../../components/Chart';
 import { CHART_COLORS } from '../../lib/chartTheme';
