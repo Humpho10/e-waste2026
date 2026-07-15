@@ -443,7 +443,8 @@ export default function ProductsPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[760px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Image', 'Listing', 'Seller', 'Category', 'Price', 'Condition', 'Status', 'Actions'].map(h => (
@@ -538,6 +539,7 @@ export default function ProductsPage() {
               })}
             </tbody>
           </table>
+          </div>
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-slate-800">

@@ -12,6 +12,7 @@ import PublicFooter from '../components/PublicFooter';
 import BackToTopButton from '../components/BackToTopButton';
 import Reveal from '../components/Reveal';
 import StatNumber from '../components/StatNumber';
+import { storageUrl } from '../lib/urls';
 import {
   Recycle, Search, X, ChevronRight, ChevronDown, ArrowRight, Plus,
   MapPin, Star, Shield, Tag, Chat, Users, CheckCircle, List, Camera,
@@ -28,7 +29,7 @@ const HERO_IMAGES = [
   '/hero-5.webp',
   '/hero-6.webp',
 ];
-const HERO_ROTATE_MS = 3000;
+const HERO_ROTATE_MS = 6000;
 
 // ── Fallback data — keeps the page looking great even if the API is down ──
 const SAMPLE_CATEGORIES = [
@@ -49,7 +50,6 @@ const SAMPLE_CATEGORIES = [
   { category_id: 'c5', name: 'Entertainment & Audio',  subcategories: [] },
 ];
 
-/*
 const SAMPLE_PRODUCTS = [
   { product_id: 'p1', title: '8GB DDR4 Laptop RAM', price: 85000,  condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Kikuubo'    } },
   { product_id: 'p2', title: '15.6" LCD Screen',    price: 120000, condition: 'Good',           category: { name: 'Computer'  }, seller: { location: 'Nakawa'     } },

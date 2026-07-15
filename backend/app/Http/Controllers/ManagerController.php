@@ -13,6 +13,7 @@ use App\Models\SubCategory; // 👈 Added for clarity
 use App\Helpers\AuditLogger;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\Mailer;
 use Illuminate\Support\Facades\Auth;
 use App\Mail\ProductApprovedMail;
 use App\Mail\ProductRejectedMail;
@@ -97,9 +98,7 @@ class ManagerController extends Controller
 
         AuditLogger::log('users', $user->id, 'updated', $oldValue, $user->toArray());
 
-        if ($user->email) {
-            Mail::to($user->email)->send(new UserDeactivatedMail($user));
-        }
+        Mailer::send($user->email, new UserDeactivatedMail($user));
 
         return response()->json([
             'message' => "{$user->name} has been deactivated.",
@@ -122,9 +121,7 @@ class ManagerController extends Controller
 
         AuditLogger::log('users', $user->id, 'updated', $oldValue, $user->toArray());
 
-        if ($user->email) {
-            Mail::to($user->email)->send(new UserActivatedMail($user));
-        }
+        Mailer::send($user->email, new UserActivatedMail($user));
 
         return response()->json([
             'message' => "{$user->name} has been reactivated.",
@@ -169,13 +166,10 @@ class ManagerController extends Controller
 
         AuditLogger::log('users', $pm->id, 'created', null, $pm->toArray());
 
-        // Send email notification
+        // Send email notification (non-fatal — creating the PM must succeed
+        // even if the welcome email can't be delivered).
         $plainPassword = $validated['password'];
-        try {
-            Mail::to($pm->email)->send(new ProductManagerCreatedMail($pm->name, $pm->email, $plainPassword));
-        } catch (\Exception $e) {
-            // Silently log — don't fail the request
-        }
+        Mailer::send($pm->email, new ProductManagerCreatedMail($pm->name, $pm->email, $plainPassword));
 
         // Send in-app notification
         Notification::create([
@@ -591,9 +585,7 @@ class ManagerController extends Controller
             'is_read'      => false,
         ]);
 
-        if ($product->seller?->email) {
-            Mail::to($product->seller->email)->send(new ProductApprovedMail($product));
-        }
+        Mailer::send($product->seller?->email, new ProductApprovedMail($product));
 
         return response()->json([
             'message' => 'Product approved successfully.',
@@ -647,9 +639,7 @@ class ManagerController extends Controller
             'is_read'      => false,
         ]);
 
-        if ($product->seller?->email) {
-            Mail::to($product->seller->email)->send(new ProductRejectedMail($product));
-        }
+        Mailer::send($product->seller?->email, new ProductRejectedMail($product));
 
         return response()->json([
             'message' => 'Product rejected and seller has been notified.',

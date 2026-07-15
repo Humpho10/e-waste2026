@@ -25,17 +25,17 @@ export const getUserProfile    = ()     => api.get('/profile');
 export const updateUserProfile = (data) => api.post('/profile', data);
 
 // ── Homepage stats & photo search ──────────────────────────
-// TODO: build matching Laravel routes/controllers for these.
-// Until then, HomePage's .catch() fallback (SAMPLE_CATEGORIES/
-// SAMPLE_PRODUCTS/statsError) will handle these gracefully.
-
-
-// ── Homepage stats & photo search ──────────────────────────
 export const getStats = () => api.get('/stats');
 
 // Public settings — powers the storefront maintenance banner/branding.
 export const getPublicSettings = () => api.get('/settings/public');
 
-// TODO: build matching Laravel route/controller for image search
-export const searchByImage = () =>
-  Promise.reject(new Error('Image search not implemented yet'));
+// Sends the photo to POST /api/search/image (Hugging Face image
+// classification on the backend), which returns matching labels + listings.
+export const searchByImage = (file) => {
+  const formData = new FormData();
+  formData.append('image', file);
+  return api.post('/search/image', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};

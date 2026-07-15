@@ -6,6 +6,7 @@ import { myListings, resubmitProduct } from '../../api/products';
 import { storageUrl } from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
+import { storageUrl } from '../../lib/urls';
 
 export default function ResubmitListingPage() {
   const { hashId } = useParams();

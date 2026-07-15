@@ -166,7 +166,8 @@ function UsersPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[700px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['#', 'Name', 'Email', 'Role', 'Categories', 'Joined', 'Actions'].map(h => (
@@ -242,6 +243,7 @@ function UsersPage() {
               })}
             </tbody>
           </table>
+          </div>
         </div>
       )}
 

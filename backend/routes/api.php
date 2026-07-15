@@ -13,6 +13,7 @@ use App\Http\Controllers\StaffMessageController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\SellerRatingController;
+use App\Http\Controllers\ImageSearchController;
 
 // ── Auth ──────────────────────────────────────────────────────
 Route::prefix('auth')->group(function () {
@@ -44,6 +45,10 @@ Route::get('/settings/public', [StatsController::class, 'publicSettings']);
 
 // Contact page — rate-limited (5/min per IP) since it's unauthenticated.
 Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:5,1');
+
+// Photo search (homepage camera button) — rate-limited since it calls a
+// third-party API (Hugging Face) per request.
+Route::post('/search/image', [ImageSearchController::class, 'search'])->middleware('throttle:5,1');
 
 // ── SUPER ADMIN ROUTES ───────────────────────────────────────
 // These require permissions that only Super Admin has (or anyone with these specific permissions)

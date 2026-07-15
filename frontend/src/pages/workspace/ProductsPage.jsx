@@ -7,6 +7,7 @@ import { storageUrl } from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
+import { storageUrl } from '../../lib/urls';
 
 // Debounce a fast-changing value (e.g. search input) so we don't fire a
 // server request on every keystroke.
@@ -30,11 +31,8 @@ const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
 // ── Flexible image URL helper ──────────────────────────────
 const getImageUrl = (image) => {
   if (!image) return null;
-  if (typeof image === 'string') return image;
-  const path = image.image_path || image.path || image.url || '';
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return storageUrl(path);
+  if (typeof image === 'string') return storageUrl(image);
+  return storageUrl(image.image_path || image.path || image.url || '');
 };
 
 function StatusBadge({ status }) {
@@ -55,7 +53,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden dark:bg-slate-900">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 dark:border-slate-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 dark:border-slate-800">
           <div className="min-w-0">
             <h3 className="font-bold text-gray-800 text-lg truncate dark:text-gray-100">{product.title}</h3>
             <p className="text-gray-400 text-xs mt-0.5 dark:text-gray-500">
@@ -67,7 +65,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Images */}
             <div>
@@ -151,7 +149,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2 sm:gap-3 shrink-0">
           {product.status === 'pending' && (
             <>
               {canApprove && (
@@ -297,7 +295,12 @@ export default function WorkspaceProductsPage() {
   const search                          = useDebouncedValue(searchInput);
   const [page, setPage]                 = useState(1);
   const [perPage, setPerPage]           = useState(10);
-  const [view, setView]                 = useState('table');
+  // Phones get the card grid by default — a 6-column table behind a
+  // horizontal scroll is a poor primary view on a small screen. The
+  // toggle still lets the user switch either way.
+  const [view, setView]                 = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'table'
+  );
   const [viewProduct, setViewProduct]   = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [approving, setApproving]       = useState(null);
@@ -507,7 +510,8 @@ export default function WorkspaceProductsPage() {
       ) : (
         /* ── Table view ──────────────────────────────────── */
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Listing', 'Seller', 'Category', 'Price', 'Status', 'Actions'].map(h => (
@@ -547,6 +551,7 @@ export default function WorkspaceProductsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
         )}
 

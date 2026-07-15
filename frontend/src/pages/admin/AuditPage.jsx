@@ -740,7 +740,8 @@ export default function AuditPage() {
       )}
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-sm border border-gray-100 dark:border-slate-800 overflow-hidden">
-        <table className="w-full text-sm">
+        <div className="overflow-x-auto">
+        <table className="w-full min-w-[760px] text-sm">
           <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
             <tr>
               {['#', 'User', 'Action', 'Table', 'Record', 'Date', ''].map(h => (
@@ -808,6 +809,7 @@ export default function AuditPage() {
             )}
           </tbody>
         </table>
+        </div>
 
         {!loading && audit.length > 0 && (
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-slate-800">

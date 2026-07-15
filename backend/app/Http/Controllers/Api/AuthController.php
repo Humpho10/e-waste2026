@@ -14,6 +14,7 @@ use App\Mail\PasswordResetOtpMail;
 use App\Models\EmailVerification;
 use App\Mail\VerifyEmailMail;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\Mailer;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Models\Settings;
@@ -295,7 +296,7 @@ class AuthController extends Controller
                 'expires_at' => now()->addSeconds($expiresInSeconds),
             ]);
 
-            Mail::to($request->email)->send(new PasswordResetOtpMail($otp));
+            Mailer::send($request->email, new PasswordResetOtpMail($otp));
         }
 
         return response()->json([
@@ -397,6 +398,8 @@ class AuthController extends Controller
             'expires_at' => now()->addHours(24),
         ]);
 
-        Mail::to($user->email)->send(new VerifyEmailMail($user->name, $token));
+        // Non-fatal: a mail-server failure must not break registration. The
+        // user row already exists; they can request a fresh link later.
+        Mailer::send($user->email, new VerifyEmailMail($user->name, $token));
     }
 }

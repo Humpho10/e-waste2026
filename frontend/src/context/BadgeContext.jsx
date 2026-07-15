@@ -2,6 +2,7 @@ import { createContext, useContext } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useAuth } from './AuthContext';
+import api from '../api/axios';
 
 const BadgeContext = createContext();
 

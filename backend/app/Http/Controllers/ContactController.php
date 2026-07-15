@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Mail\ContactMessageMail;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\Mailer;
 
 class ContactController extends Controller
 {
@@ -22,7 +23,7 @@ class ContactController extends Controller
 
         $recipient = env('CONTACT_RECIPIENT_EMAIL', config('mail.from.address'));
 
-        Mail::to($recipient)->send(new ContactMessageMail(
+        Mailer::send($recipient, new ContactMessageMail(
             $data['name'],
             $data['email'],
             $data['topic'] ?: 'General inquiry',

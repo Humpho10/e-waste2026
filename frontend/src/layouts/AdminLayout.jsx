@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
@@ -7,6 +7,7 @@ import { logoutUser } from '../api/auth';
 import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import Bi from '../components/BsIcon';
+import { storageUrl } from '../lib/urls';
 
 // 🔥 Define nav items with required permissions — icon is a Bootstrap Icons
 // glyph name (see https://icons.getbootstrap.com), rendered via <Bi name=.../>
@@ -37,9 +38,13 @@ export default function AdminLayout({ children }) {
   const navigate         = useNavigate();
   const queryClient      = useQueryClient();
   const [collapsed, setCollapsed]   = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
   const { notifCount, msgCount } = useBadge();
+
+  // Close the mobile drawer whenever the route changes.
+  useEffect(() => { setMobileOpen(false); }, [location.pathname]);
 
   // The "logging out" message pops immediately, then the session actually
   // ends exactly 2 seconds later — long enough to register on screen,
@@ -73,6 +78,10 @@ export default function AdminLayout({ children }) {
 
   const avatarUrl = storageUrl(user?.avatar);
 
+  // Icon-only rail applies to the desktop collapse toggle only — the
+  // mobile drawer always shows the expanded sidebar.
+  const isRail = collapsed && !mobileOpen;
+
   const getBadgeCount = (badge) => {
     if (badge === 'notif') return notifCount;
     if (badge === 'msg')   return msgCount;
@@ -82,32 +91,47 @@ export default function AdminLayout({ children }) {
   return (
     <div className="flex min-h-screen bg-slate-50 dark:bg-slate-950">
 
-      {/* ── Sidebar ─────────────────────────────────────── */}
+      {/* Mobile backdrop */}
+      {mobileOpen && (
+        <div
+          onClick={() => setMobileOpen(false)}
+          className="fixed inset-0 bg-black/50 z-30 md:hidden"
+        />
+      )}
+
+      {/* ── Sidebar — off-canvas drawer on mobile, fixed rail on md+ ── */}
       <aside className={`
-        ${collapsed ? 'w-[70px]' : 'w-[240px]'}
-        bg-slate-900 flex flex-col fixed h-full z-20
+        ${collapsed ? 'md:w-[70px]' : 'md:w-[240px]'} w-[240px]
+        bg-slate-900 flex flex-col fixed h-full z-40
         transition-all duration-200 ease-in-out
         border-r border-slate-800
+        ${mobileOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0
       `}>
 
         {/* Logo */}
         <div className={`
           flex items-center h-16 border-b border-slate-800 shrink-0
-          ${collapsed ? 'justify-center px-3' : 'px-5 gap-3'}
+          ${isRail ? 'justify-center px-3' : 'px-5 gap-3'}
         `}>
           <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shrink-0 shadow-lg shadow-blue-900/40">
             <Bi name="recycle" className="text-white" size={16} />
           </div>
-          {!collapsed && (
-            <div className="overflow-hidden">
+          {!isRail && (
+            <div className="overflow-hidden flex-1">
               <p className="text-white font-bold text-sm leading-tight truncate">E-Waste Mart</p>
               <p className="text-slate-500 text-xs dark:text-gray-400">Super Admin</p>
             </div>
           )}
+          <button
+            onClick={() => setMobileOpen(false)}
+            className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:bg-slate-800 hover:text-white transition shrink-0"
+          >
+            <Bi name="x-lg" size={14} />
+          </button>
         </div>
 
         {/* User card with avatar */}
-        {!collapsed ? (
+        {!isRail ? (
           <div className="mx-3 mt-4 mb-2 bg-slate-800/80 border border-slate-700/50 rounded-2xl p-3 flex items-center gap-3 shadow-inner shadow-black/20">
             <div className="w-9 h-9 rounded-xl overflow-hidden shrink-0">
               {avatarUrl ? (
@@ -145,7 +169,7 @@ export default function AdminLayout({ children }) {
             if (items.length === 0) return null; // Hide empty groups
             return (
               <div key={group.key}>
-                {!collapsed && (
+                {!isRail && (
                   <p className="text-slate-500 text-xs font-semibold uppercase tracking-widest px-3 mb-1 dark:text-gray-400">
                     {group.label}
                   </p>
@@ -158,10 +182,10 @@ export default function AdminLayout({ children }) {
                       <Link
                         key={path}
                         to={path}
-                        title={collapsed ? label : ''}
+                        title={isRail ? label : ''}
                         className={`
                           flex items-center rounded-2xl text-sm transition-all duration-150 relative group
-                          ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
+                          ${isRail ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
                           ${active
                             ? 'bg-gradient-to-r from-blue-600 to-blue-500 text-white shadow-lg shadow-blue-900/30'
                             : 'text-slate-400 hover:bg-slate-800 hover:text-white hover:translate-x-0.5 dark:text-gray-500'
@@ -173,19 +197,19 @@ export default function AdminLayout({ children }) {
                           ${active ? 'w-7 h-7 rounded-lg bg-white/15' : 'group-hover:scale-110'}
                         `}>
                           <Bi name={icon} size={active ? 15 : 17} />
-                          {collapsed && badgeCount > 0 && (
+                          {isRail && badgeCount > 0 && (
                             <span className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold">
                               {badgeCount > 9 ? '9+' : badgeCount}
                             </span>
                           )}
                         </span>
-                        {!collapsed && <span className="font-medium flex-1">{label}</span>}
-                        {!collapsed && badgeCount > 0 && (
+                        {!isRail && <span className="font-medium flex-1">{label}</span>}
+                        {!isRail && badgeCount > 0 && (
                           <span className="w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center font-bold shrink-0">
                             {badgeCount > 9 ? '9+' : badgeCount}
                           </span>
                         )}
-                        {!collapsed && active && badgeCount === 0 && (
+                        {!isRail && active && badgeCount === 0 && (
                           <span className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-300 shrink-0" />
                         )}
                       </Link>
@@ -202,43 +226,52 @@ export default function AdminLayout({ children }) {
           <button
             onClick={handleLogout}
             disabled={loggingOut}
-            title={collapsed ? 'Logout' : ''}
+            title={isRail ? 'Logout' : ''}
             className={`
               flex items-center rounded-xl text-sm text-slate-400
               hover:bg-red-900/40 hover:text-red-400 transition-all duration-150 w-full
-              ${collapsed ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
+              ${isRail ? 'justify-center w-10 h-10 mx-auto' : 'gap-3 px-3 py-2.5'}
             `}
           >
             <Bi name="box-arrow-right" size={17} className="shrink-0" />
-            {!collapsed && <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
+            {!isRail && <span className="font-medium">{loggingOut ? 'Logging out...' : 'Logout'}</span>}
           </button>
         </div>
 
-        {/* Collapse toggle */}
+        {/* Collapse toggle — desktop only, the mobile drawer uses the X button instead */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="absolute -right-3 top-20 w-6 h-6 bg-slate-700 hover:bg-blue-600 border border-slate-600 rounded-full flex items-center justify-center text-white transition-colors duration-150 shadow-lg"
+          className="hidden md:flex absolute -right-3 top-20 w-6 h-6 bg-slate-700 hover:bg-blue-600 border border-slate-600 rounded-full items-center justify-center text-white transition-colors duration-150 shadow-lg"
         >
           <Bi name={collapsed ? 'chevron-right' : 'chevron-left'} size={13} />
         </button>
       </aside>
 
-      {/* ── Main area ───────────────────────────────────── */}
+      {/* ── Main area — min-w-0 lets this flex item shrink to the viewport
+          so wide content scrolls inside its own container, not the page ── */}
       <div className={`
-        flex-1 flex flex-col min-h-screen
-        ${collapsed ? 'ml-[70px]' : 'ml-[240px]'}
+        flex-1 flex flex-col min-h-screen min-w-0
+        ${collapsed ? 'md:ml-[70px]' : 'md:ml-[240px]'}
         transition-all duration-200 ease-in-out
       `}>
 
         {/* Top bar */}
-        <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between px-6 sticky top-0 z-10 shadow-sm">
-          <div className="flex items-center gap-2 text-sm">
-            <span className="text-gray-400 dark:text-gray-500">Admin</span>
-            <span className="text-gray-300 dark:text-gray-600">/</span>
-            <span className="font-semibold text-gray-700 dark:text-gray-200">{currentLabel}</span>
+        <header className="h-16 bg-white dark:bg-slate-900 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between gap-2 px-3 sm:px-6 sticky top-0 z-10 shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+            <button
+              onClick={() => setMobileOpen(true)}
+              className="md:hidden w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 transition shrink-0"
+            >
+              <Bi name="list" size={20} />
+            </button>
+            <div className="flex items-center gap-2 text-sm min-w-0">
+              <span className="hidden sm:inline text-gray-400 dark:text-gray-500">Admin</span>
+              <span className="hidden sm:inline text-gray-300 dark:text-gray-600">/</span>
+              <span className="font-semibold text-gray-700 dark:text-gray-200 truncate">{currentLabel}</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <ThemeToggle />
 
             <Link
@@ -265,11 +298,11 @@ export default function AdminLayout({ children }) {
               )}
             </Link>
 
-            <div className="w-px h-6 bg-gray-200 dark:bg-slate-700" />
+            <div className="hidden sm:block w-px h-6 bg-gray-200 dark:bg-slate-700" />
 
             <Link
               to="/admin/profile"
-              className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
+              className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl px-1.5 sm:px-3 py-1.5 hover:bg-gray-100 dark:hover:bg-slate-700 transition"
             >
               <div className="w-6 h-6 rounded-lg overflow-hidden shrink-0">
                 {avatarUrl ? (
@@ -291,12 +324,12 @@ export default function AdminLayout({ children }) {
         </header>
 
         {/* Page content */}
-        <main className="flex-1 p-6">
+        <main className="flex-1 p-4 sm:p-6">
           {children}
         </main>
 
         {/* Footer */}
-        <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-6 py-3 flex items-center justify-between">
+        <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
           <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
           <p className="text-xs text-gray-400 dark:text-gray-500">Super Admin Console</p>
         </footer>
