@@ -6,8 +6,8 @@ import { getPMStats } from '../../api/productManager';
 import { useAuth } from '../../context/AuthContext';
 import Chart from '../../components/Chart';
 import { CHART_COLORS } from '../../lib/chartTheme';
+import { storageUrl } from '../../lib/urls';
 
-const STORAGE = 'http://localhost:8000/storage';
 const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
 
 const toISO = (d) => d.toISOString().slice(0, 10);
@@ -245,7 +245,7 @@ export default function WorkspaceOverviewPage() {
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div>
             <h2 className="text-2xl font-bold text-white">
-              {greeting}, {user?.name?.split(' ')[0]} <span className="inline-block">👋</span>
+              {greeting}, {user?.name?.split(' ')[0]} <i className="bi bi-emoji-smile inline-block" />
             </h2>
             <p className="text-teal-100 text-sm mt-1">
               You have <span className="font-semibold text-white">{stats.pending_products ?? 0}</span> listing(s) waiting for your review.
@@ -310,7 +310,7 @@ export default function WorkspaceOverviewPage() {
               </div>
               {/* Period selector */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
+                <div className="flex flex-wrap bg-gray-50 p-1 rounded-xl border border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
                   {PERIOD_PRESETS.map((p) => (
                     <button key={p.key} onClick={() => setPreset(p.key)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === p.key ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'}`}>
@@ -426,7 +426,7 @@ export default function WorkspaceOverviewPage() {
                     >
                       <div className="w-11 h-11 rounded-lg bg-gray-100 overflow-hidden shrink-0 flex items-center justify-center text-gray-300 dark:bg-slate-800">
                         {p.image
-                          ? <img src={`${STORAGE}/${p.image}`} alt="" className="w-full h-full object-cover" />
+                          ? <img src={storageUrl(p.image)} alt="" className="w-full h-full object-cover" />
                           : <i className="bi bi-image" />}
                       </div>
                       <div className="flex-1 min-w-0">

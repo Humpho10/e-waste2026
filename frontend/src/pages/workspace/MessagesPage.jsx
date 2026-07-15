@@ -8,7 +8,7 @@ import { useToast } from '../../components/Toast';
 import StaffAdminChat from '../../components/StaffAdminChat';
 
 export default function WorkspaceMessagesPage() {
-  const { user, permissions } = useAuth(); // 👈 Get permissions
+  const { user, permissions } = useAuth();
   const [active, setActive]               = useState(null);
   const [newMsg, setNewMsg]               = useState('');
 
@@ -16,7 +16,6 @@ export default function WorkspaceMessagesPage() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  // 👈 Check if user has permission to send messages
   const canSend = permissions?.includes('message-send') || false;
 
   const { data: conversations = [], isLoading: loading } = useQuery({
@@ -51,7 +50,7 @@ export default function WorkspaceMessagesPage() {
 
   const handleSend = (e) => {
     e.preventDefault();
-    if (!newMsg.trim() || !active || !canSend) return; // 👈 Check permission here too
+    if (!newMsg.trim() || !active || !canSend) return;
     sendMutation.mutate(newMsg);
   };
 
@@ -71,8 +70,8 @@ export default function WorkspaceMessagesPage() {
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
-        {/* Conversations */}
-        <div className="w-72 border-r border-gray-100 dark:border-slate-800 flex flex-col shrink-0">
+        {/* Conversations — full width on mobile until a thread is opened */}
+        <div className={`${active ? 'hidden md:flex' : 'flex'} w-full md:w-72 border-r border-gray-100 dark:border-slate-800 flex-col shrink-0`}>
           <div className="px-4 py-3 border-b border-gray-50">
             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Conversations</p>
           </div>
@@ -91,7 +90,7 @@ export default function WorkspaceMessagesPage() {
               </div>
             ) : conversations.length === 0 ? (
               <div className="p-6 text-center">
-                <p className="text-3xl mb-2">💬</p>
+                <p className="text-3xl mb-2 text-gray-300 dark:text-gray-600"><i className="bi bi-chat-dots" /></p>
                 <p className="text-sm text-gray-400 dark:text-gray-500">No conversations yet</p>
               </div>
             ) : (
@@ -120,25 +119,31 @@ export default function WorkspaceMessagesPage() {
           </div>
         </div>
 
-        {/* Thread */}
-        <div className="flex-1 flex flex-col">
+        {/* Thread — full width on mobile, replaces the conversation list */}
+        <div className={`${active ? 'flex' : 'hidden md:flex'} flex-1 flex-col`}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
-                <p className="text-5xl mb-4">💬</p>
+                <p className="text-5xl mb-4 text-gray-300 dark:text-gray-600"><i className="bi bi-chat-dots" /></p>
                 <p className="font-bold text-gray-700 dark:text-gray-200 mb-1">Select a conversation</p>
                 <p className="text-gray-400 dark:text-gray-500 text-sm">Choose a conversation from the left</p>
               </div>
             </div>
           ) : (
             <>
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
+                <button
+                  onClick={() => setActive(null)}
+                  className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition shrink-0 -ml-1"
+                >
+                  <i className="bi bi-arrow-left" />
+                </button>
+                <div className="w-9 h-9 rounded-xl bg-teal-100 dark:bg-teal-900/40 text-teal-700 dark:text-teal-400 flex items-center justify-center font-bold text-sm shrink-0">
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">{active.other_person?.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title || 'Team message'}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm truncate">{active.other_person?.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">Re: {active.product_title || 'Team message'}</p>
                 </div>
               </div>
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
@@ -156,7 +161,7 @@ export default function WorkspaceMessagesPage() {
                   );
                 })}
               </div>
-              {/* 👇 Only show the send form if user has permission to send messages */}
+              {/* Only show the send form if user has permission to send messages */}
               {canSend ? (
                 <form onSubmit={handleSend} className="px-4 py-3 border-t border-gray-100 dark:border-slate-800 flex gap-3">
                   <input

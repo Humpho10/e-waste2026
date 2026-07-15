@@ -5,6 +5,7 @@ import DashboardLayout from '../../layouts/DashboardLayout';
 import { myListings, resubmitProduct } from '../../api/products';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
+import { storageUrl } from '../../lib/urls';
 
 export default function ResubmitListingPage() {
   const { hashId } = useParams();
@@ -269,7 +270,7 @@ export default function ResubmitListingPage() {
                     return (
                       <div key={img.productImage_id} className="relative group aspect-square rounded-xl overflow-hidden">
                         <img
-                          src={`http://localhost:8000/storage/${img.image_path}`}
+                          src={storageUrl(img.image_path)}
                           alt=""
                           className={`w-full h-full object-cover transition ${isRemoved ? 'opacity-30 grayscale' : ''}`}
                         />

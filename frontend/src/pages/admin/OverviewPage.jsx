@@ -296,7 +296,7 @@ export default function OverviewPage() {
           </p>
         </div>
 
-        <div className="relative z-[1] flex gap-3 shrink-0">
+        <div className="relative z-[1] flex flex-wrap gap-3 md:shrink-0">
           <div className="bg-white/10 backdrop-blur border border-white/10 rounded-xl px-5 py-3 text-center min-w-[110px]">
             <Bi name="box-seam-fill" size={17} className="text-white/80 mx-auto mb-1" />
             <p className="text-xl font-bold text-white tabular-nums">{listingStats?.total ?? 0}</p>
@@ -448,7 +448,8 @@ export default function OverviewPage() {
               View all <Bi name="arrow-right" size={12} />
             </Link>
           </div>
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[560px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60">
               <tr>
                 {['Name', 'Email', 'Role', 'Joined'].map(h => (
@@ -492,6 +493,7 @@ export default function OverviewPage() {
               )}
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

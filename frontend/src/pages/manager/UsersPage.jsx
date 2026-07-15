@@ -182,7 +182,8 @@ export default function UsersPage() {
 
       {loading ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Name', 'Email', 'Phone', 'Location', 'Status', 'Actions'].map(h => (
@@ -194,6 +195,7 @@ export default function UsersPage() {
               {Array(5).fill(0).map((_, i) => <SkeletonRow key={i} />)}
             </tbody>
           </table>
+          </div>
         </div>
       ) : users.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
@@ -207,7 +209,8 @@ export default function UsersPage() {
         </div>
       ) : (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[640px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Name', 'Email', 'Phone', 'Location', 'Status', 'Actions'].map(h => (
@@ -269,6 +272,7 @@ export default function UsersPage() {
               ))}
             </tbody>
           </table>
+          </div>
 
           {/* Pagination */}
           <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 border-t border-gray-100 dark:border-slate-800">

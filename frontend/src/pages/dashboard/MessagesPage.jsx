@@ -7,6 +7,7 @@ import {
   FiPackage,
   FiClock,
   FiChevronLeft,
+  FiArrowLeft,
   FiSearch,
   FiCheck,
   FiCheckCircle,
@@ -115,8 +116,8 @@ export default function MessagesPage() {
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Your conversations with buyers and sellers</p>
       </div>
       <div className="flex h-[70vh] bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 overflow-hidden shadow-sm">
-        {/* Conversations list */}
-        <div className="w-72 border-r border-gray-100 dark:border-slate-800 flex flex-col shrink-0">
+        {/* Conversations list — full width on mobile until a thread is opened */}
+        <div className={`${active ? 'hidden md:flex' : 'flex'} w-full md:w-72 border-r border-gray-100 dark:border-slate-800 flex-col shrink-0`}>
           <div className="px-4 py-3 border-b border-gray-50">
             <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wide">Conversations</p>
           </div>
@@ -164,8 +165,8 @@ export default function MessagesPage() {
           </div>
         </div>
 
-        {/* Message thread */}
-        <div className="flex-1 flex flex-col">
+        {/* Message thread — replaces the list on mobile */}
+        <div className={`${active ? 'flex' : 'hidden md:flex'} flex-1 flex-col min-w-0`}>
           {!active ? (
             <div className="flex-1 flex items-center justify-center text-center p-8">
               <div>
@@ -177,13 +178,19 @@ export default function MessagesPage() {
           ) : (
             <>
               {/* Thread header */}
-              <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
-                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm dark:bg-blue-900/40">
+              <div className="px-4 sm:px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center gap-3">
+                <button
+                  onClick={() => setActive(null)}
+                  className="md:hidden w-8 h-8 rounded-lg flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-800 transition shrink-0 -ml-1"
+                >
+                  <FiArrowLeft className="w-4 h-4" />
+                </button>
+                <div className="w-9 h-9 rounded-xl bg-blue-100 text-blue-700 dark:text-blue-400 flex items-center justify-center font-bold text-sm shrink-0 dark:bg-blue-900/40">
                   {active.other_person?.name?.charAt(0).toUpperCase()}
                 </div>
-                <div>
-                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm">{active.other_person?.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">Re: {active.product_title || 'Team message'}</p>
+                <div className="min-w-0">
+                  <p className="font-bold text-gray-800 dark:text-gray-100 text-sm truncate">{active.other_person?.name}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 truncate">Re: {active.product_title || 'Team message'}</p>
                 </div>
               </div>
 

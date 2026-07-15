@@ -9,7 +9,13 @@ export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
   const [token, setToken]     = useState(localStorage.getItem('token'));
   const [role, setRole]       = useState(localStorage.getItem('role'));
-  const [permissions, setPermissions] = useState([]);
+  // Hydrate permissions from the last session so route guards don't
+  // momentarily see an empty list on hard refresh and bounce the user
+  // to "/" before /auth/me has answered. getMe() still refreshes them.
+  const [permissions, setPermissions] = useState(() => {
+    try { return JSON.parse(localStorage.getItem('permissions')) || []; }
+    catch { return []; }
+  });
 
   // Session check on boot / whenever token changes. Kept as a self-contained
   // fetch + inline state sync (mirroring the original's .then()/.catch()
@@ -17,7 +23,7 @@ export function AuthProvider({ children }) {
   // app can invalidate (e.g. queryClient.invalidateQueries(['me'])) to force
   // a fresh permissions/role check without threading a refetch callback
   // through context.
-  const { isLoading: loading } = useQuery({
+  const { isPending } = useQuery({
     queryKey: ['me', token],
     enabled: !!token,
     retry: false,
@@ -44,6 +50,12 @@ export function AuthProvider({ children }) {
           throw err;
         }),
   });
+
+  // Route guards must wait only when we truly know nothing yet: a token
+  // exists but there are no cached permissions and /auth/me hasn't answered.
+  // (isPending alone is unreliable as a gate — it's true forever for
+  // disabled queries and can be observed before the fetch even starts.)
+  const loading = !!token && isPending && permissions.length === 0;
 
   const login = (userData, userToken, userRole, userPermissions) => {
     setUser(userData);

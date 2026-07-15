@@ -151,7 +151,7 @@ export default function MyListingsPage() {
             const cfg = statusConfig[listing.status] || statusConfig.pending;
             const firstImage = listing.images?.[0];
             return (
-              <div key={listing.product_id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-5 flex gap-4 items-start">
+              <div key={listing.product_id} className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm hover:shadow-md transition-all p-4 sm:p-5 flex flex-wrap gap-4 items-start">
                 {/* Image */}
                 <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-2xl shrink-0 overflow-hidden">
                   {firstImage ? (
@@ -168,7 +168,7 @@ export default function MyListingsPage() {
                 </div>
 
                 {/* Info */}
-                <div className="flex-1 overflow-hidden">
+                <div className="flex-1 overflow-hidden min-w-[12rem]">
                   <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{listing.title}</h3>
                   <div className="flex flex-wrap gap-3 mt-1.5 text-xs text-gray-400 dark:text-gray-500">
                     <span>UGX {Number(listing.price).toLocaleString()}</span>
@@ -188,13 +188,16 @@ export default function MyListingsPage() {
                   )}
                 </div>
 
-                <div className="flex flex-col items-end gap-2 shrink-0">
-                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full ${cfg.color}`}>
+                {/* On phones this cluster wraps to its own full-width row
+                    (badge left, actions right) instead of squeezing the
+                    title column or overflowing the card. */}
+                <div className="flex w-full sm:w-auto flex-row sm:flex-col items-center sm:items-end justify-between gap-2 sm:shrink-0">
+                  <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full shrink-0 ${cfg.color}`}>
                     <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
                     {cfg.label}
                   </span>
 
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap items-center justify-end gap-2">
                     <Link
                       to={`/dashboard/product/${listing.slug}-${listing.hash_id}`}
                       className="text-xs text-gray-500 dark:text-gray-400 hover:underline"
