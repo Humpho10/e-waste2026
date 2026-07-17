@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   BiGrid, BiBriefcase, BiFolder, BiBox, BiUsers, BiUser,
-  BiMessageSquare, BiBell, BiLogOut, BiChevronLeft, BiChevronRight,
+  BiMessageSquare, BiMail, BiBell, BiLogOut, BiChevronLeft, BiChevronRight,
   BiList, BiX,
 } from '../components/bi';
 import { useAuth } from '../context/AuthContext';
@@ -13,7 +13,7 @@ import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 import { Recycle } from '../components/icons';
-import { storageUrl } from '../lib/urls';
+//import { storageUrl } from '../lib/urls';
 
 const navItems = [
   { path: '/manager',                   icon: BiGrid,          label: 'Overview',          group: 'main',  badge: null   },
@@ -23,6 +23,7 @@ const navItems = [
   { path: '/manager/users',             icon: BiUsers,         label: 'Users',              group: 'main',  badge: null   },
   { path: '/manager/profile',           icon: BiUser,          label: 'Profile',            group: 'main',  badge: null   },
   { path: '/manager/messages',          icon: BiMessageSquare, label: 'Messages',           group: 'comms', badge: 'msg'  }, // 👈 Added
+  { path: '/manager/contact-messages',  icon: BiMail,          label: 'Contact Messages',   group: 'comms', badge: null   },
   { path: '/manager/notifications',     icon: BiBell,          label: 'Notifications',      group: 'comms', badge: 'notif' }, // 👈 Added
 ];
 

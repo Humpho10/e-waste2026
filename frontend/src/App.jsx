@@ -45,6 +45,7 @@ import ProductsPage from './pages/manager/ProductsPage';
 import ManagerProfilePage from './pages/manager/ProfilePage';
 import ManagerNotificationsPage from './pages/manager/NotificationsPage';
 import ManagerMessagesPage from './pages/manager/MessagesPage';
+import ContactMessagesPage from './pages/manager/ContactMessagesPage';
 import ManagerUsersPage from './pages/manager/UsersPage';
 
 // ─── Product Manager (Workspace) Pages ──────────────────────
@@ -195,6 +196,11 @@ function App() {
         <Route path="/manager/messages" element={
           <PermissionRoute requiredPermissions={['message-view']}>
             <ManagerMessagesPage />
+          </PermissionRoute>
+        } />
+        <Route path="/manager/contact-messages" element={
+          <PermissionRoute requiredPermissions={['contact-view']}>
+            <ContactMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/manager/users" element={

@@ -6,7 +6,7 @@ import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
 import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
-import { storageUrl } from '../lib/urls';
+//import { storageUrl } from '../lib/urls';
 
 const navItems = [
   { path: '/workspace',               icon: 'bi-grid-1x2-fill', label: 'Overview',       group: 'main',  badge: null       },

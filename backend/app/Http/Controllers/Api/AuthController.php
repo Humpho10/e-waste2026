@@ -19,6 +19,7 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use App\Models\Settings;
 use Illuminate\Support\Facades\RateLimiter;
+use App\Helpers\EmailVerifier;
 
 class AuthController extends Controller
 {
@@ -101,7 +102,12 @@ class AuthController extends Controller
             ], 403);
         }
 
-        if ($settings->require_email_verification && !$user->email_verified_at) {
+        // Staff accounts (Admin, Product-Manager) must always verify their
+        // email before first login, regardless of the site-wide toggle —
+        // that toggle only governs public buyer/seller registration.
+        $requiresVerification = $settings->require_email_verification || $user->hasAnyRole(['Admin', 'Product-Manager']);
+
+        if ($requiresVerification && !$user->email_verified_at) {
             return response()->json([
                 'message' => 'Please verify your email address before signing in. Check your inbox for the verification link.',
                 'email_unverified' => true,
@@ -385,21 +391,29 @@ class AuthController extends Controller
         return response()->json(['message' => 'Verification email sent.']);
     }
 
+    // Public — resend the verification link by email, no auth required.
+    // Mirrors forgotPassword()'s non-enumerating pattern: someone blocked at
+    // login for being unverified has no auth token to call the authenticated
+    // resend endpoint above with, so this is the only way they can recover
+    // a lost or expired link.
+    public function resendVerificationPublic(Request $request)
+    {
+        $request->validate(['email' => 'required|email']);
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user && !$user->email_verified_at) {
+            EmailVerifier::send($user);
+        }
+
+        return response()->json([
+            'message' => 'If that email exists and needs verifying, a new link has been sent.',
+        ]);
+    }
+
     // Generate a fresh verification token for the user and email it to them.
     private function sendVerificationEmail(User $user): void
     {
-        EmailVerification::where('email', $user->email)->delete();
-
-        $token = Str::random(64);
-
-        EmailVerification::create([
-            'email'      => $user->email,
-            'token'      => $token,
-            'expires_at' => now()->addHours(24),
-        ]);
-
-        // Non-fatal: a mail-server failure must not break registration. The
-        // user row already exists; they can request a fresh link later.
-        Mailer::send($user->email, new VerifyEmailMail($user->name, $token));
+        EmailVerifier::send($user);
     }
 }

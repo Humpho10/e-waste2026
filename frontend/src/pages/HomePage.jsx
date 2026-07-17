@@ -5,7 +5,6 @@ import { useAuth } from '../context/AuthContext';
 import { browseProducts, getCategories, getStats, searchByImage, getPublicSettings } from '../api/products';
 import { getTopRatedSellers } from '../api/ratings';
 import { logoutUser } from '../api/auth';
-import { storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import PublicNavbar from '../components/PublicNavbar';
 import PublicFooter from '../components/PublicFooter';
@@ -50,31 +49,13 @@ const SAMPLE_CATEGORIES = [
   { category_id: 'c5', name: 'Entertainment & Audio',  subcategories: [] },
 ];
 
-const SAMPLE_PRODUCTS = [
-  { product_id: 'p1', title: '8GB DDR4 Laptop RAM', price: 85000,  condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Kikuubo'    } },
-  { product_id: 'p2', title: '15.6" LCD Screen',    price: 120000, condition: 'Good',           category: { name: 'Computer'  }, seller: { location: 'Nakawa'     } },
-  { product_id: 'p3', title: 'Dell Motherboard',    price: 150000, condition: 'Fair',           category: { name: 'Computer'  }, seller: { location: 'Ntinda'     } },
-  { product_id: 'p4', title: '500W Power Supply',   price: 65000,  condition: 'For Parts Only', category: { name: 'Accessory' }, seller: { location: 'Wandegeya'  } },
-  { product_id: 'p5', title: 'iPhone 11 LCD Screen',price: 95000,  condition: 'Good',           category: { name: 'Phone'     }, seller: { location: 'Kikuubo'    } },
-  { product_id: 'p6', title: '1TB External HDD',    price: 110000, condition: 'Excellent',      category: { name: 'Computer'  }, seller: { location: 'Ntinda'     } },
-].map(p => ({ ...p, _sample: true }));
-
 const conditionStyle = (c = '') => {
   const k = c.toLowerCase();
   if (k.includes('excellent')) return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
   if (k.includes('good'))      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400';
   if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
   return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
-};
-*/
-
-const conditionStyle = (c = '') => {
-  const k = c.toLowerCase();
-  if (k.includes('excellent')) return 'bg-green-50 dark:bg-green-950/40 text-green-700 dark:text-green-400';
-  if (k.includes('good'))      return 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400';
-  if (k.includes('fair'))      return 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400';
-  return 'bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400'; // parts only / unknown
-};
+}; 
 
 // ── Product Card ──────────────────────────────────────────────
 function ProductCard({ product }) {
@@ -84,9 +65,8 @@ function ProductCard({ product }) {
   const Icon = categoryIcon(`${product.category?.name} ${product.title}`);
 
   const handleClick = () => {
-    if (!token)            navigate('/login');
-    else if (product._sample) navigate('/dashboard/browse');
-    else                   navigate(`/dashboard/product/${product.slug}-${product.hash_id}`);
+    if (!token) navigate('/login');
+    else        navigate(`/dashboard/product/${product.slug}-${product.hash_id}`);
   };
 
   const img = product.images?.[0]?.image_path;
@@ -178,6 +158,7 @@ export default function HomePage() {
   const [searchInput, setSearchInput] = useState('');
   const [query, setQuery]             = useState('');
   const [activeCategory, setActiveCategory] = useState(null);
+  const [activeSubcategory, setActiveSubcategory] = useState(null); // { id, name }
   const [expandedCats, setExpandedCats]     = useState({ c1: true });
   const [imageSearch, setImageSearch]       = useState(null); // { labels: [] }
   const [imageSearchProducts, setImageSearchProducts] = useState([]);
@@ -189,22 +170,23 @@ export default function HomePage() {
   const howRef       = useRef(null);
   const fileInputRef = useRef(null);
 
-  // Categories + featured products are fetched together, matching the
-  // original's Promise.all — either one failing falls back to sample data
-  // for both, rather than mixing real + sample results.
+  // Categories + featured products are fetched together. Categories fall
+  // back to sample data if the API is unreachable, so the browse sidebar
+  // still works — but products never do: an empty/failed response means
+  // there simply aren't any approved listings yet, and showing fake ones
+  // in their place would be misleading.
   const { data: homeData, isLoading: loading } = useQuery({
     queryKey: ['home-featured'],
     queryFn: async () => {
       try {
         const [catRes, prodRes] = await Promise.all([getCategories(), browseProducts({ per_page: 8 })]);
         const cats = catRes.data.categories;
-        const prods = prodRes.data.data;
         return {
           categories: cats?.length ? cats : SAMPLE_CATEGORIES,
-          products: prods?.length ? prods : SAMPLE_PRODUCTS,
+          products: prodRes.data.data || [],
         };
       } catch {
-        return { categories: SAMPLE_CATEGORIES, products: SAMPLE_PRODUCTS };
+        return { categories: SAMPLE_CATEGORIES, products: [] };
       }
     },
   });
@@ -263,7 +245,15 @@ export default function HomePage() {
 
   const handleCategoryClick = (cat) => {
     setActiveCategory(prev => (prev === cat.category_id ? null : cat.category_id));
+    setActiveSubcategory(null);
     setQuery('');
+    scrollToListings();
+  };
+
+  const handleSubcategoryClick = (sub) => {
+    setActiveSubcategory(prev => (prev?.id === sub.subcategory_id ? null : { id: sub.subcategory_id, name: sub.sub_category_name }));
+    setActiveCategory(null);
+    setQuery(''); setSearchInput('');
     scrollToListings();
   };
 
@@ -315,6 +305,12 @@ export default function HomePage() {
         (activeCatName.toLowerCase().includes((p.category?.name || '').toLowerCase()))
       );
     }
+    if (activeSubcategory) {
+      list = list.filter(p =>
+        p.sub_category?.subcategory_id === activeSubcategory.id ||
+        p.sub_category?.sub_category_name === activeSubcategory.name
+      );
+    }
     if (query) {
       const q = query.toLowerCase();
       list = list.filter(p =>
@@ -324,11 +320,11 @@ export default function HomePage() {
       );
     }
     return list;
-  }, [products, activeCatName, query]);
+  }, [products, activeCatName, activeSubcategory, query]);
 
-  const filterActive = Boolean(query || activeCategory || imageSearch);
+  const filterActive = Boolean(query || activeCategory || activeSubcategory || imageSearch);
   const clearFilters = () => {
-    setQuery(''); setSearchInput(''); setActiveCategory(null);
+    setQuery(''); setSearchInput(''); setActiveCategory(null); setActiveSubcategory(null);
     setImageError('');
     if (imageSearch) { setImageSearch(null); } // reverts products to baseProducts
   };
@@ -489,15 +485,18 @@ export default function HomePage() {
 
                     {expandedCats[cat.category_id] && cat.subcategories?.length > 0 && (
                       <ul className="ml-4 mt-1 space-y-0.5 border-l border-gray-100 dark:border-slate-800 pl-3">
-                        {cat.subcategories.map(sub => (
-                          <li key={sub.subcategory_id}
-                            className="text-xs text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer py-1.5 flex items-center gap-2"
-                            onClick={() => { setSearchInput(sub.sub_category_name); setQuery(sub.sub_category_name); setActiveCategory(null); scrollToListings(); }}
-                          >
-                            <span className="w-1.5 h-1.5 rounded-full bg-gray-300 inline-block" />
-                            {sub.sub_category_name}
-                          </li>
-                        ))}
+                        {cat.subcategories.map(sub => {
+                          const subActive = activeSubcategory?.id === sub.subcategory_id;
+                          return (
+                            <li key={sub.subcategory_id}
+                              className={`text-xs cursor-pointer py-1.5 flex items-center gap-2 ${subActive ? 'text-blue-600 dark:text-blue-400 font-semibold' : 'text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400'}`}
+                              onClick={() => handleSubcategoryClick(sub)}
+                            >
+                              <span className={`w-1.5 h-1.5 rounded-full inline-block ${subActive ? 'bg-blue-500' : 'bg-gray-300'}`} />
+                              {sub.sub_category_name}
+                            </li>
+                          );
+                        })}
                       </ul>
                     )}
                   </li>
@@ -547,12 +546,12 @@ export default function HomePage() {
             </div>
           )}
 
-          {/* Text/category filter chip */}
-          {!imageSearch && (query || activeCategory) && (
+          {/* Text/category/subcategory filter chip */}
+          {!imageSearch && (query || activeCategory || activeSubcategory) && (
             <div className="mb-4 flex items-center gap-2 text-sm">
               <span className="text-gray-500 dark:text-gray-400">Filtering by</span>
               <span className="inline-flex items-center gap-1.5 bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 px-3 py-1 rounded-full font-medium">
-                {activeCatName || `"${query}"`}
+                {activeCatName || activeSubcategory?.name || `"${query}"`}
                 <button onClick={clearFilters} className="hover:text-blue-900 dark:hover:text-blue-300"><X width={13} height={13} /></button>
               </span>
               <span className="text-gray-400 dark:text-gray-500">· {displayedProducts.length} item{displayedProducts.length !== 1 ? 's' : ''}</span>
@@ -576,17 +575,26 @@ export default function HomePage() {
                 {imageSearch ? <Camera width={26} height={26} /> : <Search width={26} height={26} />}
               </div>
               <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-1">
-                {imageSearch ? 'No listings match your photo' : 'No matching listings'}
+                {imageSearch ? 'No listings match your photo' : filterActive ? 'No matching listings' : 'No listings yet'}
               </h3>
               <p className="text-gray-400 dark:text-gray-500 text-sm mb-4">
                 {imageSearch
                   ? 'We couldn’t find a related part in stock yet. Try another angle or a clearer shot.'
-                  : 'Try a different search or category.'}
+                  : filterActive
+                    ? 'Try a different search or category.'
+                    : 'Be the first to list an item on E-Waste Mart.'}
               </p>
-              <button onClick={clearFilters}
-                className="btn-lift bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700">
-                {imageSearch ? 'Back to featured' : 'Clear filters'}
-              </button>
+              {(imageSearch || filterActive) ? (
+                <button onClick={clearFilters}
+                  className="btn-lift bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700">
+                  {imageSearch ? 'Back to featured' : 'Clear filters'}
+                </button>
+              ) : (
+                <Link to="/dashboard/create"
+                  className="btn-lift inline-block bg-blue-600 text-white px-5 py-2 rounded-xl text-sm font-medium hover:bg-blue-700">
+                  Post the first listing
+                </Link>
+              )}
             </div>
           ) : (
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">

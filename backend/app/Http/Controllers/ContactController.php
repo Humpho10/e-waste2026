@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Mail\ContactMessageMail;
+use App\Models\ContactMessage;
+use App\Helpers\NotificationHelper;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use App\Helpers\Mailer;
@@ -21,14 +23,30 @@ class ContactController extends Controller
             'message' => 'required|string|max:5000',
         ]);
 
+        $topic = $data['topic'] ?: 'General inquiry';
+
         $recipient = env('CONTACT_RECIPIENT_EMAIL', config('mail.from.address'));
 
         Mailer::send($recipient, new ContactMessageMail(
             $data['name'],
             $data['email'],
-            $data['topic'] ?: 'General inquiry',
+            $topic,
             $data['message'],
         ));
+
+        $contactMessage = ContactMessage::create([
+            'name'    => $data['name'],
+            'email'   => $data['email'],
+            'topic'   => $topic,
+            'message' => $data['message'],
+            'status'  => 'new',
+        ]);
+
+        NotificationHelper::notifyAdmins(
+            'contact_message',
+            $contactMessage->contact_message_id,
+            "New contact message from {$data['name']}: {$topic}",
+        );
 
         return response()->json([
             'message' => 'Your message has been sent. We\'ll get back to you soon.',

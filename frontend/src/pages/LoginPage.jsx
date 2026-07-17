@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
-import { loginUser } from '../api/auth';
+import { loginUser, resendVerificationPublic } from '../api/auth';
 import { getPublicSettings } from '../api/products';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast'; // adjust path if needed
@@ -77,6 +77,8 @@ export default function LoginPage() {
   const [showPw, setShowPw]   = useState(false);
   const [error, setError]     = useState('');
   const [loading, setLoading] = useState(false);
+  const [unverifiedEmail, setUnverifiedEmail] = useState('');
+  const [resending, setResending] = useState(false);
   // Set instead of `error` when the server rejects a sign-in specifically
   // because maintenance mode blocks this person's role — swaps the whole
   // page for the same "under maintenance" screen visitors see, rather than
@@ -101,6 +103,7 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
+    setUnverifiedEmail('');
     setLoading(true);
     try {
       const res = await loginUser(form);
@@ -112,9 +115,24 @@ export default function LoginPage() {
         const errorMsg = err.response?.data?.message || 'Invalid email or password.';
         setError(errorMsg);
         toast(errorMsg, 'error');
+        if (err.response?.data?.email_unverified) {
+          setUnverifiedEmail(form.email);
+        }
       }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    try {
+      await resendVerificationPublic(unverifiedEmail);
+      toast('Verification email sent — check your inbox.', 'success');
+    } catch {
+      toast('Could not send verification email. Please try again.', 'error');
+    } finally {
+      setResending(false);
     }
   };
 
@@ -168,6 +186,16 @@ export default function LoginPage() {
             {error && (
               <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-lg mb-5">
                 {error}
+                {unverifiedEmail && (
+                  <button
+                    type="button"
+                    onClick={handleResendVerification}
+                    disabled={resending}
+                    className="block mt-2 font-semibold underline hover:no-underline disabled:opacity-50"
+                  >
+                    {resending ? 'Sending…' : 'Resend verification email'}
+                  </button>
+                )}
               </div>
             )}
 
