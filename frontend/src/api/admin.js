@@ -32,8 +32,6 @@ export const deletePermission  = (id)        => api.delete(`/admin/permissions/$
 export const getAuditTrail     = (params)    => api.get('/admin/audit', { params });
 export const exportAuditTrail  = (params)    => api.get('/admin/audit/export', { params, responseType: 'arraybuffer' });
 
-// Messages — Super Admin now messages staff only, see api/staffMessages.js
-
 // System settings
 export const getSettings    = ()     => api.get('/admin/settings');
 export const updateSettings = (data) => api.put('/admin/settings', data);

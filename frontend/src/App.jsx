@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import AboutPage from './pages/AboutPage';
 import ContactPage from './pages/ContactPage';
+import UnauthorizedPage from './pages/UnauthorizedPage';
 
 // ─── Regular User Pages ──────────────────────────────────────
 import DashboardPage from './pages/DashboardPage';
@@ -31,7 +32,6 @@ import UsersPage from './pages/admin/UsersPage';
 import RolesPage from './pages/admin/RolesPage';
 import PermissionsPage from './pages/admin/PermissionsPage';
 import AuditPage from './pages/admin/AuditPage';
-import AdminMessagesPage from './pages/admin/MessagesPage';
 import MyMessagesPage from './pages/admin/MyMessagesPage';
 import SettingsPage from './pages/admin/SettingsPage';
 import AdminProfilePage from './pages/admin/ProfilePage';
@@ -103,6 +103,7 @@ function App() {
         <Route path="/contact" element={<ContactPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/unauthorized" element={<UnauthorizedPage />} />
 
         {/* ─── Super Admin ──────────────────────────────────── */}
         <Route path="/admin" element={
@@ -138,11 +139,6 @@ function App() {
         <Route path="/admin/audit" element={
           <PermissionRoute requiredPermissions={['audit-list']}>
             <AuditPage />
-          </PermissionRoute>
-        } />
-        <Route path="/admin/messages" element={
-          <PermissionRoute requiredPermissions={['message-view']}>
-            <AdminMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/admin/my-messages" element={

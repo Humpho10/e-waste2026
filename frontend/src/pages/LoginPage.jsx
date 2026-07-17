@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser, resendVerificationPublic } from '../api/auth';
@@ -84,6 +84,18 @@ export default function LoginPage() {
   // page for the same "under maintenance" screen visitors see, rather than
   // a plain inline error.
   const [maintenanceBlock, setMaintenanceBlock] = useState(null);
+
+  // The axios 401 handler sends people here when their token was rejected
+  // by the server (expired/revoked) rather than by a deliberate logout —
+  // surface that explicitly instead of leaving them to wonder why they're
+  // suddenly looking at the sign-in form again.
+  useEffect(() => {
+    if (sessionStorage.getItem('sessionExpired')) {
+      sessionStorage.removeItem('sessionExpired');
+      toast('Your session has expired. Please sign in again.', 'info');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Same cache key as MaintenanceGate/HomePage — hides "Continue with
   // Google" if the Super Admin has switched it off in Settings.
