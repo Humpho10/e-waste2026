@@ -187,7 +187,7 @@ function PMFormModal({ mode, initial, onClose, onSaved }) {
                 <BiBriefcase size={18} /> {isEdit ? 'Edit Product Manager' : 'Create Product Manager'}
               </h3>
               <p className="text-orange-200 text-xs mt-0.5">
-                {isEdit ? 'Update their details, password, or category assignments' : 'They will receive a notification with login details'}
+                {isEdit ? 'Update their details, password, or category assignments' : "They'll receive an email to verify their account before they can log in"}
               </p>
             </div>
             <button onClick={onClose} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition">

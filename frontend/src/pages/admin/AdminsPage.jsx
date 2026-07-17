@@ -127,7 +127,7 @@ function CreateAdminModal({ onClose, onCreated }) {
             <div>
               <h3 className="text-white font-bold text-lg">Create New Admin</h3>
               <p className="text-blue-200 text-xs mt-0.5">
-                They will receive login credentials via email
+                They'll receive an email to verify their account before they can log in
               </p>
             </div>
             <button

@@ -12,6 +12,7 @@ use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\StaffMessageController;
 use App\Http\Controllers\StatsController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ContactMessageController;
 use App\Http\Controllers\SellerRatingController;
 use App\Http\Controllers\ImageSearchController;
 
@@ -23,6 +24,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/forgot-password', [AuthController::class, 'forgotPassword']); // ← new
     Route::post('/reset-password',  [AuthController::class, 'resetPassword']);  // ← new
     Route::post('/verify-email',    [AuthController::class, 'verifyEmail']);    // ← new
+    Route::post('/resend-verification-public', [AuthController::class, 'resendVerificationPublic']);
 });
 
 Route::middleware('auth:sanctum')->prefix('auth')->group(function () {
@@ -145,6 +147,11 @@ Route::middleware(['auth:sanctum', 'check.permissions:category-list,product-list
 
     // ── Messages ───────────────────────────────────────────
     Route::get('/manager/messages', [ManagerController::class, 'getMessages'])->middleware('can:message-view');
+
+    // ── Contact Messages ───────────────────────────────────
+    Route::get('/contact-messages',             [ContactMessageController::class, 'index'])->middleware('can:contact-view');
+    Route::get('/contact-messages/{id}',        [ContactMessageController::class, 'show'])->middleware('can:contact-view');
+    Route::post('/contact-messages/{id}/reply', [ContactMessageController::class, 'reply'])->middleware('can:contact-reply');
 });
 
 // ── PRODUCT MANAGER ROUTES ──────────────────────────────────

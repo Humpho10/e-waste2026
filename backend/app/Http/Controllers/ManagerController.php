@@ -11,6 +11,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ProductManagerAssignment;
 use App\Models\SubCategory; // 👈 Added for clarity
 use App\Helpers\AuditLogger;
+use App\Helpers\EmailVerifier;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use App\Helpers\Mailer;
@@ -151,7 +152,6 @@ class ManagerController extends Controller
             'password'          => Hash::make($validated['password']),
             'phone'             => $validated['phone'] ?? null,
             'location'          => $validated['location'] ?? null,
-            'email_verified_at' => now(),
             'is_active'         => true,
         ]);
 
@@ -168,15 +168,18 @@ class ManagerController extends Controller
 
         // Send email notification (non-fatal — creating the PM must succeed
         // even if the welcome email can't be delivered).
-        $plainPassword = $validated['password'];
-        Mailer::send($pm->email, new ProductManagerCreatedMail($pm->name, $pm->email, $plainPassword));
+        Mailer::send($pm->email, new ProductManagerCreatedMail($pm->name, $pm->email));
+
+        // Must verify their email before they can log in — send the same
+        // link-based verification flow used everywhere else in the app.
+        EmailVerifier::send($pm);
 
         // Send in-app notification
         Notification::create([
             'user_id'      => $pm->id,
             'type'         => 'account_created',
             'reference_id' => $pm->id,
-            'message'      => 'Your Product Manager account has been created. You can now log in.',
+            'message'      => 'Your Product Manager account has been created. Please check your email to verify your account before logging in.',
             'is_read'      => false,
         ]);
 
