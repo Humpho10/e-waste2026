@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { myListings, resubmitProduct } from '../../api/products';
+import { myListings, resubmitProduct, getPublicSettings } from '../../api/products';
 import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext'; // 👈 Import useAuth
 import { storageUrl } from '../../lib/urls';
@@ -33,6 +33,15 @@ export default function ResubmitListingPage() {
     queryFn: () => myListings().then(res => res.data.products || []),
     enabled: canResubmit,
   });
+
+  // Same cache key as LoginPage/HomePage/CreateListingPage — reflects the
+  // Super Admin's configured photo limit instead of a hardcoded number.
+  const { data: siteSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => getPublicSettings().then(res => res.data),
+    staleTime: 30_000,
+  });
+  const maxImages = siteSettings?.max_images_per_listing ?? 5;
 
   const product = listings?.find(p => p.hash_id == hashId);
 
@@ -72,7 +81,7 @@ export default function ResubmitListingPage() {
     }
   }, [hashId, canResubmit, loading, product]);
 
-  const remainingSlots = 5 - (existingImages.length - removedImageIds.length) - newImages.length;
+  const remainingSlots = maxImages - (existingImages.length - removedImageIds.length) - newImages.length;
 
   const handleImageChange = (e) => {
     const files = Array.from(e.target.files).slice(0, remainingSlots);
@@ -257,7 +266,7 @@ export default function ResubmitListingPage() {
           <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm p-6">
             <h3 className="font-bold text-gray-800 dark:text-gray-100 text-sm uppercase tracking-wide mb-1">Photos</h3>
             <p className="text-xs text-gray-400 dark:text-gray-500 mb-4">
-              {visibleExisting.length + newImages.length} / 5 photos · Remove old photos or add new ones
+              {visibleExisting.length + newImages.length} / {maxImages} photos · Remove old photos or add new ones
             </p>
 
             {/* Existing images */}

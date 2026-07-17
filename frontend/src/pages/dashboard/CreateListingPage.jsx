@@ -1,10 +1,11 @@
 import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useDropzone } from 'react-dropzone';
 import { toast } from 'react-hot-toast';
 import DashboardLayout from '../../layouts/DashboardLayout';
-import { getCategories, createProduct } from '../../api/products';
+import { getCategories, createProduct, getPublicSettings } from '../../api/products';
 import { 
   FiChevronRight, 
   FiChevronLeft, 
@@ -85,6 +86,15 @@ export default function CreateListingPage() {
     specification: '',
   });
 
+  // Same cache key as LoginPage/HomePage/MaintenanceGate — reflects the
+  // Super Admin's configured photo limit instead of a hardcoded number.
+  const { data: siteSettings } = useQuery({
+    queryKey: ['public-settings'],
+    queryFn: () => getPublicSettings().then(res => res.data),
+    staleTime: 30_000,
+  });
+  const maxImages = siteSettings?.max_images_per_listing ?? 5;
+
   // Load categories
   useEffect(() => {
     getCategories()
@@ -103,11 +113,11 @@ export default function CreateListingPage() {
 
   // Image handling with react-dropzone
   const onDrop = (acceptedFiles) => {
-    const remaining = 5 - images.length;
+    const remaining = maxImages - images.length;
     const newFiles = acceptedFiles.slice(0, remaining);
-    
+
     if (newFiles.length === 0) {
-      toast.error('Maximum 5 images allowed');
+      toast.error(`Maximum ${maxImages} images allowed`);
       return;
     }
 
@@ -125,8 +135,8 @@ export default function CreateListingPage() {
       'image/webp': ['.webp']
     },
     maxSize: 2 * 1024 * 1024, // 2MB
-    maxFiles: 5,
-    disabled: images.length >= 5,
+    maxFiles: maxImages,
+    disabled: images.length >= maxImages,
   });
 
   const removeImage = (index) => {
@@ -168,6 +178,7 @@ export default function CreateListingPage() {
   const canNext = () => {
     if (step === 1) return form.category_id && form.subcategory_id;
     if (step === 2) return form.title && form.description && form.condition && form.price;
+    if (step === 3) return images.length >= maxImages;
     return true;
   };
 
@@ -468,9 +479,9 @@ export default function CreateListingPage() {
               <div>
                 <h3 className="text-xl font-bold text-gray-800 mb-1 dark:text-gray-100">Add Photos</h3>
                 <p className="text-gray-500 text-sm mb-6 dark:text-gray-400">
-                  Upload up to 5 photos. Clear photos get more buyer interest.
+                  Upload {maxImages} photo{maxImages === 1 ? '' : 's'} to continue. Clear photos get more buyer interest.
                   <span className="block text-xs text-blue-600 mt-1 dark:text-blue-400">
-                    {images.length}/5 images uploaded
+                    {images.length}/{maxImages} images uploaded
                   </span>
                 </p>
 
@@ -478,9 +489,9 @@ export default function CreateListingPage() {
                 <div
                   {...getRootProps()}
                   className={`border-2 border-dashed rounded-2xl p-10 text-center cursor-pointer transition-all duration-200
-                    ${isDragActive 
-                      ? 'border-blue-500 bg-blue-50 shadow-inner dark:bg-blue-950/40' 
-                      : images.length >= 5 
+                    ${isDragActive
+                      ? 'border-blue-500 bg-blue-50 shadow-inner dark:bg-blue-950/40'
+                      : images.length >= maxImages
                         ? 'border-gray-300 bg-gray-50 cursor-not-allowed opacity-60 dark:border-slate-600 dark:bg-slate-800/60'
                         : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50/30 dark:border-slate-600'
                     }`}
@@ -506,7 +517,7 @@ export default function CreateListingPage() {
                         JPEG, PNG, WebP · Up to 2MB each
                       </p>
                       <p className="text-xs text-gray-400 mt-1 dark:text-gray-500">
-                        {images.length}/5 images used
+                        {images.length}/{maxImages} images used
                       </p>
                     </div>
                   </motion.div>
@@ -546,10 +557,12 @@ export default function CreateListingPage() {
                   </div>
                 )}
 
-                {images.length === 0 && (
-                  <div className="mt-6 p-4 bg-gray-50 rounded-xl text-center dark:bg-slate-800/60">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                      No photos added yet — you can skip this step and add photos later
+                {images.length < maxImages && (
+                  <div className="mt-6 p-4 bg-amber-50 rounded-xl text-center dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/40">
+                    <p className="text-sm text-amber-700 dark:text-amber-400">
+                      {images.length === 0
+                        ? `Add ${maxImages} photo${maxImages === 1 ? '' : 's'} to continue — photos are required to submit your listing.`
+                        : `Add ${maxImages - images.length} more photo${maxImages - images.length === 1 ? '' : 's'} to continue (${maxImages} required).`}
                     </p>
                   </div>
                 )}
@@ -600,7 +613,7 @@ export default function CreateListingPage() {
                         <FiImage className="w-4 h-4" /> Photos ({imagePreviews.length})
                       </p>
                       <div className="flex gap-2">
-                        {imagePreviews.slice(0, 5).map((src, i) => (
+                        {imagePreviews.slice(0, maxImages).map((src, i) => (
                           <img 
                             key={i} 
                             src={src} 
