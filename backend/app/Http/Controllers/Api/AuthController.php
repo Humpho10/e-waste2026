@@ -16,6 +16,8 @@ use App\Mail\VerifyEmailMail;
 use Illuminate\Support\Facades\Mail;
 use App\Helpers\Mailer;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Str;
 use App\Models\Settings;
 use Illuminate\Support\Facades\RateLimiter;
@@ -184,9 +186,23 @@ class AuthController extends Controller
 
         // Verify the ID token with Google's tokeninfo endpoint — avoids needing
         // a full OAuth library just to validate a signed JWT.
-        $response = Http::get('https://oauth2.googleapis.com/tokeninfo', [
-            'id_token' => $request->credential,
-        ]);
+        try {
+            $response = Http::timeout(10)
+                ->connectTimeout(5)
+                ->retry(2, 200, fn ($e) => $e instanceof ConnectionException, throw: false)
+                ->get('https://oauth2.googleapis.com/tokeninfo', [
+                    'id_token' => $request->credential,
+                ]);
+        } catch (ConnectionException $e) {
+            // Guzzle appends the failing URL to its message, which carries the
+            // caller's live id_token — redact it before this reaches the log.
+            $reason = preg_replace('/id_token=[\w.\-]+/', 'id_token=[redacted]', $e->getMessage());
+            Log::error('Google tokeninfo unreachable: ' . $reason);
+
+            return response()->json([
+                'message' => 'Could not reach Google to verify your sign-in. Please try again in a moment.',
+            ], 503);
+        }
 
         if (!$response->ok()) {
             return response()->json([
