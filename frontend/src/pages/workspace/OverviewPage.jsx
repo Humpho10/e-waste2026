@@ -3,19 +3,12 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMStats } from '../../api/productManager';
-import { storageUrl } from '../../api/axios';
 import { useAuth } from '../../context/AuthContext';
 import Chart from '../../components/Chart';
 import { CHART_COLORS } from '../../lib/chartTheme';
+import { storageUrl } from '../../lib/urls';
 
 const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
-const ugxShort = (n) => {
-  const v = Number(n || 0);
-  if (v >= 1e9) return `UGX ${(v / 1e9).toFixed(1)}B`;
-  if (v >= 1e6) return `UGX ${(v / 1e6).toFixed(1)}M`;
-  if (v >= 1e3) return `UGX ${(v / 1e3).toFixed(0)}K`;
-  return `UGX ${v.toLocaleString()}`;
-};
 
 const toISO = (d) => d.toISOString().slice(0, 10);
 
@@ -54,18 +47,15 @@ function timeAgo(dateStr) {
   const d = Math.floor(h / 24); return `${d}d ago`;
 }
 
-/* ── KPI card ─────────────────────────────────────────────── */
-function StatCard({ icon, label, value, to, accent, sub, loading }) {
-  return (
-    <Link
-      to={to}
-      className="group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 dark:bg-slate-900 dark:border-slate-800"
-    >
+/* ── KPI card — links to `to`, or fires `onClick` when given instead ─ */
+function StatCard({ icon, label, value, to, onClick, accent, sub, loading }) {
+  const content = (
+    <>
       <div className="flex items-center justify-between mb-3">
         <div className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl ${accent.chip}`}>
           <i className={`bi ${icon}`} />
         </div>
-        <i className="bi bi-arrow-up-right text-gray-300 group-hover:text-gray-400 transition" />
+        <i className={`bi ${onClick ? 'bi-eye' : 'bi-arrow-up-right'} text-gray-300 group-hover:text-gray-400 transition`} />
       </div>
       {loading ? (
         <div className="h-8 w-16 bg-gray-100 rounded-lg animate-pulse mb-1 dark:bg-slate-800" />
@@ -74,7 +64,64 @@ function StatCard({ icon, label, value, to, accent, sub, loading }) {
       )}
       <p className="text-sm text-gray-500 dark:text-gray-400 font-medium">{label}</p>
       {sub && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">{sub}</p>}
-    </Link>
+    </>
+  );
+  const className = "group bg-white rounded-2xl p-5 shadow-sm border border-gray-100 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-200 dark:bg-slate-900 dark:border-slate-800 text-left w-full";
+
+  if (onClick) {
+    return <button type="button" onClick={onClick} className={className}>{content}</button>;
+  }
+  return <Link to={to} className={className}>{content}</Link>;
+}
+
+/* ── My Categories modal — categories assigned to this PM by an admin ─ */
+function CategoriesModal({ categories, onClose }) {
+  return (
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-2xl w-full max-w-lg max-h-[80vh] flex flex-col overflow-hidden">
+        <div className="px-6 py-4 border-b border-gray-100 dark:border-slate-800 flex items-center justify-between shrink-0">
+          <div>
+            <h3 className="font-bold text-gray-800 dark:text-gray-100 flex items-center gap-2">
+              <i className="bi bi-folder2-open text-teal-600 dark:text-teal-400" /> My categories
+            </h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">Assigned to you by an admin</p>
+          </div>
+          <button onClick={onClose} className="w-8 h-8 rounded-xl bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 transition shrink-0 dark:bg-slate-800 dark:text-gray-400">
+            <i className="bi bi-x-lg" />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto p-4">
+          {categories.length ? (
+            <div className="space-y-2">
+              {categories.map((c) => (
+                <div key={c.name} className="flex items-center justify-between gap-3 rounded-xl border border-gray-100 dark:border-slate-800 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-gray-800 dark:text-gray-100 truncate">{c.name}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">
+                      {c.approved} approved · {c.pending} pending · {c.rejected} rejected
+                    </p>
+                  </div>
+                  <span className="text-sm font-bold text-teal-600 dark:text-teal-400 shrink-0">{c.total}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-10 text-gray-300">
+              <i className="bi bi-folder-x text-4xl mb-2" />
+              <p className="text-sm text-gray-400 dark:text-gray-500">No categories assigned yet.</p>
+            </div>
+          )}
+        </div>
+        <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 shrink-0">
+          <Link
+            to="/workspace/products"
+            className="block text-center bg-teal-600 hover:bg-teal-700 text-white py-2.5 rounded-xl text-sm font-semibold transition"
+          >
+            View all listings
+          </Link>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -95,6 +142,8 @@ function ChartCard({ title, icon, action, children, className = '' }) {
 
 export default function WorkspaceOverviewPage() {
   const { user } = useAuth();
+
+  const [showCategories, setShowCategories] = useState(false);
 
   // Period selector state — preset or a custom {from, to} range.
   const [preset, setPreset]   = useState('month');
@@ -121,11 +170,11 @@ export default function WorkspaceOverviewPage() {
   const noCategories = !isLoading && (stats.assigned_categories ?? 0) === 0;
 
   const kpis = [
-    { icon: 'bi-folder2-open',   label: 'My Categories',  value: stats.assigned_categories, to: '/workspace/products',                accent: { chip: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400' },      sub: 'Assigned to you' },
+    { icon: 'bi-folder2-open',   label: 'My Categories',  value: stats.assigned_categories, onClick: () => setShowCategories(true), accent: { chip: 'bg-teal-50 text-teal-600 dark:bg-teal-950/40 dark:text-teal-400' },      sub: 'Assigned to you' },
     { icon: 'bi-box-seam',       label: 'Total Listings', value: stats.total_products,      to: '/workspace/products',                accent: { chip: 'bg-indigo-50 text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400' },  sub: 'In your categories' },
     { icon: 'bi-check2-circle',  label: 'Approved',       value: stats.approved_products,   to: '/workspace/products?status=approved', accent: { chip: 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/40 dark:text-emerald-400' }, sub: 'Live on marketplace' },
+    { icon: 'bi-hourglass-split',label: 'Pending',        value: stats.pending_products,    to: '/workspace/products?status=pending',  accent: { chip: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' },   sub: 'Awaiting your review' },
     { icon: 'bi-x-circle',       label: 'Rejected',       value: stats.rejected_products,   to: '/workspace/products?status=rejected', accent: { chip: 'bg-red-50 text-red-500 dark:bg-red-950/40 dark:text-red-400' },        sub: 'Sent back' },
-    { icon: 'bi-cash-coin',      label: 'Inventory Value',value: ugx(stats.inventory_value), to: '/workspace/products?status=approved', accent: { chip: 'bg-amber-50 text-amber-600 dark:bg-amber-950/40 dark:text-amber-400' },   sub: 'Approved listings' },
   ];
 
   /* ── Chart option builders ──────────────────────────────── */
@@ -153,27 +202,23 @@ export default function WorkspaceOverviewPage() {
     }],
   };
 
-  // Period performance: value approved (money, columns) + listings submitted (line).
+  // Period performance: number of listings submitted vs approved, by date.
   const perfSeries = period.series ?? [];
   const perfOptions = {
     chart: { height: 260 },
     xAxis: { categories: perfSeries.map((p) => p.label), crosshair: true },
-    yAxis: [
-      { title: { text: null }, labels: { formatter() { return ugxShort(this.value); } } },
-      { title: { text: null }, allowDecimals: false, opposite: true },
-    ],
+    yAxis: { title: { text: null }, allowDecimals: false },
     legend: { enabled: true, align: 'center', verticalAlign: 'bottom' },
     tooltip: { shared: true },
     plotOptions: { column: { borderRadius: 3, borderWidth: 0 } },
     series: [
       {
-        name: 'Value approved', type: 'column', yAxis: 0, color: CHART_COLORS.teal,
-        data: perfSeries.map((p) => p.approved_value),
-        tooltip: { pointFormatter() { return `<span style="color:${this.color}">●</span> Value approved: <b>${ugx(this.y)}</b><br/>`; } },
+        name: 'Listings submitted', type: 'column', color: CHART_COLORS.teal,
+        data: perfSeries.map((p) => p.submitted),
       },
       {
-        name: 'Listings submitted', type: 'spline', yAxis: 1, color: CHART_COLORS.pending,
-        data: perfSeries.map((p) => p.submitted), marker: { enabled: false },
+        name: 'Listings approved', type: 'spline', color: CHART_COLORS.approved,
+        data: perfSeries.map((p) => p.approved), marker: { enabled: false },
       },
     ],
   };
@@ -200,7 +245,7 @@ export default function WorkspaceOverviewPage() {
         <div className="relative flex flex-col md:flex-row md:items-center md:justify-between gap-5">
           <div>
             <h2 className="text-2xl font-bold text-white">
-              {greeting}, {user?.name?.split(' ')[0]} <span className="inline-block">👋</span>
+              {greeting}, {user?.name?.split(' ')[0]} <i className="bi bi-emoji-smile inline-block" />
             </h2>
             <p className="text-teal-100 text-sm mt-1">
               You have <span className="font-semibold text-white">{stats.pending_products ?? 0}</span> listing(s) waiting for your review.
@@ -260,12 +305,12 @@ export default function WorkspaceOverviewPage() {
                   <i className="bi bi-graph-up-arrow text-teal-600 dark:text-teal-400" /> Performance
                 </h3>
                 <p className="text-xs text-gray-400 mt-0.5 dark:text-gray-500">
-                  {period.from && period.to ? `${period.from} → ${period.to}` : '—'} · value of listings approved in your categories
+                  {period.from && period.to ? `${period.from} → ${period.to}` : '—'} · listings submitted and approved in your categories
                 </p>
               </div>
               {/* Period selector */}
               <div className="flex flex-wrap items-center gap-2">
-                <div className="flex bg-gray-50 p-1 rounded-xl border border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
+                <div className="flex flex-wrap bg-gray-50 p-1 rounded-xl border border-gray-100 dark:bg-slate-800/60 dark:border-slate-800">
                   {PERIOD_PRESETS.map((p) => (
                     <button key={p.key} onClick={() => setPreset(p.key)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-medium transition ${preset === p.key ? 'bg-white text-teal-700 shadow-sm dark:bg-slate-900 dark:text-teal-400' : 'text-gray-500 hover:text-gray-800 dark:text-gray-400'}`}>
@@ -292,9 +337,8 @@ export default function WorkspaceOverviewPage() {
             </div>
 
             {/* Period KPI strip */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-5">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
               {[
-                { icon: 'bi-cash-stack',         tint: 'text-teal-600 bg-teal-50 dark:text-teal-400 dark:bg-teal-950/40',       label: 'Value approved',   value: ugx(period.approved_value) },
                 { icon: 'bi-inbox',              tint: 'text-indigo-600 bg-indigo-50 dark:text-indigo-400 dark:bg-indigo-950/40',   label: 'Submitted',        value: period.submitted ?? 0 },
                 { icon: 'bi-check2-circle',      tint: 'text-emerald-600 bg-emerald-50 dark:text-emerald-400 dark:bg-emerald-950/40', label: 'Approved',         value: period.approved ?? 0 },
                 { icon: 'bi-x-circle',           tint: 'text-red-500 bg-red-50 dark:text-red-400 dark:bg-red-950/40',         label: 'Rejected',         value: period.rejected ?? 0 },
@@ -320,13 +364,6 @@ export default function WorkspaceOverviewPage() {
                 <i className="bi bi-calendar-x text-4xl mb-2" />
                 <p className="text-sm">No activity in this period</p>
               </div>
-            )}
-
-            {period.revenue > 0 && (
-              <p className="text-xs text-gray-500 mt-3 flex items-center gap-1.5 dark:text-gray-400">
-                <i className="bi bi-cash-coin text-emerald-500" /> Recorded sales revenue this period:
-                <span className="font-semibold text-gray-700 dark:text-gray-200">{ugx(period.revenue)}</span>
-              </p>
             )}
           </div>
 
@@ -426,6 +463,10 @@ export default function WorkspaceOverviewPage() {
               )}
             </div>
         </>
+      )}
+
+      {showCategories && (
+        <CategoriesModal categories={byCategory} onClose={() => setShowCategories(false)} />
       )}
     </WorkspaceLayout>
   );

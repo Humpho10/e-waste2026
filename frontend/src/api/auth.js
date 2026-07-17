@@ -11,3 +11,4 @@ export const resetPassword  = (data)  => api.post('/auth/reset-password', data);
 
 export const verifyEmail        = (token) => api.post('/auth/verify-email', { token });
 export const resendVerification = ()      => api.post('/auth/resend-verification');
+export const resendVerificationPublic = (email) => api.post('/auth/resend-verification-public', { email });

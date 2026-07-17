@@ -1,10 +1,15 @@
 import axios from 'axios';
 console.log('API URL:', import.meta.env.VITE_API_URL);
 
+// Don't set a default Content-Type here. Axios already adds
+// "application/json" automatically for plain object payloads. Forcing it
+// as a blanket default instead makes axios's FormData detection think
+// every request wants JSON — including multipart FormData uploads (product
+// images, avatars) — so it JSON-stringifies the FormData and silently
+// drops any File objects inside it instead of sending real multipart data.
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {
-    'Content-Type': 'application/json',
     'Accept': 'application/json',
   }
 });

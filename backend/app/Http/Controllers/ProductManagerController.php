@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Mail;
+use App\Helpers\Mailer;
 use App\Mail\ProductApprovedMail;
 use App\Mail\ProductRejectedMail;
 
@@ -66,9 +67,6 @@ class ProductManagerController extends Controller
             ->where('reviewed_by', Auth::id())
             ->where('reviewed_at', '>=', now()->subDays(7))
             ->count();
-
-        // Live inventory value = sum of approved listing prices.
-        $inventoryValue = (clone $scoped())->where('status', 'approved')->sum('price');
 
         // ── Per-category breakdown (stacked bar chart) ──────────
         $names = \App\Models\Category::whereIn('category_id', $categoryIds)
@@ -147,7 +145,6 @@ class ProductManagerController extends Controller
                 'approved_products'   => $approved,
                 'rejected_products'   => $rejected,
                 'reviewed_this_week'  => $reviewedThisWeek,
-                'inventory_value'     => round((float) $inventoryValue, 2),
             ],
             'by_category'    => $byCategory,
             'daily_new'      => $dailyNew,
@@ -183,17 +180,6 @@ class ProductManagerController extends Controller
         $rejected  = (clone $scoped())->where('status', 'rejected')->whereBetween('reviewed_at', [$from, $to])->count();
         $reviewed  = (clone $scoped())->where('reviewed_by', Auth::id())->whereBetween('reviewed_at', [$from, $to])->count();
 
-        // Value of listings this PM cleared to go live in the window ("money added").
-        $approvedValue = (clone $scoped())
-            ->where('status', 'approved')
-            ->whereBetween('reviewed_at', [$from, $to])
-            ->sum('price');
-
-        // Actual sales revenue for products in these categories (0 until sales are recorded).
-        $revenue = \App\Models\Transaction::whereBetween('transactions.created_at', [$from, $to])
-            ->whereIn('product_id', (clone $scoped())->select('product_id'))
-            ->sum('amount');
-
         // Choose a readable granularity based on the span.
         $days = $from->diffInDays($to) + 1;
         $unit = $days <= 45 ? 'day' : ($days <= 731 ? 'month' : 'year');
@@ -206,11 +192,11 @@ class ProductManagerController extends Controller
             ->selectRaw("DATE_FORMAT(created_at, '{$sqlFmt}') as k, COUNT(*) as c")
             ->groupBy('k')->pluck('c', 'k');
 
-        $valueByBucket = (clone $scoped())
+        $approvedByBucket = (clone $scoped())
             ->where('status', 'approved')
             ->whereBetween('reviewed_at', [$from, $to])
-            ->selectRaw("DATE_FORMAT(reviewed_at, '{$sqlFmt}') as k, SUM(price) as s")
-            ->groupBy('k')->pluck('s', 'k');
+            ->selectRaw("DATE_FORMAT(reviewed_at, '{$sqlFmt}') as k, COUNT(*) as c")
+            ->groupBy('k')->pluck('c', 'k');
 
         $series = [];
         $cursor = $from->copy();
@@ -218,9 +204,9 @@ class ProductManagerController extends Controller
         while ($cursor->lessThanOrEqualTo($to) && $guard++ < 500) {
             $key = $cursor->format($keyFmt);
             $series[] = [
-                'label'          => $cursor->format($labelFmt),
-                'submitted'      => (int) ($submittedByBucket[$key] ?? 0),
-                'approved_value' => round((float) ($valueByBucket[$key] ?? 0), 2),
+                'label'     => $cursor->format($labelFmt),
+                'submitted' => (int) ($submittedByBucket[$key] ?? 0),
+                'approved'  => (int) ($approvedByBucket[$key] ?? 0),
             ];
             match ($unit) {
                 'day'   => $cursor->addDay(),
@@ -230,20 +216,19 @@ class ProductManagerController extends Controller
         }
 
         return [
-            'from'           => $from->toDateString(),
-            'to'             => $to->toDateString(),
-            'unit'           => $unit,
-            'submitted'      => $submitted,
-            'approved'       => $approved,
-            'rejected'       => $rejected,
-            'reviewed'       => $reviewed,
-            'approved_value' => round((float) $approvedValue, 2),
-            'revenue'        => round((float) $revenue, 2),
-            'series'         => $series,
+            'from'      => $from->toDateString(),
+            'to'        => $to->toDateString(),
+            'unit'      => $unit,
+            'submitted' => $submitted,
+            'approved'  => $approved,
+            'rejected'  => $rejected,
+            'reviewed'  => $reviewed,
+            'series'    => $series,
         ];
     }
 
     // ── LIST PRODUCTS IN ASSIGNED CATEGORIES ──────────────────
+    // Supports ?status=, ?search=, ?page=, ?per_page= (server-side pagination).
     public function listProducts(Request $request)
     {
         if (!$this->user->can('product-list')) {
@@ -252,13 +237,28 @@ class ProductManagerController extends Controller
 
         $categoryIds = $this->assignedCategoryIds();
 
+        $emptyMeta = ['current_page' => 1, 'last_page' => 1, 'per_page' => 10, 'total' => 0];
+        $emptyCounts = ['all' => 0, 'pending' => 0, 'approved' => 0, 'rejected' => 0];
+
         if (empty($categoryIds)) {
             return response()->json([
                 'message'  => 'You have no categories assigned yet.',
                 'products' => [],
-                'count'    => 0,
+                'meta'     => $emptyMeta,
+                'counts'   => $emptyCounts,
             ], 200);
         }
+
+        $base = fn () => Product::whereIn('category_id', $categoryIds);
+
+        // Status counts are computed independent of the current status/search
+        // filters so the tab badges always reflect the full assigned set.
+        $counts = [
+            'all'      => (clone $base())->count(),
+            'pending'  => (clone $base())->where('status', 'pending')->count(),
+            'approved' => (clone $base())->where('status', 'approved')->count(),
+            'rejected' => (clone $base())->where('status', 'rejected')->count(),
+        ];
 
         $query = Product::with([
             'seller:id,name,email,phone',
@@ -266,16 +266,31 @@ class ProductManagerController extends Controller
             'images',
         ])->whereIn('category_id', $categoryIds);
 
-        // Filter by status
-        if ($request->has('status') && $request->status !== 'all') {
+        if ($request->filled('status') && $request->status !== 'all') {
             $query->where('status', $request->status);
         }
 
-        $products = $query->latest()->get();
+        if ($request->filled('search')) {
+            $search = $request->input('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('title', 'like', "%{$search}%")
+                  ->orWhereHas('seller', fn ($s) => $s->where('name', 'like', "%{$search}%"))
+                  ->orWhereHas('category', fn ($c) => $c->where('name', 'like', "%{$search}%"));
+            });
+        }
+
+        $perPage  = min((int) $request->input('per_page', 10), 50) ?: 10;
+        $products = $query->latest()->paginate($perPage)->withQueryString();
 
         return response()->json([
-            'products' => $products,
-            'count'    => $products->count(),
+            'products' => $products->items(),
+            'meta'     => [
+                'current_page' => $products->currentPage(),
+                'last_page'    => $products->lastPage(),
+                'per_page'     => $products->perPage(),
+                'total'        => $products->total(),
+            ],
+            'counts' => $counts,
         ], 200);
     }
 
@@ -349,9 +364,7 @@ class ProductManagerController extends Controller
             'is_read'      => false,
         ]);
 
-        if ($product->seller?->email) {
-            Mail::to($product->seller->email)->send(new ProductApprovedMail($product));
-        }
+        Mailer::send($product->seller?->email, new ProductApprovedMail($product));
 
         return response()->json([
             'message' => 'Product approved successfully.',
@@ -415,9 +428,7 @@ class ProductManagerController extends Controller
             'is_read'      => false,
         ]);
 
-        if ($product->seller?->email) {
-            Mail::to($product->seller->email)->send(new ProductRejectedMail($product));
-        }
+        Mailer::send($product->seller?->email, new ProductRejectedMail($product));
 
         return response()->json([
             'message' => 'Product rejected and seller has been notified.',

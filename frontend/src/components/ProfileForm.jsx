@@ -19,7 +19,7 @@ import {
 } from 'react-icons/fi';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
-import { storageUrl } from '../api/axios';
+import { storageUrl } from '../lib/urls';
 
 export default function ProfileForm({ getProfile, updateProfile, accentColor = 'blue' }) {
   const { user, login, token, role } = useAuth();

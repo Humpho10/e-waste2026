@@ -39,6 +39,5 @@ export const getSettings    = ()     => api.get('/admin/settings');
 export const updateSettings = (data) => api.put('/admin/settings', data);
 
 export const getAdminProfile    = ()     => api.get('/admin/profile');
-export const updateAdminProfile = (data) => api.post('/admin/profile', data, {
-  headers: { 'Content-Type': 'multipart/form-data' }
-});
+// Don't force Content-Type here — see api/products.js for why.
+export const updateAdminProfile = (data) => api.post('/admin/profile', data);

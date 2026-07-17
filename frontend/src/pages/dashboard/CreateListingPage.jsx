@@ -158,6 +158,7 @@ export default function CreateListingPage() {
       } else {
         toast.error(err.response?.data?.message || 'Failed to submit listing.');
       }
+
       setStep(2);
     } finally {
       setSubmitting(false);

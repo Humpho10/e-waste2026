@@ -1,12 +1,23 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import WorkspaceLayout from '../../layouts/WorkspaceLayout';
 import { getPMProducts, approvePMProduct, rejectPMProduct } from '../../api/productManager';
-import { storageUrl } from '../../api/axios';
 import { useToast } from '../../components/Toast';
 import { useConfirm } from '../../components/ConfirmDialog';
 import { useAuth } from '../../context/AuthContext';
+import { storageUrl } from '../../lib/urls';
+
+// Debounce a fast-changing value (e.g. search input) so we don't fire a
+// server request on every keystroke.
+function useDebouncedValue(value, delay = 400) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return debounced;
+}
 
 const statusConfig = {
   pending:  { label: 'Pending',  color: 'bg-yellow-100 text-yellow-700 dark:bg-yellow-900/40 dark:text-yellow-400', dot: 'bg-yellow-400', icon: 'bi-hourglass-split' },
@@ -19,11 +30,8 @@ const ugx = (n) => `UGX ${Number(n || 0).toLocaleString()}`;
 // ── Flexible image URL helper ──────────────────────────────
 const getImageUrl = (image) => {
   if (!image) return null;
-  if (typeof image === 'string') return image;
-  const path = image.image_path || image.path || image.url || '';
-  if (!path) return null;
-  if (path.startsWith('http')) return path;
-  return storageUrl(path);
+  if (typeof image === 'string') return storageUrl(image);
+  return storageUrl(image.image_path || image.path || image.url || '');
 };
 
 function StatusBadge({ status }) {
@@ -44,7 +52,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden dark:bg-slate-900">
-        <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 dark:border-slate-800">
+        <div className="px-4 sm:px-6 py-4 border-b border-gray-100 flex items-center justify-between shrink-0 dark:border-slate-800">
           <div className="min-w-0">
             <h3 className="font-bold text-gray-800 text-lg truncate dark:text-gray-100">{product.title}</h3>
             <p className="text-gray-400 text-xs mt-0.5 dark:text-gray-500">
@@ -56,7 +64,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto p-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Images */}
             <div>
@@ -140,7 +148,7 @@ function ProductDetailModal({ product, onClose, onApprove, onReject, canApprove,
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex gap-3 shrink-0">
+        <div className="px-4 sm:px-6 py-4 border-t border-gray-100 dark:border-slate-800 flex flex-col sm:flex-row gap-2 sm:gap-3 shrink-0">
           {product.status === 'pending' && (
             <>
               {canApprove && (
@@ -277,11 +285,21 @@ function RowActions({ product, canApprove, canReject, approving, onView, onAppro
 }
 
 // ── Main Products Page ─────────────────────────────────────
+const PER_PAGE_OPTIONS = [10, 25, 50];
+
 export default function WorkspaceProductsPage() {
   const [searchParams]                  = useSearchParams();
   const [status, setStatus]             = useState(searchParams.get('status') || 'all');
-  const [search, setSearch]             = useState('');
-  const [view, setView]                 = useState('table');
+  const [searchInput, setSearchInput]   = useState('');
+  const search                          = useDebouncedValue(searchInput);
+  const [page, setPage]                 = useState(1);
+  const [perPage, setPerPage]           = useState(10);
+  // Phones get the card grid by default — a 6-column table behind a
+  // horizontal scroll is a poor primary view on a small screen. The
+  // toggle still lets the user switch either way.
+  const [view, setView]                 = useState(() =>
+    typeof window !== 'undefined' && window.innerWidth < 768 ? 'grid' : 'table'
+  );
   const [viewProduct, setViewProduct]   = useState(null);
   const [rejectTarget, setRejectTarget] = useState(null);
   const [approving, setApproving]       = useState(null);
@@ -294,22 +312,31 @@ export default function WorkspaceProductsPage() {
   const canApprove = permissions?.includes('product-approve') || false;
   const canReject  = permissions?.includes('product-reject')  || false;
 
-  // Fetch ALL listings once, then filter client-side. This gives us live
-  // per-status counts and instant filtering without extra round-trips.
-  const { data: products = [], isLoading: loading } = useQuery({
-    queryKey: ['pm-products'],
-    queryFn: () => getPMProducts({}).then(res => res.data.products || []),
+  // Reset to page 1 whenever the filters that reshape the result set change.
+  useEffect(() => { setPage(1); }, [status, search, perPage]);
+
+  const queryParams = useMemo(() => ({
+    status: status !== 'all' ? status : undefined,
+    search: search || undefined,
+    page,
+    per_page: perPage,
+  }), [status, search, page, perPage]);
+
+  const { data, isLoading: loading, isFetching } = useQuery({
+    queryKey: ['pm-products', queryParams],
+    queryFn: () => getPMProducts(queryParams).then(res => res.data),
+    placeholderData: keepPreviousData,
   });
 
-  const setProductStatus = (productId, newStatus) => {
-    queryClient.setQueryData(['pm-products'], (old = []) =>
-      old.map(p => p.product_id === productId ? { ...p, status: newStatus } : p)
-    );
-  };
+  const products = data?.products ?? [];
+  const meta     = data?.meta ?? { current_page: 1, last_page: 1, per_page: perPage, total: 0 };
+  const counts   = data?.counts ?? { all: 0, pending: 0, approved: 0, rejected: 0 };
+
+  const refreshProducts = () => queryClient.invalidateQueries({ queryKey: ['pm-products'] });
 
   const approveMutation = useMutation({
     mutationFn: (productId) => approvePMProduct(productId),
-    onSuccess: (_res, productId) => setProductStatus(productId, 'approved'),
+    onSuccess: refreshProducts,
   });
 
   const handleApprove = async (product) => {
@@ -329,22 +356,6 @@ export default function WorkspaceProductsPage() {
       setApproving(null);
     }
   };
-
-  const counts = {
-    all:      products.length,
-    pending:  products.filter(p => p.status === 'pending').length,
-    approved: products.filter(p => p.status === 'approved').length,
-    rejected: products.filter(p => p.status === 'rejected').length,
-  };
-
-  const q = search.trim().toLowerCase();
-  const filtered = products
-    .filter(p => status === 'all' || p.status === status)
-    .filter(p => !q ||
-      p.title?.toLowerCase().includes(q) ||
-      p.seller?.name?.toLowerCase().includes(q) ||
-      p.category?.name?.toLowerCase().includes(q)
-    );
 
   const tabs = [
     { key: 'all',      label: 'All',      icon: 'bi-grid-3x3-gap' },
@@ -368,6 +379,7 @@ export default function WorkspaceProductsPage() {
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Listings</h2>
           <p className="text-gray-500 text-sm mt-1 dark:text-gray-400">
             {counts.all} listing{counts.all === 1 ? '' : 's'} in your assigned categories
+            {isFetching && !loading && <i className="bi bi-arrow-repeat animate-spin ml-2 text-gray-300 dark:text-gray-600" />}
             {counts.pending > 0 && (
               <span className="ml-2 inline-flex items-center gap-1 text-amber-600 font-medium dark:text-amber-400">
                 <i className="bi bi-hourglass-split" /> {counts.pending} awaiting review
@@ -406,11 +418,11 @@ export default function WorkspaceProductsPage() {
             <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm dark:text-gray-500" />
             <input
               type="text" placeholder="Search title, seller or category..."
-              value={search} onChange={e => setSearch(e.target.value)}
+              value={searchInput} onChange={e => setSearchInput(e.target.value)}
               className="w-full lg:w-72 pl-9 pr-8 py-2 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-teal-500 bg-white dark:border-slate-700 dark:bg-slate-900"
             />
-            {search && (
-              <button onClick={() => setSearch('')} title="Clear"
+            {searchInput && (
+              <button onClick={() => setSearchInput('')} title="Clear"
                 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gray-100 hover:bg-gray-200 flex items-center justify-center text-gray-500 dark:bg-slate-800 dark:text-gray-400">
                 <i className="bi bi-x-lg text-[10px]" />
               </button>
@@ -448,7 +460,7 @@ export default function WorkspaceProductsPage() {
             </div>
           ))}
         </div>
-      ) : filtered.length === 0 ? (
+      ) : products.length === 0 ? (
         <div className="bg-white rounded-2xl border border-dashed border-gray-200 p-16 text-center dark:bg-slate-900 dark:border-slate-700">
           <div className="w-16 h-16 rounded-2xl bg-gray-50 text-gray-300 text-3xl flex items-center justify-center mx-auto mb-4 dark:bg-slate-800/60">
             <i className={`bi ${search ? 'bi-search' : 'bi-inbox'}`} />
@@ -456,16 +468,18 @@ export default function WorkspaceProductsPage() {
           <h3 className="font-bold text-gray-700 mb-2 dark:text-gray-200">No listings found</h3>
           <p className="text-gray-400 text-sm dark:text-gray-500">
             {search
-              ? <>Nothing matches “{search}”. <button onClick={() => setSearch('')} className="text-teal-600 underline dark:text-teal-400">Clear search</button></>
+              ? <>Nothing matches “{search}”. <button onClick={() => setSearchInput('')} className="text-teal-600 underline dark:text-teal-400">Clear search</button></>
               : status !== 'all'
                 ? `No ${status} listings in your categories.`
                 : 'No listings have been submitted in your categories yet.'}
           </p>
         </div>
-      ) : view === 'grid' ? (
+      ) : (
+        <>
+        {view === 'grid' ? (
         /* ── Grid view ───────────────────────────────────── */
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-          {filtered.map(product => (
+          {products.map(product => (
             <div key={product.product_id} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden hover:shadow-md transition flex flex-col dark:bg-slate-900 dark:border-slate-800">
               <div className="relative aspect-video bg-gray-50 flex items-center justify-center overflow-hidden dark:bg-slate-800/60">
                 {product.images?.[0]
@@ -495,7 +509,8 @@ export default function WorkspaceProductsPage() {
       ) : (
         /* ── Table view ──────────────────────────────────── */
         <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden dark:bg-slate-900 dark:border-slate-800">
-          <table className="w-full text-sm">
+          <div className="overflow-x-auto">
+          <table className="w-full min-w-[720px] text-sm">
             <thead className="bg-gray-50 dark:bg-slate-800/60 border-b border-gray-100 dark:border-slate-800">
               <tr>
                 {['Listing', 'Seller', 'Category', 'Price', 'Status', 'Actions'].map(h => (
@@ -504,7 +519,7 @@ export default function WorkspaceProductsPage() {
               </tr>
             </thead>
             <tbody>
-              {filtered.map(product => (
+              {products.map(product => (
                 <tr key={product.product_id} className="border-t border-gray-50 hover:bg-gray-50 transition">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -535,7 +550,45 @@ export default function WorkspaceProductsPage() {
               ))}
             </tbody>
           </table>
+          </div>
         </div>
+        )}
+
+        {/* ── Pagination ────────────────────────────────── */}
+        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 px-1">
+          <div className="flex items-center gap-2 text-xs text-gray-500 dark:text-gray-400">
+            <span>
+              Showing {meta.total === 0 ? 0 : (meta.current_page - 1) * meta.per_page + 1}–{Math.min(meta.current_page * meta.per_page, meta.total)} of {meta.total.toLocaleString()}
+            </span>
+            <select
+              value={perPage}
+              onChange={e => setPerPage(Number(e.target.value))}
+              className="ml-2 border border-gray-200 dark:border-slate-700 dark:bg-slate-900 dark:text-gray-100 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-teal-500"
+            >
+              {PER_PAGE_OPTIONS.map(n => <option key={n} value={n}>{n} / page</option>)}
+            </select>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={meta.current_page <= 1}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <i className="bi bi-chevron-left" />
+            </button>
+            <span className="text-xs text-gray-500 dark:text-gray-400 px-2">
+              Page {meta.current_page} of {meta.last_page}
+            </span>
+            <button
+              onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
+              disabled={meta.current_page >= meta.last_page}
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-slate-800 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              <i className="bi bi-chevron-right" />
+            </button>
+          </div>
+        </div>
+        </>
       )}
 
       {viewProduct && (
@@ -553,7 +606,7 @@ export default function WorkspaceProductsPage() {
         <RejectModal
           product={rejectTarget}
           onClose={() => setRejectTarget(null)}
-          onRejected={(productId) => setProductStatus(productId, 'rejected')}
+          onRejected={refreshProducts}
           toast={toast}
         />
       )}

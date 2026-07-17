@@ -22,6 +22,7 @@ import DashboardLayout from '../layouts/DashboardLayout';
 import { myListings } from '../api/products';
 import { getNotifications } from '../api/notifications';
 import { useAuth } from '../context/AuthContext';
+import { storageUrl } from '../lib/urls';
 
 // ── StatCard with Neutral Colors (YOUR PREFERRED VERSION) ──
 function StatCard({ icon, label, value, color, to, trend }) {
@@ -328,8 +329,16 @@ export default function DashboardPage() {
                         transition={{ delay: index * 0.05 }}
                         whileHover={{ x: 4 }}
                       >
-                        <div className={`w-12 h-12 rounded-2xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0 border ${cfg.color.split(' ')[2]} group-hover:scale-110 transition-transform`}>
-                          <FiPackage className="w-6 h-6 text-slate-500 dark:text-gray-400" />
+                        <div className={`w-12 h-12 rounded-2xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0 border ${cfg.color.split(' ')[2]} group-hover:scale-110 transition-transform overflow-hidden`}>
+                          {listing.images?.[0] ? (
+                            <img
+                              src={storageUrl(listing.images[0].image_path)}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <FiPackage className="w-6 h-6 text-slate-500 dark:text-gray-400" />
+                          )}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-slate-800 truncate text-sm group-hover:text-blue-600 transition-colors dark:text-gray-100">
@@ -420,8 +429,16 @@ export default function DashboardPage() {
                 const cfg = statusConfig[listing.status] || statusConfig.pending;
                 return (
                   <div key={listing.product_id} className="flex items-center gap-4 p-3 rounded-xl hover:bg-slate-50/80 transition-colors">
-                    <div className={`w-10 h-10 rounded-xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0`}>
-                      <FiPackage className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                    <div className={`w-10 h-10 rounded-xl ${cfg.color.split(' ')[0]} flex items-center justify-center shrink-0 overflow-hidden`}>
+                      {listing.images?.[0] ? (
+                        <img
+                          src={storageUrl(listing.images[0].image_path)}
+                          alt=""
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <FiPackage className="w-5 h-5 text-slate-500 dark:text-gray-400" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-slate-800 truncate dark:text-gray-100">{listing.title}</p>

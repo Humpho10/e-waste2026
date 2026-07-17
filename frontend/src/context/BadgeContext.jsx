@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '../api/axios';
 import { useAuth } from './AuthContext';
 
+
 const BadgeContext = createContext();
 
 // Both endpoints work for every role since they're in the auth:sanctum
