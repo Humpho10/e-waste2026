@@ -85,14 +85,17 @@ export default function LoginPage() {
   // a plain inline error.
   const [maintenanceBlock, setMaintenanceBlock] = useState(null);
 
-  // The axios 401 handler sends people here when their token was rejected
-  // by the server (expired/revoked) rather than by a deliberate logout —
-  // surface that explicitly instead of leaving them to wonder why they're
-  // suddenly looking at the sign-in form again.
+  // Set by the axios 401 handler (token rejected by the server) or by the
+  // idle-timeout watcher in AuthContext — surface why, instead of leaving
+  // people to wonder why they're suddenly looking at the sign-in form again.
   useEffect(() => {
-    if (sessionStorage.getItem('sessionExpired')) {
-      sessionStorage.removeItem('sessionExpired');
-      toast('Your session has expired. Please sign in again.', 'info');
+    const reason = sessionStorage.getItem('authNotice');
+    if (reason) {
+      sessionStorage.removeItem('authNotice');
+      const message = reason === 'idle'
+        ? "You were signed out due to inactivity."
+        : 'Your session has expired. Please sign in again.';
+      toast(message, 'info');
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

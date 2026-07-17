@@ -51,7 +51,7 @@ api.interceptors.response.use(
       localStorage.removeItem('role');
       localStorage.removeItem('permissions');
       if (!intentionalLogout) {
-        sessionStorage.setItem('sessionExpired', '1');
+        sessionStorage.setItem('authNotice', 'expired');
         window.location.href = '/login';
       }
     }
