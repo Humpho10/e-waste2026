@@ -38,7 +38,7 @@ export default function MyListingsPage() {
     queryKey: ['my-listings', status],
     queryFn: () => myListings(status !== 'all' ? { status } : {}).then(res => res.data.products || []),
   });
- console.log("Test.............1",listings);
+
   const deleteMutation = useMutation({
     mutationFn: (id) => deleteProduct(id),
     onSuccess: () => {

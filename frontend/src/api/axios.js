@@ -48,7 +48,10 @@ api.interceptors.response.use(
   error => {
     if (error.response?.status === 401) {
       localStorage.removeItem('token');
+      localStorage.removeItem('role');
+      localStorage.removeItem('permissions');
       if (!intentionalLogout) {
+        sessionStorage.setItem('authNotice', 'expired');
         window.location.href = '/login';
       }
     }

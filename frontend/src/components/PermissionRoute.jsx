@@ -1,23 +1,22 @@
 // src/components/PermissionRoute.jsx
-import { Navigate } from 'react-router-dom';
+import { Navigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 /**
  * PermissionRoute – Restricts access based on user permissions
- * 
+ *
  * @param {Object} props
  * @param {React.ReactNode} props.children - The page/component to render
  * @param {string[]} props.requiredPermissions - Array of permission names; user needs at least one
- * @param {string} [props.redirectTo='/dashboard'] - Where to redirect if unauthorized
  * @param {boolean} [props.requireAll=false] - If true, user must have ALL permissions; default: any
  */
-function PermissionRoute({ 
-  children, 
-  requiredPermissions = [], 
-  redirectTo = '/',
-  requireAll = false 
+function PermissionRoute({
+  children,
+  requiredPermissions = [],
+  requireAll = false
 }) {
   const { token, loading, permissions } = useAuth();
+  const location = useLocation();
 
   // Show loading state while checking auth
   if (loading) {
@@ -43,9 +42,10 @@ function PermissionRoute({
     ? requiredPermissions.every(p => permissions?.includes(p))
     : requiredPermissions.some(p => permissions?.includes(p));
 
-  // If no permission, redirect
+  // If no permission, send to an explicit denial page rather than
+  // silently landing somewhere that could look like it worked.
   if (!hasPermission) {
-    return <Navigate to={redirectTo} />;
+    return <Navigate to="/unauthorized" state={{ from: location.pathname }} replace />;
   }
 
   // All good → render children

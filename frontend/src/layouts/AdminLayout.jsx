@@ -21,8 +21,7 @@ const allNavItems = [
   { path: '/admin/audit',        icon: 'file-earmark-text-fill',label: 'Audit Trail',  group: 'system', badge: null,   permission: 'audit-list' },
   { path: '/admin/settings',     icon: 'gear-fill',             label: 'Settings',     group: 'system', badge: null,   permission: 'dashboard-view' },
   { path: '/admin/profile',      icon: 'person-circle',         label: 'Profile',      group: 'system', badge: null,   permission: null }, // always visible
-  { path: '/admin/my-messages',  icon: 'chat-square-text-fill', label: 'My Messages',  group: 'system', badge: 'msg',   permission: 'message-view' },
-  { path: '/admin/messages',     icon: 'chat-dots-fill',        label: 'All Messages', group: 'system', badge: null,   permission: 'message-view' },
+  { path: '/admin/my-messages',  icon: 'chat-square-text-fill', label: 'Messages',     group: 'system', badge: 'msg',   permission: 'message-view' },
   { path: '/admin/notifications',icon: 'bell-fill',             label: 'Notifications',group: 'system', badge: 'notif', permission: 'notification-view' },
 ];
 
@@ -275,7 +274,7 @@ export default function AdminLayout({ children }) {
             <ThemeToggle />
 
             <Link
-              to="/admin/messages"
+              to="/admin/my-messages"
               className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:scale-105 transition-all"
             >
               <Bi name="chat-dots-fill" size={16} />

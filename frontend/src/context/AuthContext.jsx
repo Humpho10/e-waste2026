@@ -1,9 +1,16 @@
 // src/context/AuthContext.jsx
-import { createContext, useContext, useState } from 'react';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { getMe } from '../api/auth';
+import { getMe, logoutUser } from '../api/auth';
 
 const AuthContext = createContext();
+
+// No activity (mouse, keyboard, scroll, touch) for this long while signed
+// in auto-logs-out — separate from the token's own server-side expiration
+// (config/sanctum.php), which keeps working even if someone stays active
+// forever. Covers the "walked away from an unlocked/shared computer" case.
+const IDLE_TIMEOUT_MS = 30 * 60 * 1000; // 30 minutes
+const ACTIVITY_EVENTS = ['mousemove', 'mousedown', 'keydown', 'wheel', 'touchstart', 'scroll'];
 
 export function AuthProvider({ children }) {
   const [user, setUser]       = useState(null);
@@ -76,6 +83,49 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('role');
     localStorage.removeItem('permissions');
   };
+
+  // Idle auto-logout — only while signed in. Throttles activity resets to
+  // once/second so continuous mousemove/scroll doesn't churn setTimeout.
+  const idleTimerRef = useRef(null);
+  const lastActivityRef = useRef(0);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const handleIdleTimeout = () => {
+      // Wait for the revoke call to actually go out (with the token still
+      // in localStorage for the request interceptor to attach) before
+      // clearing state — otherwise this fires with no Authorization header
+      // and the server-side token never actually gets revoked.
+      logoutUser().catch(() => {}).finally(() => {
+        setUser(null);
+        setToken(null);
+        setRole(null);
+        setPermissions([]);
+        localStorage.removeItem('token');
+        localStorage.removeItem('role');
+        localStorage.removeItem('permissions');
+        sessionStorage.setItem('authNotice', 'idle');
+        window.location.href = '/login';
+      });
+    };
+
+    const resetTimer = () => {
+      const now = Date.now();
+      if (now - lastActivityRef.current < 1000) return; // throttle
+      lastActivityRef.current = now;
+      clearTimeout(idleTimerRef.current);
+      idleTimerRef.current = setTimeout(handleIdleTimeout, IDLE_TIMEOUT_MS);
+    };
+
+    resetTimer();
+    ACTIVITY_EVENTS.forEach(e => window.addEventListener(e, resetTimer, { passive: true }));
+
+    return () => {
+      clearTimeout(idleTimerRef.current);
+      ACTIVITY_EVENTS.forEach(e => window.removeEventListener(e, resetTimer));
+    };
+  }, [token]);
 
   // 🔥 REDIRECT LOGIC – NEW ROLES GO TO /app
   const redirectPath = () => {

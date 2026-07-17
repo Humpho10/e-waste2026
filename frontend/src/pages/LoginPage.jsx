@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUser, resendVerificationPublic } from '../api/auth';
@@ -84,6 +84,21 @@ export default function LoginPage() {
   // page for the same "under maintenance" screen visitors see, rather than
   // a plain inline error.
   const [maintenanceBlock, setMaintenanceBlock] = useState(null);
+
+  // Set by the axios 401 handler (token rejected by the server) or by the
+  // idle-timeout watcher in AuthContext — surface why, instead of leaving
+  // people to wonder why they're suddenly looking at the sign-in form again.
+  useEffect(() => {
+    const reason = sessionStorage.getItem('authNotice');
+    if (reason) {
+      sessionStorage.removeItem('authNotice');
+      const message = reason === 'idle'
+        ? "You were signed out due to inactivity."
+        : 'Your session has expired. Please sign in again.';
+      toast(message, 'info');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Same cache key as MaintenanceGate/HomePage — hides "Continue with
   // Google" if the Super Admin has switched it off in Settings.

@@ -5,7 +5,6 @@ import { getConversations, getProductMessages, sendMessage } from '../../api/mes
 import { useAuth } from '../../context/AuthContext';
 import { useBadge } from '../../context/BadgeContext';
 import { useToast } from '../../components/Toast';
-import StaffAdminChat from '../../components/StaffAdminChat';
 
 export default function WorkspaceMessagesPage() {
   const { user, permissions } = useAuth();
@@ -61,12 +60,6 @@ export default function WorkspaceMessagesPage() {
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">Messages</h2>
         <p className="text-gray-500 dark:text-gray-400 text-sm mt-1">Communications regarding listings in your categories</p>
-      </div>
-
-      <StaffAdminChat accent="teal" />
-
-      <div className="mb-3">
-        <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wide">Listing conversations</p>
       </div>
 
       <div className="bg-white dark:bg-slate-900 rounded-2xl border border-gray-100 dark:border-slate-800 shadow-sm overflow-hidden flex h-[600px]">
