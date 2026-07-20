@@ -107,132 +107,132 @@ function App() {
 
         {/* ─── Super Admin ──────────────────────────────────── */}
         <Route path="/admin" element={
-          <PermissionRoute requiredPermissions={['dashboard-view', 'user-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['dashboard-view', 'user-list']}>
             <OverviewPage />
           </PermissionRoute>
         } />
         <Route path="/admin/admins" element={
-          <PermissionRoute requiredPermissions={['admin-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['admin-list']}>
             <AdminsPage />
           </PermissionRoute>
         } />
         <Route path="/admin/product-managers" element={
-          <PermissionRoute requiredPermissions={['pm-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['pm-list']}>
             <AdminProductManagersPage />
           </PermissionRoute>
         } />
         <Route path="/admin/users" element={
-          <PermissionRoute requiredPermissions={['user-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['user-list']}>
             <UsersPage />
           </PermissionRoute>
         } />
         <Route path="/admin/roles" element={
-          <PermissionRoute requiredPermissions={['role-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['role-list']}>
             <RolesPage />
           </PermissionRoute>
         } />
         <Route path="/admin/permissions" element={
-          <PermissionRoute requiredPermissions={['permission-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['permission-list']}>
             <PermissionsPage />
           </PermissionRoute>
         } />
         <Route path="/admin/audit" element={
-          <PermissionRoute requiredPermissions={['audit-list']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['audit-list']}>
             <AuditPage />
           </PermissionRoute>
         } />
         <Route path="/admin/my-messages" element={
-          <PermissionRoute requiredPermissions={['message-view']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['message-view']}>
             <MyMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/admin/settings" element={
-          <PermissionRoute requiredPermissions={['dashboard-view']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['dashboard-view']}>
             <SettingsPage />
           </PermissionRoute>
         } />
         <Route path="/admin/profile" element={
-          <PermissionRoute><AdminProfilePage /></PermissionRoute>
+          <PermissionRoute allowedRoles={['Super-Admin']}><AdminProfilePage /></PermissionRoute>
         } />
         <Route path="/admin/notifications" element={
-          <PermissionRoute requiredPermissions={['notification-view']}>
+          <PermissionRoute allowedRoles={['Super-Admin']} requiredPermissions={['notification-view']}>
             <AdminNotificationsPage />
           </PermissionRoute>
         } />
 
         {/* ─── Manager ──────────────────────────────────────── */}
         <Route path="/manager" element={
-          <PermissionRoute requiredPermissions={['dashboard-view', 'product-list']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['dashboard-view', 'product-list']}>
             <ManagerOverviewPage />
           </PermissionRoute>
         } />
         <Route path="/manager/product-managers" element={
-          <PermissionRoute requiredPermissions={['pm-list']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['pm-list']}>
             <ProductManagersPage />
           </PermissionRoute>
         } />
         <Route path="/manager/categories" element={
-          <PermissionRoute requiredPermissions={['category-list']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['category-list']}>
             <CategoriesPage />
           </PermissionRoute>
         } />
         <Route path="/manager/products" element={
-          <PermissionRoute requiredPermissions={['product-list']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['product-list']}>
             <ProductsPage />
           </PermissionRoute>
         } />
         <Route path="/manager/profile" element={
-          <PermissionRoute><ManagerProfilePage /></PermissionRoute>
+          <PermissionRoute allowedRoles={['Admin']}><ManagerProfilePage /></PermissionRoute>
         } />
         <Route path="/manager/notifications" element={
-          <PermissionRoute requiredPermissions={['notification-view']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['notification-view']}>
             <ManagerNotificationsPage />
           </PermissionRoute>
         } />
         <Route path="/manager/messages" element={
-          <PermissionRoute requiredPermissions={['message-view']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['message-view']}>
             <ManagerMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/manager/contact-messages" element={
-          <PermissionRoute requiredPermissions={['contact-view']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['contact-view']}>
             <ContactMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/manager/users" element={
-          <PermissionRoute requiredPermissions={['user-list']}>
+          <PermissionRoute allowedRoles={['Admin']} requiredPermissions={['user-list']}>
             <ManagerUsersPage />
           </PermissionRoute>
         } />
 
         {/* ─── Workspace (Product Manager) ──────────────────── */}
         <Route path="/workspace" element={
-          <PermissionRoute requiredPermissions={['product-list']}>
+          <PermissionRoute allowedRoles={['Product-Manager']} requiredPermissions={['product-list']}>
             <WorkspaceOverviewPage />
           </PermissionRoute>
         } />
         <Route path="/workspace/products" element={
-          <PermissionRoute requiredPermissions={['product-list']}>
+          <PermissionRoute allowedRoles={['Product-Manager']} requiredPermissions={['product-list']}>
             <WorkspaceProductsPage />
           </PermissionRoute>
         } />
         <Route path="/workspace/messages" element={
-          <PermissionRoute requiredPermissions={['message-view']}>
+          <PermissionRoute allowedRoles={['Product-Manager']} requiredPermissions={['message-view']}>
             <WorkspaceMessagesPage />
           </PermissionRoute>
         } />
         <Route path="/workspace/notifications" element={
-          <PermissionRoute requiredPermissions={['notification-view']}>
+          <PermissionRoute allowedRoles={['Product-Manager']} requiredPermissions={['notification-view']}>
             <WorkspaceNotificationsPage />
           </PermissionRoute>
         } />
         <Route path="/workspace/profile" element={
-          <PermissionRoute><WorkspaceProfilePage /></PermissionRoute>
+          <PermissionRoute allowedRoles={['Product-Manager']}><WorkspaceProfilePage /></PermissionRoute>
         } />
 
         {/* ─── Regular User ─────────────────────────────────── */}
         <Route path="/dashboard" element={
-          <PermissionRoute requiredPermissions={['dashboard-view']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['dashboard-view']}>
             <DashboardPage />
           </PermissionRoute>
         } />
@@ -240,12 +240,12 @@ function App() {
           <ProtectedRoute><BrowsePage /></ProtectedRoute>
         } />
         <Route path="/dashboard/listings" element={
-          <PermissionRoute requiredPermissions={['product-list']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['product-list']}>
             <MyListingsPage />
           </PermissionRoute>
         } />
         <Route path="/dashboard/create" element={
-          <PermissionRoute requiredPermissions={['product-create']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['product-create']}>
             <CreateListingPage />
           </PermissionRoute>
         } />
@@ -253,12 +253,12 @@ function App() {
           <ProtectedRoute><ProductDetailPage /></ProtectedRoute>
         } />
         <Route path="/dashboard/messages" element={
-          <PermissionRoute requiredPermissions={['message-view']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['message-view']}>
             <MessagesPage />
           </PermissionRoute>
         } />
         <Route path="/dashboard/notifications" element={
-          <PermissionRoute requiredPermissions={['notification-view']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['notification-view']}>
             <NotificationsPage />
           </PermissionRoute>
         } />
@@ -266,7 +266,7 @@ function App() {
           <ProtectedRoute><UserProfilePage /></ProtectedRoute>
         } />
         <Route path="/dashboard/resubmit/:hashId" element={
-          <PermissionRoute requiredPermissions={['product-create']}>
+          <PermissionRoute allowedRoles={['User']} requiredPermissions={['product-create']}>
             <ResubmitListingPage />
           </PermissionRoute>
         } />

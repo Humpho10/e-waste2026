@@ -31,7 +31,7 @@ import { FaRecycle, FaShoppingBag } from 'react-icons/fa';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
-import { storageUrl } from '../api/axios';
+import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 //import { storageUrl } from '../lib/urls';
@@ -68,12 +68,25 @@ export default function DashboardLayout({ children }) {
 
   // Instant logout — clear client-side session right away instead of
   // waiting on the network round trip; revoke the token in the background.
+  // The token clear is deferred one tick so the revoke request still goes
+  // out authenticated (it reads localStorage when axios builds it) — doing
+  // it synchronously here would race the request and 401 it, which the
+  // global interceptor would then mistake for a real expired session.
+  // intentionalLogout stays true for a fixed grace window rather than
+  // resetting as soon as the logout call itself resolves — queryClient.clear()
+  // below also forces an immediate (token-less) refetch of whatever's still
+  // mounted (e.g. badge counts), and that request's own 401 would otherwise
+  // race the reset and trigger the same false "session expired" redirect.
   const handleLogout = () => {
+    setIntentionalLogout(true);
     setLoggingOut(true);
-    logout();
-    queryClient.clear();
-    navigate('/');
     logoutUser().catch(() => {});
+    setTimeout(() => {
+      logout();
+      queryClient.clear();
+      navigate('/');
+    }, 0);
+    setTimeout(() => setIntentionalLogout(false), 1000);
   };
 
   const currentLabel = navItems.find(n => location.pathname === n.path)?.label || 'Dashboard';
