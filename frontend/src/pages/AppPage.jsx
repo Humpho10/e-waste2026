@@ -24,25 +24,25 @@ function AppPage() {
     return colors[index];
   };
 
-  // Helper: Get emoji for permission
-  const getEmoji = (permission) => {
+  // Helper: Get a Bootstrap icon name for a permission
+  const getIconName = (permission) => {
     const lower = permission.toLowerCase();
-    if (lower.includes('transaction') || lower.includes('payment')) return '💰';
-    if (lower.includes('message')) return '💬';
-    if (lower.includes('notification')) return '🔔';
-    if (lower.includes('user')) return '👥';
-    if (lower.includes('admin')) return '🛡️';
-    if (lower.includes('role') || lower.includes('permission')) return '🔑';
-    if (lower.includes('product') || lower.includes('inventory')) return '📦';
-    if (lower.includes('category')) return '🏷️';
-    if (lower.includes('report') || lower.includes('analytics')) return '📊';
-    if (lower.includes('audit')) return '📋';
-    if (lower.includes('order')) return '🛒';
-    if (lower.includes('support')) return '🎫';
-    if (lower.includes('shipping')) return '🚚';
-    if (lower.includes('review')) return '⭐';
-    if (lower.includes('setting')) return '⚙️';
-    return '📌';
+    if (lower.includes('transaction') || lower.includes('payment')) return 'cash-coin';
+    if (lower.includes('message')) return 'chat-dots';
+    if (lower.includes('notification')) return 'bell';
+    if (lower.includes('user')) return 'people';
+    if (lower.includes('admin')) return 'shield-lock';
+    if (lower.includes('role') || lower.includes('permission')) return 'key';
+    if (lower.includes('product') || lower.includes('inventory')) return 'box-seam';
+    if (lower.includes('category')) return 'tag';
+    if (lower.includes('report') || lower.includes('analytics')) return 'bar-chart';
+    if (lower.includes('audit')) return 'clipboard-data';
+    if (lower.includes('order')) return 'cart';
+    if (lower.includes('support')) return 'ticket-detailed';
+    if (lower.includes('shipping')) return 'truck';
+    if (lower.includes('review')) return 'star';
+    if (lower.includes('setting')) return 'gear';
+    return 'pin-angle';
   };
 
   // Helper: Format permission name to readable title
@@ -117,7 +117,7 @@ function AppPage() {
       {hasPermissions && (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {permissions.map((permission) => {
-            const emoji = getEmoji(permission);
+            const iconName = getIconName(permission);
             const color = getColor(permission);
             const title = formatTitle(permission);
             const actionLabel = getActionLabel(permission);
@@ -128,7 +128,7 @@ function AppPage() {
                 onClick={() => handleWidgetClick(permission)}
                 className={`${color} border rounded-xl p-6 shadow-sm hover:shadow-md transition cursor-pointer hover:scale-[1.02]`}
               >
-                <div className="text-3xl mb-3">{emoji}</div>
+                <div className="text-3xl mb-3"><i className={`bi bi-${iconName}`} /></div>
                 <h3 className="font-semibold text-gray-800 dark:text-gray-100">{title}</h3>
                 <p className="text-gray-600 dark:text-gray-300 text-sm mt-1">
                   Click to {actionLabel.toLowerCase()}

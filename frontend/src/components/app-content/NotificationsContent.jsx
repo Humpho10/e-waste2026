@@ -6,12 +6,14 @@ import { useToast } from '../../components/Toast';
 import { useAuth } from '../../context/AuthContext';
 
 const typeConfig = {
-  product_approved:    { icon: '✅', color: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'   },
-  product_rejected:    { icon: '❌', color: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50'       },
-  new_message:         { icon: '💬', color: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50'     },
-  account_created:     { icon: '🎉', color: 'bg-purple-50 border-purple-200 dark:bg-purple-950/40' },
-  listing_resubmitted: { icon: '🔄', color: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50' },
-  new_listing:         { icon: '📦', color: 'bg-teal-50 border-teal-200 dark:bg-teal-950/40'     },
+  product_approved:    { icon: 'check-circle-fill',      tint: 'text-green-600 dark:text-green-400',   color: 'bg-green-50 dark:bg-green-950/40 border-green-200 dark:border-green-800/50'   },
+  product_rejected:    { icon: 'x-circle-fill',          tint: 'text-red-600 dark:text-red-400',       color: 'bg-red-50 dark:bg-red-950/40 border-red-200 dark:border-red-800/50'       },
+  new_message:         { icon: 'chat-dots-fill',         tint: 'text-blue-600 dark:text-blue-400',     color: 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/50'     },
+  account_created:     { icon: 'person-check-fill',      tint: 'text-purple-600 dark:text-purple-400', color: 'bg-purple-50 border-purple-200 dark:bg-purple-950/40' },
+  listing_resubmitted: { icon: 'arrow-repeat',           tint: 'text-yellow-600 dark:text-yellow-400', color: 'bg-yellow-50 dark:bg-yellow-950/40 border-yellow-200 dark:border-yellow-800/50' },
+  new_listing:         { icon: 'box-seam-fill',          tint: 'text-teal-600 dark:text-teal-400',     color: 'bg-teal-50 border-teal-200 dark:bg-teal-950/40'     },
+  category_update:     { icon: 'folder-fill',            tint: 'text-indigo-600 dark:text-indigo-400', color: 'bg-indigo-50 border-indigo-200 dark:bg-indigo-950/40' },
+  account_update:      { icon: 'person-gear',            tint: 'text-slate-600 dark:text-slate-300',   color: 'bg-slate-50 border-slate-200 dark:bg-slate-800/60' },
 };
 
 export default function NotificationsContent() {
@@ -98,21 +100,21 @@ export default function NotificationsContent() {
         </div>
       ) : notifications.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">🔔</div>
+          <i className="bi bi-bell text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No notifications yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm">You'll be notified about new listings and messages</p>
         </div>
       ) : (
         <div className="space-y-3">
           {notifications.map(notif => {
-            const cfg = typeConfig[notif.type] || { icon: '🔔', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700' };
+            const cfg = typeConfig[notif.type] || { icon: 'bell-fill', tint: 'text-gray-400 dark:text-gray-500', color: 'bg-gray-50 dark:bg-slate-800/60 border-gray-200 dark:border-slate-700' };
             return (
               <div
                 key={notif.notification_id}
                 className={`rounded-2xl border p-5 flex gap-4 items-start transition ${cfg.color} ${!notif.is_read ? 'shadow-sm' : 'opacity-75'}`}
               >
                 <div className="w-10 h-10 rounded-xl bg-white dark:bg-slate-900 flex items-center justify-center text-xl shrink-0 shadow-sm">
-                  {cfg.icon}
+                  <i className={`bi bi-${cfg.icon} ${cfg.tint || ''}`} />
                 </div>
                 <div className="flex-1">
                   <p className={`text-sm leading-relaxed ${!notif.is_read ? 'font-semibold text-gray-800 dark:text-gray-100' : 'text-gray-600 dark:text-gray-300'}`}>

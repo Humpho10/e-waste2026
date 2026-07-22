@@ -7,22 +7,23 @@ import { logoutUser } from '../api/auth';
 import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import Bi from '../components/BsIcon';
+import { usePlatformName } from '../hooks/useSiteSettings';
 //import { storageUrl } from '../lib/urls';
 
 // 🔥 Define nav items with required permissions — icon is a Bootstrap Icons
 // glyph name (see https://icons.getbootstrap.com), rendered via <Bi name=.../>
 const allNavItems = [
   { path: '/admin',              icon: 'speedometer2',          label: 'Overview',     group: 'main',   badge: null,   permission: 'dashboard-view' },
-  { path: '/admin/admins',       icon: 'person-check-fill',     label: 'Admins',       group: 'main',   badge: null,   permission: 'admin-list' },
-  { path: '/admin/product-managers', icon: 'kanban-fill',       label: 'Product Managers', group: 'main', badge: null, permission: 'pm-list' },
-  { path: '/admin/users',        icon: 'people-fill',           label: 'All Users',    group: 'main',   badge: null,   permission: 'user-list' },
-  { path: '/admin/roles',        icon: 'shield-lock-fill',      label: 'Roles',        group: 'access', badge: null,   permission: 'role-list' },
-  { path: '/admin/permissions',  icon: 'key-fill',              label: 'Permissions',  group: 'access', badge: null,   permission: 'permission-list' },
-  { path: '/admin/audit',        icon: 'file-earmark-text-fill',label: 'Audit Trail',  group: 'system', badge: null,   permission: 'audit-list' },
-  { path: '/admin/settings',     icon: 'gear-fill',             label: 'Settings',     group: 'system', badge: null,   permission: 'dashboard-view' },
+  { path: '/admin/admins',       icon: 'person-check',          label: 'Admins',       group: 'main',   badge: null,   permission: 'admin-list' },
+  { path: '/admin/product-managers', icon: 'kanban',            label: 'Product Managers', group: 'main', badge: null, permission: 'pm-list' },
+  { path: '/admin/users',        icon: 'people',                label: 'All Users',    group: 'main',   badge: null,   permission: 'user-list' },
+  { path: '/admin/roles',        icon: 'shield-lock',           label: 'Roles',        group: 'access', badge: null,   permission: 'role-list' },
+  { path: '/admin/permissions',  icon: 'key',                   label: 'Permissions',  group: 'access', badge: null,   permission: 'permission-list' },
+  { path: '/admin/audit',        icon: 'file-earmark-text',     label: 'Audit Trail',  group: 'system', badge: null,   permission: 'audit-list' },
+  { path: '/admin/settings',     icon: 'gear',                  label: 'Settings',     group: 'system', badge: null,   permission: 'dashboard-view' },
   { path: '/admin/profile',      icon: 'person-circle',         label: 'Profile',      group: 'system', badge: null,   permission: null }, // always visible
-  { path: '/admin/my-messages',  icon: 'chat-square-text-fill', label: 'Messages',     group: 'system', badge: 'msg',   permission: 'message-view' },
-  { path: '/admin/notifications',icon: 'bell-fill',             label: 'Notifications',group: 'system', badge: 'notif', permission: 'notification-view' },
+  { path: '/admin/my-messages',  icon: 'chat-square-text',      label: 'Messages',     group: 'system', badge: 'msg',   permission: 'message-view' },
+  { path: '/admin/notifications',icon: 'bell',                  label: 'Notifications',group: 'system', badge: 'notif', permission: 'notification-view' },
 ];
 
 const groups = [
@@ -33,6 +34,7 @@ const groups = [
 
 export default function AdminLayout({ children }) {
   const { user, logout, permissions } = useAuth(); // 🔥 Get permissions
+  const platformName     = usePlatformName();
   const location         = useLocation();
   const navigate         = useNavigate();
   const queryClient      = useQueryClient();
@@ -117,7 +119,7 @@ export default function AdminLayout({ children }) {
           </div>
           {!isRail && (
             <div className="overflow-hidden flex-1">
-              <p className="text-white font-bold text-sm leading-tight truncate">E-Waste Mart</p>
+              <p className="text-white font-bold text-sm leading-tight truncate">{platformName}</p>
               <p className="text-slate-500 text-xs dark:text-gray-400">Super Admin</p>
             </div>
           )}
@@ -277,7 +279,7 @@ export default function AdminLayout({ children }) {
               to="/admin/my-messages"
               className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:scale-105 transition-all"
             >
-              <Bi name="chat-dots-fill" size={16} />
+              <Bi name="chat-dots" size={16} />
               {msgCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {msgCount > 9 ? '9+' : msgCount}
@@ -289,7 +291,7 @@ export default function AdminLayout({ children }) {
               to="/admin/notifications"
               className="relative w-9 h-9 rounded-xl bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 flex items-center justify-center text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-slate-700 hover:scale-105 transition-all"
             >
-              <Bi name="bell-fill" size={16} />
+              <Bi name="bell" size={16} />
               {notifCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-red-500 text-white text-[10px] flex items-center justify-center font-bold shadow">
                   {notifCount > 9 ? '9+' : notifCount}
@@ -329,7 +331,7 @@ export default function AdminLayout({ children }) {
 
         {/* Footer */}
         <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
-          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 {platformName}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500">Super Admin Console</p>
         </footer>
       </div>

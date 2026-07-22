@@ -95,7 +95,7 @@ export default function ProductsContent() {
           </button>
         ))}
         <div className="relative ml-auto">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">🔍</span>
+          <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm" />
           <input
             type="text"
             placeholder="Search listings..."
@@ -123,7 +123,7 @@ export default function ProductsContent() {
         </div>
       ) : filtered.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">📭</div>
+          <i className="bi bi-inbox text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No listings found</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm">
             {status !== 'all' ? `No ${status} listings at the moment.` : 'No listings have been submitted yet.'}
@@ -175,9 +175,9 @@ export default function ProductsContent() {
                       <div className="flex gap-2 items-center">
                         <button
                           onClick={() => setViewProduct(product)}
-                          className="text-xs bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg font-medium transition"
+                          className="inline-flex items-center gap-1.5 text-xs bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-slate-700 px-3 py-1.5 rounded-lg font-medium transition"
                         >
-                          👁 View
+                          <i className="bi bi-eye" /> View
                         </button>
                         {product.status === 'pending' && canApprove && (
                           <button
@@ -187,23 +187,23 @@ export default function ProductsContent() {
                           >
                             {approving === product.product_id
                               ? <span className="flex items-center gap-1"><span className="w-3 h-3 border border-green-400 border-t-green-600 rounded-full animate-spin" /> Approving...</span>
-                              : '✓ Approve'
+                              : <span className="inline-flex items-center gap-1.5"><i className="bi bi-check-lg" /> Approve</span>
                             }
                           </button>
                         )}
                         {product.status === 'pending' && canReject && (
                           <button
                             onClick={() => setRejectTarget(product)}
-                            className="text-xs bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 hover:bg-red-100 border border-red-200 dark:border-red-800/50 px-3 py-1.5 rounded-lg font-medium transition"
+                            className="inline-flex items-center gap-1.5 text-xs bg-red-50 dark:bg-red-950/40 text-red-500 dark:text-red-400 hover:bg-red-100 border border-red-200 dark:border-red-800/50 px-3 py-1.5 rounded-lg font-medium transition"
                           >
-                            ✕ Reject
+                            <i className="bi bi-x-lg" /> Reject
                           </button>
                         )}
                         {product.status === 'approved' && (
-                          <span className="text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-950/40 px-2 py-1 rounded-lg">✓ Approved</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs text-green-600 dark:text-green-400 font-medium bg-green-50 dark:bg-green-950/40 px-2 py-1 rounded-lg"><i className="bi bi-check-circle-fill" /> Approved</span>
                         )}
                         {product.status === 'rejected' && (
-                          <span className="text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/40 px-2 py-1 rounded-lg">✕ Rejected</span>
+                          <span className="inline-flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 font-medium bg-red-50 dark:bg-red-950/40 px-2 py-1 rounded-lg"><i className="bi bi-x-circle-fill" /> Rejected</span>
                         )}
                       </div>
                     </td>

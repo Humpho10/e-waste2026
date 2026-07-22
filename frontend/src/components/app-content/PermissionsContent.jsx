@@ -87,7 +87,7 @@ export default function PermissionsContent() {
   if (!userPermissions?.includes('permission-list')) {
     return (
       <div className="text-center py-20">
-        <div className="text-6xl mb-4">🔒</div>
+        <i className="bi bi-lock-fill text-6xl text-gray-300 dark:text-slate-600 mb-4 block" />
         <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
         <p className="text-gray-500 dark:text-gray-400">You don't have permission to view permissions.</p>
       </div>
@@ -112,7 +112,7 @@ export default function PermissionsContent() {
               onClick={() => { setShowModal(true); setError(''); setForm({ name: '' }); }}
               className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium"
             >
-              + Add Permission
+<i className="bi bi-plus-lg" /> Add Permission
             </button>
           )}
         </div>
@@ -122,7 +122,7 @@ export default function PermissionsContent() {
         <div className="text-gray-400 dark:text-gray-500">Loading permissions...</div>
       ) : Object.keys(grouped).length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">🔑</div>
+          <i className="bi bi-key-fill text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No permissions found</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm">Try adjusting your search.</p>
         </div>
@@ -140,7 +140,7 @@ export default function PermissionsContent() {
                     <tr key={p.id} className={`border-b border-gray-50 dark:border-slate-800 hover:bg-gray-50 dark:hover:bg-slate-800 ${i % 2 === 0 ? '' : 'bg-gray-50/50 dark:bg-slate-800/30'}`}>
                       <td className="px-6 py-3 text-gray-400 dark:text-gray-500 w-12">{i + 1}</td>
                       <td className="px-4 py-3">
-                        <span className="bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-medium">🔑 {p.name}</span>
+                        <span className="inline-flex items-center gap-1.5 bg-purple-100 dark:bg-purple-950/40 text-purple-700 dark:text-purple-400 px-2 py-1 rounded-full text-xs font-medium"><i className="bi bi-key-fill" /> {p.name}</span>
                       </td>
                       <td className="px-4 py-3 text-gray-400 dark:text-gray-500">{p.guard_name}</td>
                       <td className="px-4 py-3 text-right">

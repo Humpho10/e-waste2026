@@ -16,7 +16,7 @@ import {
   FiRefreshCw,
   FiInbox,
   FiSmile
-} from 'react-icons/fi';
+} from '../components/feathericons';
 import { useQuery } from '@tanstack/react-query';
 import DashboardLayout from '../layouts/DashboardLayout';
 import { myListings } from '../api/products';

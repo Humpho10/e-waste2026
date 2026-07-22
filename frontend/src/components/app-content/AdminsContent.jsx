@@ -82,7 +82,7 @@ export default function AdminsContent() {
       {admins.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">🔍</span>
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm" />
             <input
               type="text" placeholder="Search admins..."
               value={search} onChange={e => setSearch(e.target.value)}
@@ -112,7 +112,7 @@ export default function AdminsContent() {
         </div>
       ) : admins.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-3xl mx-auto mb-4">👤</div>
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-3xl mx-auto mb-4 text-blue-500 dark:text-blue-400"><i className="bi bi-person-fill" /></div>
           <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">No admins yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm mb-6 max-w-xs mx-auto">
             Create the first admin account. Admins manage marketplace operations and product managers.
@@ -122,7 +122,7 @@ export default function AdminsContent() {
               onClick={() => setShowModal(true)}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
             >
-              + Create First Admin
+<i className="bi bi-plus-lg" /> Create First Admin
             </button>
           )}
         </div>
@@ -144,13 +144,13 @@ export default function AdminsContent() {
                   <div className="flex-1 overflow-hidden">
                     <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{admin.name}</h3>
                     <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{admin.email}</p>
-                    {admin.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📞 {admin.phone}</p>}
+                    {admin.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1"><i className="bi bi-telephone" /> {admin.phone}</p>}
                   </div>
                   <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${admin.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
                 </div>
                 <div className="flex items-center gap-2 mb-4">
                   <span className="bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 text-xs px-2.5 py-1 rounded-full font-semibold">Admin</span>
-                  {admin.location && <span className="text-xs text-gray-400 dark:text-gray-500">📍 {admin.location}</span>}
+                  {admin.location && <span className="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1"><i className="bi bi-geo-alt" /> {admin.location}</span>}
                 </div>
                 <div className="flex items-center justify-between pt-4 border-t border-gray-50 dark:border-slate-800">
                   <span className="text-xs text-gray-400 dark:text-gray-500">
@@ -180,7 +180,7 @@ export default function AdminsContent() {
                   <h3 className="text-white font-bold text-lg">Create New Admin</h3>
                   <p className="text-blue-200 text-xs mt-0.5">They will receive login credentials via email</p>
                 </div>
-                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
+                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"><i className="bi bi-x-lg text-sm" /></button>
               </div>
             </div>
             <form onSubmit={(e) => {

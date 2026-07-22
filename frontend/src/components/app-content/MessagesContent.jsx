@@ -68,7 +68,7 @@ export default function MessagesContent() {
             </div>
           ) : conversations.length === 0 ? (
             <div className="p-6 text-center">
-              <p className="text-3xl mb-2">💬</p>
+              <i className="bi bi-chat-dots text-3xl text-gray-300 dark:text-slate-600 mb-2 block" />
               <p className="text-sm text-gray-400 dark:text-gray-500">No conversations yet</p>
             </div>
           ) : (
@@ -102,7 +102,7 @@ export default function MessagesContent() {
         {!active ? (
           <div className="flex-1 flex items-center justify-center text-center p-8">
             <div>
-              <p className="text-5xl mb-4">💬</p>
+              <i className="bi bi-chat-dots text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
               <p className="font-bold text-gray-700 dark:text-gray-200 mb-1">Select a conversation</p>
               <p className="text-gray-400 dark:text-gray-500 text-sm">Choose a conversation from the left</p>
             </div>

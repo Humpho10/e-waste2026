@@ -139,7 +139,7 @@ export default function RolesContent() {
             <div key={role.id} className="bg-white dark:bg-slate-900 rounded-xl shadow-sm border border-gray-100 dark:border-slate-800 p-6">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-lg">🛡️</div>
+                  <div className="w-10 h-10 rounded-full bg-green-100 dark:bg-green-900/40 flex items-center justify-center text-lg text-green-600 dark:text-green-400"><i className="bi bi-shield-lock-fill" /></div>
                   <div>
                     <h3 className="font-bold text-gray-800 dark:text-gray-100">{role.name}</h3>
                     <p className="text-xs text-gray-400 dark:text-gray-500">

@@ -152,7 +152,7 @@ export default function ResubmitListingPage() {
     return (
       <DashboardLayout>
         <div className="max-w-2xl mx-auto text-center py-16">
-          <div className="text-5xl mb-4">🚫</div>
+          <i className="bi bi-slash-circle text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
           <p className="text-gray-500 dark:text-gray-400">You don't have permission to resubmit listings.</p>
         </div>
@@ -185,7 +185,7 @@ export default function ResubmitListingPage() {
         {/* Rejection reason */}
         {product.rejection_reason && (
           <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 rounded-2xl p-5 mb-6 flex gap-3">
-            <span className="text-2xl shrink-0">❌</span>
+            <i className="bi bi-x-circle-fill text-2xl shrink-0 text-red-500 dark:text-red-400" />
             <div>
               <p className="font-semibold text-red-700 dark:text-red-400 text-sm mb-1">Reason for rejection</p>
               <p className="text-red-600 dark:text-red-400 text-sm leading-relaxed">{product.rejection_reason}</p>
@@ -310,7 +310,7 @@ export default function ResubmitListingPage() {
                   type="file" multiple accept="image/jpeg,image/png,image/jpg"
                   className="hidden" onChange={handleImageChange}
                 />
-                <span className="text-3xl block mb-2">📸</span>
+                <i className="bi bi-camera text-3xl block mb-2 text-gray-400 dark:text-gray-500" />
                 <p className="font-medium text-gray-700 dark:text-gray-200 text-sm">Click to add new photos</p>
                 <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">{remainingSlots} slot{remainingSlots !== 1 ? 's' : ''} remaining</p>
               </label>
@@ -329,7 +329,7 @@ export default function ResubmitListingPage() {
                         onClick={() => removeNewImage(i)}
                         className="absolute top-1 right-1 w-5 h-5 rounded-full bg-red-500 text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
                       >
-                        ✕
+                        <i className="bi bi-x-lg" />
                       </button>
                       <span className="absolute bottom-1 left-1 bg-blue-600 text-white text-[10px] px-1.5 py-0.5 rounded-full">
                         New
@@ -371,7 +371,7 @@ export default function ResubmitListingPage() {
                   <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                   Resubmitting...
                 </span>
-              ) : '🚀 Resubmit for Approval'}
+              ) : <span className="inline-flex items-center gap-2"><i className="bi bi-rocket-takeoff" /> Resubmit for Approval</span>}
             </button>
           </div>
         </form>

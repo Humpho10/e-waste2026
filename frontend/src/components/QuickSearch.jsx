@@ -62,7 +62,7 @@ export default function QuickSearch({ items = [], placeholder = 'Quick search...
   return (
     <div ref={boxRef} className={`relative hidden md:block w-56 ${className}`}>
       <div className="flex items-center gap-2 bg-gray-50 dark:bg-slate-800/60 border border-gray-200 dark:border-slate-700 rounded-xl px-3 py-2 text-sm focus-within:ring-2 focus-within:ring-blue-500/40 focus-within:border-blue-300 dark:focus-within:border-blue-500/50 transition">
-        <span className="text-gray-400 dark:text-gray-500 shrink-0">🔍</span>
+        <i className="bi bi-search text-gray-400 dark:text-gray-500 shrink-0 text-xs" />
         <input
           ref={inputRef}
           type="text"
@@ -81,7 +81,7 @@ export default function QuickSearch({ items = [], placeholder = 'Quick search...
             className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 shrink-0"
             aria-label="Clear search"
           >
-            ✕
+            <i className="bi bi-x-lg text-xs" />
           </button>
         )}
       </div>

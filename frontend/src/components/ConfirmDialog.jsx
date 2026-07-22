@@ -1,6 +1,6 @@
 import { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FiAlertTriangle, FiCheckCircle, FiHelpCircle } from 'react-icons/fi';
+import { FiAlertTriangle, FiCheckCircle, FiHelpCircle } from './feathericons';
 
 const ConfirmContext = createContext();
 

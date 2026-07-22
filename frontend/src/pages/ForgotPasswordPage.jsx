@@ -4,11 +4,13 @@ import { forgotPassword, resetPassword } from '../api/auth';
 import { BrandPanel } from './LoginPage';
 import ThemeToggle from '../components/ThemeToggle';
 import { Recycle, ArrowLeft, Eye, EyeOff, CheckCircle } from '../components/icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 const fmt = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 
 export default function ForgotPasswordPage() {
   const navigate = useNavigate();
+  const platformName = usePlatformName();
   const [step, setStep]       = useState('email'); // 'email' | 'code' | 'done'
   const [email, setEmail]     = useState('');
   const [otp, setOtp]         = useState('');
@@ -84,7 +86,7 @@ export default function ForgotPasswordPage() {
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
               <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{platformName}</span>
             </Link>
           </div>
 

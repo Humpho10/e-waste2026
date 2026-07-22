@@ -16,7 +16,7 @@ import {
   FiX,
   FiEye,
   FiEyeOff
-} from 'react-icons/fi';
+} from './feathericons';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../components/Toast';
 import { storageUrl } from '../lib/urls';

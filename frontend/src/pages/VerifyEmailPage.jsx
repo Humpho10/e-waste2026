@@ -3,9 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { verifyEmail } from '../api/auth';
 import { BrandPanel } from './LoginPage';
 import { Recycle, CheckCircle, X } from '../components/icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 export default function VerifyEmailPage() {
   const navigate = useNavigate();
+  const platformName = usePlatformName();
   const [searchParams] = useSearchParams();
   const token = searchParams.get('token');
 
@@ -25,7 +27,7 @@ export default function VerifyEmailPage() {
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
               <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{platformName}</span>
             </Link>
           </div>
 

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { FiStar } from 'react-icons/fi';
+import { FiStar } from './feathericons';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from './Toast';
 import { getSellerRatingStatus, rateSeller } from '../api/ratings';

@@ -3,6 +3,7 @@ import { useQuery, keepPreviousData } from '@tanstack/react-query';
 import AdminLayout from '../../layouts/AdminLayout';
 import Bi from '../../components/BsIcon';
 import { getAuditTrail, exportAuditTrail } from '../../api/admin';
+import { usePlatformName } from '../../hooks/useSiteSettings';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
@@ -402,6 +403,7 @@ function ExportModal({ onClose, onExport, exporting, filters, meta, search }) {
 const EMPTY_FILTERS = { action: 'all', table: 'all', dateFrom: '', dateTo: '', sort: 'desc' };
 
 export default function AuditPage() {
+  const platformName = usePlatformName();
   const [searchInput, setSearchInput] = useState('');
   const search = useDebouncedValue(searchInput);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
@@ -471,7 +473,7 @@ export default function AuditPage() {
 
         doc.setFontSize(18);
         doc.setFont('helvetica', 'bold');
-        doc.text('E-Waste Mart', pageWidth / 2, 15, { align: 'center' });
+        doc.text(platformName, pageWidth / 2, 15, { align: 'center' });
         doc.setFontSize(12);
         doc.setFont('helvetica', 'normal');
         doc.text('Audit Trail Report', pageWidth / 2, 22, { align: 'center' });
@@ -517,7 +519,7 @@ export default function AuditPage() {
         const footerY = doc.internal.pageSize.getHeight() - 5;
         doc.setFontSize(7);
         doc.setTextColor(150);
-        doc.text('E-Waste Mart - Confidential', 14, footerY);
+        doc.text(`${platformName} - Confidential`, 14, footerY);
 
         doc.save(`audit-trail-${new Date().toISOString().slice(0, 10)}.pdf`);
       } else if (format === 'xlsx') {
@@ -525,7 +527,7 @@ export default function AuditPage() {
         const dataRows = rows.slice(1);
 
         const wsData = [
-          ['E-Waste Mart - Audit Trail Report'],
+          [`${platformName} - Audit Trail Report`],
           [`Generated: ${new Date().toLocaleString()}`],
           [`Total Records: ${rows.length - 1}`],
           [],

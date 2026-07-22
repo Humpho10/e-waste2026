@@ -105,7 +105,7 @@ export default function RegisterPage() {
             <div className="text-center mb-8 lg:hidden">
               <Link to="/" className="inline-flex items-center gap-2">
                 <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-                <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+                <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{siteSettings?.platform_name || 'E-Waste Mart'}</span>
               </Link>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-slate-800 text-center">
@@ -136,7 +136,7 @@ export default function RegisterPage() {
             <div className="text-center mb-8 lg:hidden">
               <Link to="/" className="inline-flex items-center gap-2">
                 <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-                <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+                <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{siteSettings?.platform_name || 'E-Waste Mart'}</span>
               </Link>
             </div>
             <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-lg p-8 border border-gray-100 dark:border-slate-800 text-center">
@@ -175,7 +175,7 @@ export default function RegisterPage() {
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
               <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{siteSettings?.platform_name || 'E-Waste Mart'}</span>
             </Link>
           </div>
 

@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { FiShieldOff } from 'react-icons/fi';
+import { FiShieldOff } from '../components/feathericons';
 import { useAuth } from '../context/AuthContext';
 
 // Reached whenever PermissionRoute blocks access to a page the current
