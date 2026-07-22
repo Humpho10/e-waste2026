@@ -3,10 +3,10 @@ import { createContext, useContext, useState, useCallback } from 'react';
 const ToastContext = createContext();
 
 const icons = {
-  success: '✅',
-  error:   '❌',
-  warning: '⚠️',
-  info:    'ℹ️',
+  success: 'check-circle-fill',
+  error:   'x-circle-fill',
+  warning: 'exclamation-triangle-fill',
+  info:    'info-circle-fill',
 };
 
 const colors = {
@@ -45,13 +45,13 @@ export function ToastProvider({ children }) {
               ${colors[t.type]}
             `}
           >
-            <span className="text-lg shrink-0 mt-0.5">{icons[t.type]}</span>
+            <i className={`bi bi-${icons[t.type]} text-lg shrink-0 mt-0.5 leading-none`} />
             <p className="text-sm font-medium leading-snug flex-1">{t.message}</p>
             <button
               onClick={() => remove(t.id)}
               className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 shrink-0 mt-0.5 transition"
             >
-              ✕
+              <i className="bi bi-x-lg text-sm" />
             </button>
           </div>
         ))}

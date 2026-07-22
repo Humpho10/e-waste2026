@@ -9,6 +9,7 @@ import GoogleAuthButton from '../components/GoogleAuthButton';
 import ThemeToggle from '../components/ThemeToggle';
 import MaintenanceNotice from '../components/MaintenanceNotice';
 import { Recycle, Eye, EyeOff, Shield, Tag, Chat, ArrowLeft } from '../components/icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 const REDIRECT_MAP = {
   'Super-Admin': '/admin',
@@ -19,6 +20,7 @@ const REDIRECT_MAP = {
 
 // Shared left-hand brand panel (reused on Register).
 export function BrandPanel({ subtitle = 'Buy & sell used electronic components across Uganda.' }) {
+  const platformName = usePlatformName();
   return (
     <div className="hidden lg:flex flex-col justify-between text-white p-10 w-[42%] relative overflow-hidden bg-[#0b2545]">
       {/* E-waste photo background — file lives at frontend/public/hero.webp */}
@@ -38,7 +40,7 @@ export function BrandPanel({ subtitle = 'Buy & sell used electronic components a
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <Recycle width={24} height={24} className="text-blue-300" />
-            <span className="text-xl font-bold">E-Waste Mart</span>
+            <span className="text-xl font-bold">{platformName}</span>
           </Link>
           <ThemeToggle variant="navbar" />
         </div>
@@ -63,7 +65,7 @@ export function BrandPanel({ subtitle = 'Buy & sell used electronic components a
           </ul>
         </div>
 
-        <p className="text-blue-100/60 text-xs">© 2026 E-Waste Mart — Circular economy in Uganda</p>
+        <p className="text-blue-100/60 text-xs">© 2026 {platformName} — Circular economy in Uganda</p>
       </div>
     </div>
   );
@@ -190,7 +192,7 @@ export default function LoginPage() {
           <div className="text-center mb-8 lg:hidden">
             <Link to="/" className="inline-flex items-center gap-2">
               <Recycle width={26} height={26} className="text-blue-600 dark:text-blue-400" />
-              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">E-Waste Mart</span>
+              <span className="text-2xl font-bold text-[#0b2545] dark:text-blue-300">{siteSettings?.platform_name || 'E-Waste Mart'}</span>
             </Link>
           </div>
 

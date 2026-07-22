@@ -3,9 +3,11 @@ import { Link, useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 function AppLayout() {
   const { user, role, permissions, logout } = useAuth();
+  const platformName = usePlatformName();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -33,22 +35,22 @@ function AppLayout() {
     return 'Dashboard';
   };
 
-  // Helper: Get emoji for permission
-  const getEmoji = (permission) => {
+  // Helper: Get a Bootstrap icon name for a permission
+  const getIconName = (permission) => {
     const lower = permission.toLowerCase();
-    if (lower.includes('transaction') || lower.includes('payment')) return '💰';
-    if (lower.includes('message')) return '💬';
-    if (lower.includes('notification')) return '🔔';
-    if (lower.includes('user')) return '👥';
-    if (lower.includes('admin')) return '🛡️';
-    if (lower.includes('role') || lower.includes('permission')) return '🔑';
-    if (lower.includes('product') || lower.includes('inventory')) return '📦';
-    if (lower.includes('category')) return '🏷️';
-    if (lower.includes('report') || lower.includes('analytics')) return '📊';
-    if (lower.includes('audit')) return '📋';
-    if (lower.includes('order')) return '🛒';
-    if (lower.includes('support')) return '🎫';
-    return '📌';
+    if (lower.includes('transaction') || lower.includes('payment')) return 'cash-coin';
+    if (lower.includes('message')) return 'chat-dots';
+    if (lower.includes('notification')) return 'bell';
+    if (lower.includes('user')) return 'people';
+    if (lower.includes('admin')) return 'shield-lock';
+    if (lower.includes('role') || lower.includes('permission')) return 'key';
+    if (lower.includes('product') || lower.includes('inventory')) return 'box-seam';
+    if (lower.includes('category')) return 'tag';
+    if (lower.includes('report') || lower.includes('analytics')) return 'bar-chart';
+    if (lower.includes('audit')) return 'clipboard-data';
+    if (lower.includes('order')) return 'cart';
+    if (lower.includes('support')) return 'ticket-detailed';
+    return 'pin-angle';
   };
 
   // Generate sidebar menu items from permissions
@@ -56,7 +58,7 @@ function AppLayout() {
     ...(permissions.includes('dashboard-view') ? [{
       name: 'Dashboard',
       path: '/app',
-      icon: '📊',
+      icon: 'bar-chart',
       permission: 'dashboard-view'
     }] : []),
     ...permissions
@@ -64,7 +66,7 @@ function AppLayout() {
       .map(p => ({
         name: formatName(p),
         path: `/app/${p}`,
-        icon: getEmoji(p),
+        icon: getIconName(p),
         permission: p,
       }))
   ];
@@ -75,7 +77,7 @@ function AppLayout() {
       <aside className="w-64 bg-gray-900 text-white flex flex-col shrink-0">
         <div className="p-4 border-b border-gray-800">
           <Link to="/app" className="text-xl font-bold text-white flex items-center gap-2">
-            <span>♻️</span> E-Waste Mart
+            <i className="bi bi-recycle" /> {platformName}
           </Link>
           <p className="text-xs text-gray-400 mt-1 truncate dark:text-gray-500">{role || 'User'}</p>
         </div>
@@ -96,7 +98,7 @@ function AppLayout() {
                   : 'text-gray-300 hover:bg-gray-800 hover:text-white'
               }`}
             >
-              <span className="text-lg">{item.icon}</span>
+              <i className={`bi bi-${item.icon} text-lg`} />
               {item.name}
             </Link>
           ))}
@@ -112,7 +114,7 @@ function AppLayout() {
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-gray-300 hover:bg-gray-800 hover:text-white transition"
           >
-            <span className="text-lg">🚪</span> Logout
+            <i className="bi bi-box-arrow-right text-lg" /> Logout
           </button>
         </div>
       </aside>

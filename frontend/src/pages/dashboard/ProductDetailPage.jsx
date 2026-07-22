@@ -19,7 +19,7 @@ import {
   FiCalendar,
   FiDollarSign,
   FiSearch
-} from 'react-icons/fi';
+} from '../../components/feathericons';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getProduct } from '../../api/products';
@@ -93,7 +93,7 @@ export default function ProductDetailPage() {
   if (!product) return (
     <DashboardLayout>
       <div className="text-center py-20">
-        <div className="text-5xl mb-4">🔍</div>
+        <i className="bi bi-search text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
         <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">Listing not found</h3>
         <button onClick={() => navigate(-1)} className="text-blue-600 dark:text-blue-400 hover:underline text-sm">Go back</button>
       </div>
@@ -130,7 +130,7 @@ export default function ProductDetailPage() {
                     className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.style.display = 'none';
-                      e.target.parentElement.innerHTML = '<span class="text-6xl opacity-30">📦</span>';
+                      e.target.parentElement.innerHTML = '<i class="bi bi-box-seam text-6xl opacity-30"></i>';
                     }}
                   />
                   {images.length > 1 && (
@@ -165,7 +165,7 @@ export default function ProductDetailPage() {
                   )}
                 </>
               ) : (
-                <span className="text-6xl opacity-30">📦</span>
+                <i className="bi bi-box-seam text-6xl opacity-30" />
               )}
             </div>
 
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
                       className="w-full h-full object-cover"
                       onError={(e) => {
                         e.target.style.display = 'none';
-                        e.target.parentElement.innerHTML = '📦';
+                        e.target.parentElement.innerHTML = '<i class="bi bi-box-seam opacity-30"></i>';
                       }}
                     />
                   </button>
@@ -235,14 +235,14 @@ export default function ProductDetailPage() {
                 </div>
                 <div>
                   <p className="font-bold text-gray-800 dark:text-gray-100">{product.seller?.name}</p>
-                  <p className="text-xs text-gray-400 dark:text-gray-500">📍 {product.seller?.location || 'Uganda'}</p>
+                  <p className="text-xs text-gray-400 dark:text-gray-500 flex items-center gap-1"><i className="bi bi-geo-alt" /> {product.seller?.location || 'Uganda'}</p>
                 </div>
               </div>
               {!isSeller && (
                 <div className="space-y-1.5">
                   {product.seller?.phone && (
                     <div className="flex items-center gap-2 text-sm">
-                      <span className="text-gray-400 dark:text-gray-500">📞</span>
+                      <i className="bi bi-telephone text-gray-400 dark:text-gray-500" />
                       <a href={`tel:${product.seller.phone}`} className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
                         {product.seller.phone}
                       </a>
@@ -268,7 +268,7 @@ export default function ProductDetailPage() {
 
             {sent ? (
               <div className="bg-green-50 dark:bg-green-950/40 border border-green-200 dark:border-green-800/50 rounded-xl px-4 py-4 flex items-center gap-3">
-                <span className="text-2xl">✅</span>
+                <i className="bi bi-check-circle-fill text-2xl text-green-600 dark:text-green-400" />
                 <div>
                   <p className="font-semibold text-green-700 dark:text-green-400">Message sent!</p>
                   <p className="text-green-600 dark:text-green-400 text-sm">The seller will get back to you soon.</p>
@@ -305,7 +305,7 @@ export default function ProductDetailPage() {
                       <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                       Sending...
                     </span>
-                  ) : '💬 Send Message'}
+                  ) : <span className="inline-flex items-center gap-2"><i className="bi bi-chat-dots" /> Send Message</span>}
                 </button>
               </form>
             )}

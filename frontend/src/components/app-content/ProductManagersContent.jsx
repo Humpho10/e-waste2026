@@ -62,7 +62,7 @@ export default function ProductManagersContent() {
       {pms.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">🔍</span>
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm" />
             <input
               type="text" placeholder="Search product managers..."
               value={search} onChange={e => setSearch(e.target.value)}
@@ -92,7 +92,7 @@ export default function ProductManagersContent() {
         </div>
       ) : pms.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-3xl mx-auto mb-4">🧑‍💼</div>
+          <div className="w-16 h-16 rounded-2xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-3xl mx-auto mb-4 text-orange-500 dark:text-orange-400"><i className="bi bi-person-badge" /></div>
           <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">No product managers yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm mb-6 max-w-xs mx-auto">
             Create product managers and assign them to categories to help review listings.
@@ -122,8 +122,8 @@ export default function ProductManagersContent() {
                 <div className="flex-1 overflow-hidden">
                   <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{pm.name}</h3>
                   <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{pm.email}</p>
-                  {pm.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📞 {pm.phone}</p>}
-                  {pm.location && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📍 {pm.location}</p>}
+                  {pm.phone && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1"><i className="bi bi-telephone" /> {pm.phone}</p>}
+                  {pm.location && <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1"><i className="bi bi-geo-alt" /> {pm.location}</p>}
                 </div>
                 <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${pm.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
               </div>
@@ -163,7 +163,7 @@ export default function ProductManagersContent() {
                   <h3 className="text-white font-bold text-lg">Create Product Manager</h3>
                   <p className="text-orange-200 text-xs mt-0.5">They will receive a notification with login details</p>
                 </div>
-                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white">✕</button>
+                <button onClick={() => setShowModal(false)} className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"><i className="bi bi-x-lg text-sm" /></button>
               </div>
             </div>
             <div className="p-6 overflow-y-auto flex-1">

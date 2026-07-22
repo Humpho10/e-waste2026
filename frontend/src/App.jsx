@@ -2,6 +2,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './context/AuthContext';
 import PermissionRoute from './components/PermissionRoute';
+import { useSyncDocumentTitle } from './hooks/useSiteSettings';
 
 // ─── Public Pages ──────────────────────────────────────────────
 import HomePage from './pages/HomePage';
@@ -92,6 +93,9 @@ function GuestRoute({ children }) {
 
 // ─── App ──────────────────────────────────────────────────────
 function App() {
+  // Keep the browser tab title in sync with the configured platform name.
+  useSyncDocumentTitle();
+
   return (
     <BrowserRouter>
       <Routes>
@@ -349,7 +353,7 @@ function App() {
           {/* ── Fallback for any unmapped permission ── */}
           <Route path=":permission" element={
             <div className="text-center py-20">
-              <div className="text-6xl mb-4">🚫</div>
+              <i className="bi bi-slash-circle text-6xl text-gray-300 dark:text-slate-600 mb-4 block" />
               <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100 mb-2">Access Denied</h2>
               <p className="text-gray-500 dark:text-gray-400 text-sm">
                 You don't have permission to view this page.
@@ -358,9 +362,9 @@ function App() {
               </p>
               <button
                 onClick={() => window.location.href = '/app'}
-                className="mt-6 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
+                className="mt-6 inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
               >
-                ← Back to Dashboard
+                <i className="bi bi-arrow-left" /> Back to Dashboard
               </button>
             </div>
           } />

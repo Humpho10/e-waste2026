@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { FiStar } from 'react-icons/fi';
+import { FiStar } from '../../components/feathericons';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { browseProducts, getCategories } from '../../api/products';
 
@@ -22,11 +22,11 @@ function ProductCard({ product }) {
             className="w-full h-full object-cover"
             onError={(e) => {
               e.target.style.display = 'none';
-              e.target.parentElement.innerHTML = '<span class="text-4xl opacity-30">📦</span>';
+              e.target.parentElement.innerHTML = '<i class="bi bi-box-seam text-4xl opacity-30"></i>';
             }}
           />
         ) : (
-          <span className="text-4xl opacity-30">📦</span>
+          <i className="bi bi-box-seam text-4xl opacity-30" />
         )}
       </div>
       <div className="p-4">
@@ -39,7 +39,7 @@ function ProductCard({ product }) {
         <p className="text-blue-700 dark:text-blue-400 font-bold mt-1">UGX {Number(product.price).toLocaleString()}</p>
         <div className="flex items-center justify-between mt-2">
           <span className="text-xs bg-gray-100 dark:bg-slate-800 text-gray-500 dark:text-gray-400 px-2 py-0.5 rounded-full">{product.condition}</span>
-          <span className="text-xs text-gray-400 dark:text-gray-500">📍 {product.seller?.location || 'Uganda'}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1"><i className="bi bi-geo-alt" /> {product.seller?.location || 'Uganda'}</span>
         </div>
         {product.seller?.rating_count > 0 && (
           <div className="flex items-center gap-1 mt-1.5">
@@ -98,7 +98,7 @@ export default function BrowsePage() {
             className="flex-1 border border-gray-200 dark:border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
           <button type="submit" className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition">
-            🔍
+            <i className="bi bi-search" />
           </button>
         </form>
 
@@ -150,7 +150,7 @@ export default function BrowsePage() {
         </div>
       ) : products.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">🔍</div>
+          <i className="bi bi-search text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No listings found</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm">Try adjusting your search or filters</p>
         </div>

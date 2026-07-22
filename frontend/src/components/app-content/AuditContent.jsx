@@ -48,7 +48,7 @@ export default function AuditContent() {
         <div className="text-gray-400 dark:text-gray-500">Loading audit trail...</div>
       ) : audit.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">📋</div>
+          <i className="bi bi-clipboard-data text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No entries found</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm">Actions will appear here as they happen.</p>
         </div>

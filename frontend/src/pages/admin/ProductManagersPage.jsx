@@ -36,7 +36,7 @@ function ProductManagerCard({ pm }) {
           <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{pm.name}</h3>
           <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{pm.email}</p>
           {pm.phone && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📞 {pm.phone}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1"><i className="bi bi-telephone" /> {pm.phone}</p>
           )}
         </div>
         <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${pm.is_active ? 'bg-green-400' : 'bg-gray-300'}`} title={pm.is_active ? 'Active' : 'Inactive'} />
@@ -66,7 +66,7 @@ function ProductManagerCard({ pm }) {
           })}
         </span>
         {pm.location && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">📍 {pm.location}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1"><i className="bi bi-geo-alt" /> {pm.location}</span>
         )}
       </div>
     </div>
@@ -129,8 +129,8 @@ export default function ProductManagersPage() {
         </div>
       ) : productManagers.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center text-3xl mx-auto mb-4">
-            📦
+          <div className="w-16 h-16 rounded-2xl bg-teal-50 dark:bg-teal-950/40 flex items-center justify-center text-3xl mx-auto mb-4 text-teal-500 dark:text-teal-400">
+            <i className="bi bi-person-badge" />
           </div>
           <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">No product managers yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm max-w-xs mx-auto">

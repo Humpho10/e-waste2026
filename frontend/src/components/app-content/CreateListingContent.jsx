@@ -109,7 +109,7 @@ export default function MyListingsContent() {
         </div>
       ) : listings.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="text-5xl mb-4">📭</div>
+          <i className="bi bi-inbox text-5xl text-gray-300 dark:text-slate-600 mb-4 block" />
           <h3 className="font-bold text-gray-700 dark:text-gray-200 mb-2">No listings yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm mb-6">Post your first e-waste component to start selling</p>
           {canCreate && (
@@ -117,7 +117,7 @@ export default function MyListingsContent() {
               to="/dashboard/create"
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition"
             >
-              + Post First Listing
+<i className="bi bi-plus-lg" /> Post First Listing
             </Link>
           )}
         </div>
@@ -134,7 +134,7 @@ export default function MyListingsContent() {
                       alt=""
                       className="w-full h-full object-cover"
                     />
-                  ) : '📦'}
+                  ) : <i className="bi bi-box-seam text-blue-400 dark:text-blue-500" />}
                 </div>
                 <div className="flex-1 overflow-hidden">
                   <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{listing.title}</h3>

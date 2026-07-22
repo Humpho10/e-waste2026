@@ -33,7 +33,7 @@ import {
   FiThumbsUp,
   FiBarChart2,
   FiTool
-} from 'react-icons/fi';
+} from '../../components/feathericons';
 
 const steps = [
   { id: 1, label: 'Category', icon: FiGrid, description: 'Choose where your item belongs' },

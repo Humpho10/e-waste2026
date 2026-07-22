@@ -16,7 +16,7 @@ import {
   FiPhone,
   FiMail,
   FiMapPin
-} from 'react-icons/fi';
+} from '../../components/feathericons';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import DashboardLayout from '../../layouts/DashboardLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { logoutUser } from '../api/auth';
 import ThemeToggle from './ThemeToggle';
 import { Recycle, Menu, X } from './icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 // Shared top nav for every public-facing page (Home, About, Contact...).
 // onHome/onBrowse/onAbout are optional overrides — the homepage passes
@@ -13,6 +14,7 @@ export default function PublicNavbar({ onAbout, onHome, onBrowse }) {
   const { user, token, role, logout } = useAuth();
   const navigate = useNavigate();
   const [menuOpen, setMenuOpen] = useState(false);
+  const platformName = usePlatformName();
 
   const dashboardPath = () => ({
     'Super-Admin': '/admin', 'Admin': '/manager', 'Product-Manager': '/workspace',
@@ -49,7 +51,7 @@ export default function PublicNavbar({ onAbout, onHome, onBrowse }) {
           <span className="grid place-items-center w-8 h-8 rounded-lg bg-blue-500/20 text-blue-300">
             <Recycle width={18} height={18} />
           </span>
-          <span className="text-lg font-bold text-white tracking-tight">E-Waste Mart</span>
+          <span className="text-lg font-bold text-white tracking-tight">{platformName}</span>
         </Link>
 
         {/* Desktop links */}

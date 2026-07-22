@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { FiMessageCircle } from 'react-icons/fi';
+import { FiMessageCircle } from '../../components/feathericons';
 import AdminLayout from '../../layouts/AdminLayout';
 import { getConversations, getProductMessages, sendMessage } from '../../api/messages';
 import { useAuth } from '../../context/AuthContext';

@@ -26,9 +26,9 @@ export function useToasts() {
 }
 
 const styles = {
-  success: { bar: 'bg-green-500', icon: '✓', ring: 'border-green-100 dark:border-green-900/50', text: 'text-green-700 dark:text-green-400' },
-  error:   { bar: 'bg-red-500',   icon: '✕', ring: 'border-red-100 dark:border-red-900/50',     text: 'text-red-700 dark:text-red-400'   },
-  info:    { bar: 'bg-slate-700', icon: 'ℹ', ring: 'border-slate-100 dark:border-slate-700',    text: 'text-slate-700 dark:text-slate-300' },
+  success: { bar: 'bg-green-500', icon: 'check-lg',  ring: 'border-green-100 dark:border-green-900/50', text: 'text-green-700 dark:text-green-400' },
+  error:   { bar: 'bg-red-500',   icon: 'x-lg',      ring: 'border-red-100 dark:border-red-900/50',     text: 'text-red-700 dark:text-red-400'   },
+  info:    { bar: 'bg-slate-700', icon: 'info-lg',   ring: 'border-slate-100 dark:border-slate-700',    text: 'text-slate-700 dark:text-slate-300' },
 };
 
 export function Toaster({ toasts = [], onDismiss }) {
@@ -51,7 +51,7 @@ export function Toaster({ toasts = [], onDismiss }) {
             >
               <div className={`w-1.5 self-stretch ${s.bar}`} />
               <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-white text-xs shrink-0 ${s.bar}`}>
-                {s.icon}
+                <i className={`bi bi-${s.icon}`} />
               </div>
               <p className={`flex-1 text-sm font-medium ${s.text} leading-snug`}>{t.message}</p>
               {onDismiss && (
@@ -59,7 +59,7 @@ export function Toaster({ toasts = [], onDismiss }) {
                   onClick={() => onDismiss(t.id)}
                   className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition shrink-0"
                 >
-                  ✕
+                  <i className="bi bi-x-lg text-sm" />
                 </button>
               )}
             </div>

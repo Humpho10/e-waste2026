@@ -150,12 +150,12 @@ export default function CategoriesContent() {
   );
 
   const catIcons = {
-    Electronics: '💻',
-    'Mobile Devices': '📱',
-    Accessories: '🔌',
-    Networking: '🌐',
-    Appliances: '🖨️',
-    Other: '📦',
+    Electronics: 'cpu',
+    'Mobile Devices': 'phone',
+    Accessories: 'plug',
+    Networking: 'diagram-3',
+    Appliances: 'printer',
+    Other: 'box-seam',
   };
 
   return (
@@ -170,7 +170,7 @@ export default function CategoriesContent() {
             onClick={openCreate}
             className="flex items-center gap-2 bg-orange-500 hover:bg-orange-600 text-white px-5 py-2.5 rounded-xl text-sm font-semibold transition shadow-sm"
           >
-            <span>+</span> Add Category
+            <i className="bi bi-plus-lg" /> Add Category
           </button>
         )}
       </div>
@@ -178,7 +178,7 @@ export default function CategoriesContent() {
       {categories.length > 0 && (
         <div className="mb-6 max-w-sm">
           <div className="relative">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500">🔍</span>
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm" />
             <input
               type="text"
               placeholder="Search categories..."
@@ -218,8 +218,8 @@ export default function CategoriesContent() {
             >
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-xl">
-                    {catIcons[cat.name] || '📦'}
+                  <div className="w-10 h-10 rounded-xl bg-orange-50 dark:bg-orange-950/40 flex items-center justify-center text-xl text-orange-500 dark:text-orange-400">
+                    <i className={`bi bi-${catIcons[cat.name] || 'box-seam'}`} />
                   </div>
                   <div>
                     <h3 className="font-bold text-gray-800 dark:text-gray-100">{cat.name}</h3>
@@ -263,14 +263,14 @@ export default function CategoriesContent() {
                   onClick={() => setShowModal(false)}
                   className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white"
                 >
-                  ✕
+                  <i className="bi bi-x-lg text-sm" />
                 </button>
               </div>
             </div>
             <div className="p-6">
               {error && (
-                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2">
-                  <span>⚠️</span>
+                <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-4 flex gap-2 items-center">
+                  <i className="bi bi-exclamation-triangle-fill shrink-0" />
                   <span>{error}</span>
                 </div>
               )}

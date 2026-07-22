@@ -283,7 +283,7 @@ export default function OverviewPage() {
 
         <div className="relative z-[1]">
           <h2 className="text-2xl font-bold text-white flex items-center gap-2">
-            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]} <span>👋</span>
+            Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 17 ? 'afternoon' : 'evening'}, {user?.name?.split(' ')[0]}
           </h2>
           <p className="text-blue-100/90 text-sm mt-1.5 max-w-md">
             {listingStats?.pending > 0

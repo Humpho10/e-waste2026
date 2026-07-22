@@ -38,7 +38,7 @@ function AdminCard({ admin, onDelete, canDelete, canMessage, onMessage }) {
           <h3 className="font-bold text-gray-800 dark:text-gray-100 truncate">{admin.name}</h3>
           <p className="text-xs text-gray-400 dark:text-gray-500 truncate mt-0.5">{admin.email}</p>
           {admin.phone && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5">📞 {admin.phone}</p>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mt-0.5 flex items-center gap-1"><i className="bi bi-telephone" /> {admin.phone}</p>
           )}
         </div>
         <div className={`w-2.5 h-2.5 rounded-full mt-1 shrink-0 ${admin.is_active ? 'bg-green-400' : 'bg-gray-300'}`} />
@@ -49,7 +49,7 @@ function AdminCard({ admin, onDelete, canDelete, canMessage, onMessage }) {
           Admin
         </span>
         {admin.location && (
-          <span className="text-xs text-gray-400 dark:text-gray-500">📍 {admin.location}</span>
+          <span className="text-xs text-gray-400 dark:text-gray-500 inline-flex items-center gap-1"><i className="bi bi-geo-alt" /> {admin.location}</span>
         )}
       </div>
 
@@ -134,7 +134,7 @@ function CreateAdminModal({ onClose, onCreated }) {
               onClick={onClose}
               className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
             >
-              ✕
+              <i className="bi bi-x-lg text-sm" />
             </button>
           </div>
         </div>
@@ -142,7 +142,7 @@ function CreateAdminModal({ onClose, onCreated }) {
         <div className="p-6">
           {error && (
             <div className="bg-red-50 dark:bg-red-950/40 border border-red-200 dark:border-red-800/50 text-red-700 dark:text-red-400 text-sm px-4 py-3 rounded-xl mb-5 flex items-start gap-2">
-              <span className="shrink-0">⚠️</span>
+              <i className="bi bi-exclamation-triangle-fill shrink-0" />
               <span>{error}</span>
             </div>
           )}
@@ -226,7 +226,7 @@ function MessageModal({ admin, onClose }) {
               onClick={onClose}
               className="w-8 h-8 rounded-xl bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition"
             >
-              ✕
+              <i className="bi bi-x-lg text-sm" />
             </button>
           </div>
         </div>
@@ -345,7 +345,7 @@ export default function AdminsPage() {
       {admins.length > 0 && (
         <div className="mb-6">
           <div className="relative max-w-sm">
-            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm">🔍</span>
+            <i className="bi bi-search absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 text-sm" />
             <input
               type="text"
               placeholder="Search admins..."
@@ -364,8 +364,8 @@ export default function AdminsPage() {
         </div>
       ) : admins.length === 0 ? (
         <div className="bg-white dark:bg-slate-900 rounded-2xl border border-dashed border-gray-200 dark:border-slate-700 p-16 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-3xl mx-auto mb-4">
-            👤
+          <div className="w-16 h-16 rounded-2xl bg-blue-50 dark:bg-blue-950/40 flex items-center justify-center text-3xl mx-auto mb-4 text-blue-500 dark:text-blue-400">
+            <i className="bi bi-person-fill" />
           </div>
           <h3 className="text-lg font-bold text-gray-700 dark:text-gray-200 mb-2">No admins yet</h3>
           <p className="text-gray-400 dark:text-gray-500 text-sm mb-6 max-w-xs mx-auto">

@@ -1,12 +1,14 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { Recycle } from './icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 
 // Shared footer for every public-facing page.
 export default function PublicFooter() {
   const { token } = useAuth();
   const navigate = useNavigate();
   const goBrowse = () => navigate(token ? '/dashboard/browse' : '/');
+  const platformName = usePlatformName();
 
   return (
     <footer className="bg-[#0b2545] text-blue-200/70 py-10 px-4 text-sm">
@@ -14,7 +16,7 @@ export default function PublicFooter() {
         <div className="max-w-xs">
           <div className="flex items-center gap-2 mb-3 text-white">
             <Recycle width={20} height={20} className="text-blue-300" />
-            <span className="font-bold">E-Waste Mart</span>
+            <span className="font-bold">{platformName}</span>
           </div>
           <p className="text-xs leading-relaxed">
             Empowering circular economy in Uganda through responsible e-waste trading.
@@ -39,7 +41,7 @@ export default function PublicFooter() {
         </div>
       </div>
       <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-white/10 text-center text-xs">
-        © 2026 E-Waste Mart — Empowering circular economy in Uganda
+        © 2026 {platformName} — Empowering circular economy in Uganda
       </div>
     </footer>
   );

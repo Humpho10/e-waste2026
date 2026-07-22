@@ -13,6 +13,7 @@ import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
 import { Recycle } from '../components/icons';
+import { usePlatformName } from '../hooks/useSiteSettings';
 //import { storageUrl } from '../lib/urls';
 
 const navItems = [
@@ -34,6 +35,7 @@ const groups = [
 
 export default function ManagerLayout({ children }) {
   const { user, logout } = useAuth();
+  const platformName     = usePlatformName();
   const location         = useLocation();
   const navigate         = useNavigate();
   const queryClient      = useQueryClient();
@@ -113,7 +115,7 @@ export default function ManagerLayout({ children }) {
           </div>
           {!isRail && (
             <div className="overflow-hidden flex-1">
-              <p className="text-white font-bold text-sm leading-tight truncate">E-Waste Mart</p>
+              <p className="text-white font-bold text-sm leading-tight truncate">{platformName}</p>
               <p className="text-slate-500 text-xs dark:text-gray-400">Admin Panel</p>
             </div>
           )}
@@ -315,7 +317,7 @@ export default function ManagerLayout({ children }) {
 
         {/* Footer */}
         <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
-          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 {platformName}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500">Admin Dashboard</p>
         </footer>
       </div>

@@ -26,14 +26,15 @@ import {
   FiSettings,
   FiHelpCircle,
   FiStar
-} from 'react-icons/fi';
-import { FaRecycle, FaShoppingBag } from 'react-icons/fa';
+} from '../components/feathericons';
+import { FaRecycle, FaShoppingBag } from '../components/feathericons';
 import { useAuth } from '../context/AuthContext';
 import { useBadge } from '../context/BadgeContext';
 import { logoutUser } from '../api/auth';
 import { setIntentionalLogout, storageUrl } from '../api/axios';
 import ThemeToggle from '../components/ThemeToggle';
 import QuickSearch from '../components/QuickSearch';
+import { usePlatformName } from '../hooks/useSiteSettings';
 //import { storageUrl } from '../lib/urls';
 
 const navItems = [
@@ -54,6 +55,7 @@ const groups = [
 
 export default function DashboardLayout({ children }) {
   const { user, logout } = useAuth();
+  const platformName     = usePlatformName();
   const location         = useLocation();
   const navigate         = useNavigate();
   const queryClient      = useQueryClient();
@@ -130,7 +132,7 @@ export default function DashboardLayout({ children }) {
             </div>
             {!isRail && (
               <div>
-                <p className="text-white font-bold text-sm leading-tight">E-Waste Mart</p>
+                <p className="text-white font-bold text-sm leading-tight">{platformName}</p>
                 <p className="text-slate-500 text-xs dark:text-gray-400">My Dashboard</p>
               </div>
             )}
@@ -343,7 +345,7 @@ export default function DashboardLayout({ children }) {
         <main className="flex-1 p-4 sm:p-6">{children}</main>
 
         <footer className="border-t border-gray-100 dark:border-slate-800 bg-white dark:bg-slate-900 px-4 sm:px-6 py-3 flex flex-col sm:flex-row items-center justify-between gap-1 text-center sm:text-left">
-          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 E-Waste Mart</p>
+          <p className="text-xs text-gray-400 dark:text-gray-500">© 2026 {platformName}</p>
           <p className="text-xs text-gray-400 dark:text-gray-500">Buy · Sell · Recycle</p>
         </footer>
       </div>
